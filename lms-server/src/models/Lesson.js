@@ -6,7 +6,7 @@ const lessonSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: String,
   materials: [{
-    type: { type: String, enum: ['pdf', 'video', 'presentation', 'link'] },
+    type: { type: String, enum: ['pdf', 'video', 'presentation', 'link'], required: true },
     url: { type: String, required: true },
     storageKey: String
   }],

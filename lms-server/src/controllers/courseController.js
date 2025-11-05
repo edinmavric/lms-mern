@@ -1,0 +1,128 @@
+const Course = require('../models/Course');
+const User = require('../models/User');
+const { asyncHandler } = require('../utils/async');
+const {
+  requireFields,
+  assertSameTenantForDoc,
+  isValidObjectId,
+} = require('../utils/validators');
+
+const getAllCourses = asyncHandler(async (req, res) => {
+  const criteria = req.applyTenantFilter({ isDeleted: false });
+  if (req.query.professor) criteria.professor = req.query.professor;
+  if (req.query.name) criteria.name = new RegExp(req.query.name, 'i');
+
+  const courses = await Course.find(criteria)
+    .populate('professor', 'firstName lastName email')
+    .populate('students', 'firstName lastName email')
+    .sort({ createdAt: -1 });
+
+  res.json(courses);
+});
+
+const getCourseById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid course ID' });
+  }
+
+  await assertSameTenantForDoc(Course, id, req.tenantId);
+
+  const course = await Course.findOne({
+    _id: id,
+    tenant: req.tenantId,
+    isDeleted: false,
+  })
+    .populate('professor', 'firstName lastName email')
+    .populate('students', 'firstName lastName email');
+
+  if (!course) {
+    return res.status(404).json({ message: 'Course not found' });
+  }
+
+  res.json(course);
+});
+
+const createCourse = asyncHandler(async (req, res) => {
+  requireFields(req.body, ['name', 'professor']);
+
+  const courseData = {
+    ...req.body,
+    tenant: req.tenantId,
+    createdBy: req.user.id,
+  };
+
+  const professorId = req.body.professor;
+  const professor = await User.findOne({
+    _id: professorId,
+    tenant: req.tenantId,
+    role: 'professor',
+  });
+
+  if (!professor) {
+    return res
+      .status(400)
+      .json({ message: 'Invalid professor ID or not part of tenant' });
+  }
+
+  const course = await Course.create(courseData);
+  await course.populate('professor', 'firstName lastName email');
+
+  res.status(201).json(course);
+});
+
+const updateCourse = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid course ID' });
+  }
+
+  await assertSameTenantForDoc(Course, id, req.tenantId);
+
+  const course = await Course.findById(id);
+  if (!course || course.isDeleted) {
+    return res.status(404).json({ message: 'Course not found' });
+  }
+
+  delete req.body.tenant;
+  req.body.updatedBy = req.user.id;
+
+  Object.assign(course, req.body);
+  await course.save();
+
+  await course.populate('professor', 'firstName lastName email');
+  await course.populate('students', 'firstName lastName email');
+
+  res.json(course);
+});
+
+const deleteCourse = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid course ID' });
+  }
+
+  await assertSameTenantForDoc(Course, id, req.tenantId);
+
+  const course = await Course.findById(id);
+  if (!course || course.isDeleted) {
+    return res.status(404).json({ message: 'Course not found' });
+  }
+
+  course.isDeleted = true;
+  course.updatedBy = req.user.id;
+  await course.save();
+
+  res.json({ message: 'Course deleted successfully', id: course._id });
+});
+
+module.exports = {
+  getAllCourses,
+  getCourseById,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+};

@@ -1,16 +1,37 @@
 const mongoose = require('mongoose');
 
 const enrollmentSchema = new mongoose.Schema({
-  tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
-  student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
-  status: { type: String, enum: ['active', 'completed', 'dropped'], default: 'active' },
-  payments: [{
-    amount: Number,
-    date: Date,
-    status: { type: String, enum: ['paid', 'pending'], default: 'pending' }
-  }],
-  createdAt: { type: Date, default: Date.now }
+  tenant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    required: true,
+  },
+  student: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['active', 'completed', 'cancelled', 'paused'],
+    default: 'active',
+  },
+  payments: [
+    {
+      amount: Number,
+      date: Date,
+      status: { type: String, enum: ['paid', 'pending'], default: 'pending' },
+    },
+  ],
+  isDeleted: { type: Boolean, default: false },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  createdAt: { type: Date, default: Date.now },
 });
 
 enrollmentSchema.pre('validate', async function (next) {

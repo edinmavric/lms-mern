@@ -11,6 +11,10 @@ const userSchema = new mongoose.Schema({
   status: { type: String, enum: ['active', 'pending', 'disabled'], default: 'active' },
   pendingApproval: { type: Boolean, default: false },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  approvedAt: { type: Date },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdAt: { type: Date, default: Date.now },
 });
 

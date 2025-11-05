@@ -17,5 +17,3 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 app.use(error);
 
 module.exports = app;
-
-

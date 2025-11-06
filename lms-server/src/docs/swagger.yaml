@@ -1,0 +1,2379 @@
+openapi: 3.0.3
+info:
+  title: LMS API
+  description: |
+    Multi-tenant Learning Management System API
+    
+    ## Authentication
+    Most endpoints require JWT authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your-jwt-token>
+    ```
+    
+    ## Multi-Tenancy
+    All resources are scoped by tenant. The tenant ID is automatically extracted from:
+    - `x-tenant-id` header, or
+    - The authenticated user's tenant
+    
+    ## Rate Limiting
+    - General API: 100 requests per 15 minutes
+    - Auth endpoints: 5 requests per 15 minutes
+    - Password reset: 3 requests per hour
+    - Tenant signup: 2 requests per hour
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: edinmavric10@gmail.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/api
+    description: Development server
+  - url: https://api.example.com/api
+    description: Production server (example)
+
+tags:
+  - name: Authentication
+    description: Public authentication endpoints
+  - name: Users
+    description: User management
+  - name: Tenants
+    description: Tenant/organization management
+  - name: Courses
+    description: Course management
+  - name: Enrollments
+    description: Student enrollments
+  - name: Lessons
+    description: Lesson content management
+  - name: Grades
+    description: Grade management
+  - name: Attendance
+    description: Attendance tracking
+  - name: Bank Accounts
+    description: Bank account management
+  - name: Health
+    description: System health check
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check API and database connection status
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  database:
+                    type: string
+                    enum: [connected, disconnected]
+                  timestamp:
+                    type: string
+                    format: date-time
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and receive JWT tokens
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: student@example.com
+                password:
+                  type: string
+                  format: password
+                  example: SecurePass123!
+                tenantId:
+                  type: string
+                  description: Tenant ID (optional if tenantName provided)
+                tenantName:
+                  type: string
+                  description: Tenant name (optional if tenantId provided)
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token (15min expiry)
+                  refreshToken:
+                    type: string
+                    description: JWT refresh token (7d expiry)
+                  user:
+                    $ref: '#/components/schemas/User'
+                  tenant:
+                    $ref: '#/components/schemas/TenantBasic'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Register a new user account (requires admin approval)
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - firstName
+                - lastName
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                tenantId:
+                  type: string
+                tenantName:
+                  type: string
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/tenant-signup:
+    post:
+      tags:
+        - Authentication
+      summary: Create new tenant
+      description: Create a new tenant organization and admin user
+      operationId: tenantSignup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tenantName
+                - adminEmail
+                - adminPassword
+                - adminFirstName
+                - adminLastName
+              properties:
+                tenantName:
+                  type: string
+                domain:
+                  type: string
+                contactEmail:
+                  type: string
+                  format: email
+                adminEmail:
+                  type: string
+                  format: email
+                adminPassword:
+                  type: string
+                  format: password
+                adminFirstName:
+                  type: string
+                adminLastName:
+                  type: string
+                settings:
+                  $ref: '#/components/schemas/TenantSettings'
+      responses:
+        '201':
+          description: Tenant created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+                  tenant:
+                    $ref: '#/components/schemas/TenantBasic'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/forgot-password:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      description: Send password reset email
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - tenantId
+              properties:
+                email:
+                  type: string
+                  format: email
+                tenantId:
+                  type: string
+      responses:
+        '200':
+          description: Reset email sent (if user exists)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/reset-password:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password
+      description: Reset password using token from email
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - newPassword
+                - tenantId
+              properties:
+                token:
+                  type: string
+                newPassword:
+                  type: string
+                  format: password
+                tenantId:
+                  type: string
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get new access and refresh tokens
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/search-tenants:
+    get:
+      tags:
+        - Authentication
+      summary: Search tenants
+      description: Search for tenants by name or domain (public)
+      operationId: searchTenants
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: Search query (name or domain)
+      responses:
+        '200':
+          description: List of matching tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    name:
+                      type: string
+                    domain:
+                      type: string
+                    contactEmail:
+                      type: string
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Get list of users (filtered by tenant)
+      operationId: getAllUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, professor, student]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, pending, disabled]
+        - name: email
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - Users
+      summary: Create user
+      description: Create a new user (admin only)
+      operationId: createUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, professor, student]
+                status:
+                  type: string
+                  enum: [active, pending, disabled]
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Users
+      summary: Update user
+      description: Update user details (admin or professor)
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum: [admin, professor, student]
+                status:
+                  type: string
+                  enum: [active, pending, disabled]
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      description: Delete user (admin only, cannot delete self)
+      operationId: deleteUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{id}/approve:
+    patch:
+      tags:
+        - Users
+      summary: Approve user
+      description: Approve pending user (admin only)
+      operationId: approveUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tenants:
+    get:
+      tags:
+        - Tenants
+      summary: Get all tenants
+      description: Get paginated list of tenants (admin only)
+      operationId: getAllTenants
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: domain
+          in: query
+          schema:
+            type: string
+        - name: createdAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: createdBefore
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: includeDeleted
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Paginated tenants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tenant'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Tenants
+      summary: Create tenant
+      description: Create new tenant (admin only)
+      operationId: createTenant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                domain:
+                  type: string
+                contactEmail:
+                  type: string
+                  format: email
+                settings:
+                  $ref: '#/components/schemas/TenantSettings'
+      responses:
+        '201':
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /tenants/{id}:
+    get:
+      tags:
+        - Tenants
+      summary: Get tenant by ID
+      operationId: getTenantById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Tenant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Tenants
+      summary: Update tenant
+      operationId: updateTenant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                domain:
+                  type: string
+                contactEmail:
+                  type: string
+                  format: email
+                settings:
+                  $ref: '#/components/schemas/TenantSettings'
+      responses:
+        '200':
+          description: Tenant updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Tenants
+      summary: Delete tenant (soft delete)
+      operationId: deleteTenant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Tenant deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /courses:
+    get:
+      tags:
+        - Courses
+      summary: Get all courses
+      operationId: getAllCourses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: professor
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - Courses
+      summary: Create course
+      description: Create new course (admin or professor)
+      operationId: createCourse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - professor
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                professor:
+                  type: string
+                  description: User ID with professor role
+                students:
+                  type: array
+                  items:
+                    type: string
+                price:
+                  type: number
+                schedule:
+                  $ref: '#/components/schemas/CourseSchedule'
+      responses:
+        '201':
+          description: Course created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /courses/{id}:
+    get:
+      tags:
+        - Courses
+      summary: Get course by ID
+      operationId: getCourseById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: Course details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Courses
+      summary: Update course
+      operationId: updateCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                professor:
+                  type: string
+                students:
+                  type: array
+                  items:
+                    type: string
+                price:
+                  type: number
+                schedule:
+                  $ref: '#/components/schemas/CourseSchedule'
+      responses:
+        '200':
+          description: Course updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Courses
+      summary: Delete course (soft delete)
+      operationId: deleteCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: Course deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /enrollments:
+    get:
+      tags:
+        - Enrollments
+      summary: Get all enrollments
+      operationId: getAllEnrollments
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student
+          in: query
+          schema:
+            type: string
+        - name: course
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, completed, cancelled, paused]
+      responses:
+        '200':
+          description: List of enrollments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Enrollment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - Enrollments
+      summary: Create enrollment
+      description: Enroll student in course (admin or professor only)
+      operationId: createEnrollment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - student
+                - course
+              properties:
+                student:
+                  type: string
+                  description: User ID with student role
+                course:
+                  type: string
+                  description: Course ID
+                status:
+                  type: string
+                  enum: [active, completed, cancelled, paused]
+                  default: active
+      responses:
+        '201':
+          description: Enrollment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /enrollments/{id}:
+    get:
+      tags:
+        - Enrollments
+      summary: Get enrollment by ID
+      operationId: getEnrollmentById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+      responses:
+        '200':
+          description: Enrollment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Enrollments
+      summary: Update enrollment
+      operationId: updateEnrollment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, completed, cancelled, paused]
+      responses:
+        '200':
+          description: Enrollment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Enrollments
+      summary: Delete enrollment (soft delete)
+      description: Soft delete enrollment (admin only)
+      operationId: deleteEnrollment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+      responses:
+        '200':
+          description: Enrollment deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /enrollments/{id}/payments:
+    post:
+      tags:
+        - Enrollments
+      summary: Add payment to enrollment
+      description: Record payment for enrollment (admin or professor only)
+      operationId: addPayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+              properties:
+                amount:
+                  type: number
+                  minimum: 0
+                  description: Payment amount (cannot exceed course price)
+                date:
+                  type: string
+                  format: date-time
+                  default: Current date
+      responses:
+        '200':
+          description: Payment added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /lessons:
+    get:
+      tags:
+        - Lessons
+      summary: Get all lessons
+      operationId: getAllLessons
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: course
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of lessons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lesson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - Lessons
+      summary: Create lesson
+      description: Create new lesson (admin or professor)
+      operationId: createLesson
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course
+                - title
+              properties:
+                course:
+                  type: string
+                title:
+                  type: string
+                content:
+                  type: string
+                materials:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/LessonMaterial'
+      responses:
+        '201':
+          description: Lesson created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /lessons/{id}:
+    get:
+      tags:
+        - Lessons
+      summary: Get lesson by ID
+      operationId: getLessonById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonId'
+      responses:
+        '200':
+          description: Lesson details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Lessons
+      summary: Update lesson
+      description: Update lesson (only course professor or admin)
+      operationId: updateLesson
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                materials:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/LessonMaterial'
+      responses:
+        '200':
+          description: Lesson updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Lessons
+      summary: Delete lesson
+      description: Delete lesson (only course professor or admin)
+      operationId: deleteLesson
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonId'
+      responses:
+        '200':
+          description: Lesson deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /grades:
+    get:
+      tags:
+        - Grades
+      summary: Get all grades
+      operationId: getAllGrades
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student
+          in: query
+          schema:
+            type: string
+        - name: course
+          in: query
+          schema:
+            type: string
+        - name: professor
+          in: query
+          schema:
+            type: string
+        - name: attempt
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of grades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - Grades
+      summary: Create grade
+      description: Create new grade (admin or professor)
+      operationId: createGrade
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - student
+                - course
+                - value
+              properties:
+                student:
+                  type: string
+                course:
+                  type: string
+                value:
+                  type: number
+                  description: Grade value (must be within tenant's grade scale)
+                comment:
+                  type: string
+                attempt:
+                  type: integer
+                  default: 1
+      responses:
+        '201':
+          description: Grade created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /grades/{id}:
+    get:
+      tags:
+        - Grades
+      summary: Get grade by ID
+      operationId: getGradeById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      responses:
+        '200':
+          description: Grade details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Grades
+      summary: Update grade
+      description: Update grade (tracks history if value changes)
+      operationId: updateGrade
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value:
+                  type: number
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Grade updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Grades
+      summary: Delete grade
+      operationId: deleteGrade
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GradeId'
+      responses:
+        '200':
+          description: Grade deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /attendance:
+    get:
+      tags:
+        - Attendance
+      summary: Get all attendance records
+      operationId: getAllAttendance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student
+          in: query
+          schema:
+            type: string
+        - name: course
+          in: query
+          schema:
+            type: string
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of attendance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attendance'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - Attendance
+      summary: Create attendance record
+      description: Record attendance (admin or professor only, prevents duplicates)
+      operationId: createAttendance
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - student
+                - date
+                - status
+              properties:
+                student:
+                  type: string
+                course:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                status:
+                  type: string
+                  enum: [present, absent, late, excused]
+      responses:
+        '201':
+          description: Attendance recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /attendance/{id}:
+    get:
+      tags:
+        - Attendance
+      summary: Get attendance by ID
+      operationId: getAttendanceById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AttendanceId'
+      responses:
+        '200':
+          description: Attendance details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Attendance
+      summary: Update attendance
+      operationId: updateAttendance
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AttendanceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [present, absent, late, excused]
+                date:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Attendance updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Attendance
+      summary: Delete attendance
+      operationId: deleteAttendance
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AttendanceId'
+      responses:
+        '200':
+          description: Attendance deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /bank-accounts:
+    get:
+      tags:
+        - Bank Accounts
+      summary: Get all bank accounts
+      description: Get bank accounts (admin only)
+      operationId: getAllBankAccounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: isPrimary
+          in: query
+          schema:
+            type: boolean
+        - name: currency
+          in: query
+          schema:
+            type: string
+            enum: [EUR, USD, GBP, RSD, CHF, JPY, AUD, CAD]
+      responses:
+        '200':
+          description: List of bank accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BankAccount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Bank Accounts
+      summary: Create bank account
+      description: Create bank account (admin only)
+      operationId: createBankAccount
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountHolderName
+                - iban
+              properties:
+                accountHolderName:
+                  type: string
+                bankName:
+                  type: string
+                iban:
+                  type: string
+                swiftCode:
+                  type: string
+                currency:
+                  type: string
+                  enum: [EUR, USD, GBP, RSD, CHF, JPY, AUD, CAD]
+                  default: EUR
+                isPrimary:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Bank account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /bank-accounts/{id}:
+    get:
+      tags:
+        - Bank Accounts
+      summary: Get bank account by ID
+      operationId: getBankAccountById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BankAccountId'
+      responses:
+        '200':
+          description: Bank account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Bank Accounts
+      summary: Update bank account
+      operationId: updateBankAccount
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BankAccountId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountHolderName:
+                  type: string
+                bankName:
+                  type: string
+                iban:
+                  type: string
+                swiftCode:
+                  type: string
+                currency:
+                  type: string
+                  enum: [EUR, USD, GBP, RSD, CHF, JPY, AUD, CAD]
+                isPrimary:
+                  type: boolean
+      responses:
+        '200':
+          description: Bank account updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Bank Accounts
+      summary: Delete bank account (soft delete)
+      operationId: deleteBankAccount
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BankAccountId'
+      responses:
+        '200':
+          description: Bank account deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login
+
+  parameters:
+    UserId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: User ID
+    TenantId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Tenant ID
+    CourseId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Course ID
+    EnrollmentId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Enrollment ID
+    LessonId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Lesson ID
+    GradeId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Grade ID
+    AttendanceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Attendance ID
+    BankAccountId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Bank Account ID
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        tenant:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [admin, professor, student]
+        status:
+          type: string
+          enum: [active, pending, disabled]
+        pendingApproval:
+          type: boolean
+        approvedBy:
+          type: string
+        approvedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    TenantBasic:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        domain:
+          type: string
+
+    Tenant:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        domain:
+          type: string
+        contactEmail:
+          type: string
+          format: email
+        settings:
+          $ref: '#/components/schemas/TenantSettings'
+        isDeleted:
+          type: boolean
+        deletedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TenantSettings:
+      type: object
+      properties:
+        gradeScale:
+          type: object
+          properties:
+            min:
+              type: number
+              default: 1
+            max:
+              type: number
+              default: 5
+            label:
+              type: string
+              enum: ['1-5', '1-10', '6-10']
+              default: '1-5'
+        attendanceRules:
+          type: object
+          properties:
+            requiredPresencePercent:
+              type: number
+              default: 75
+            allowRemote:
+              type: boolean
+              default: false
+        currency:
+          type: string
+          default: EUR
+        locale:
+          type: string
+          default: en
+
+    Course:
+      type: object
+      properties:
+        _id:
+          type: string
+        tenant:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        professor:
+          oneOf:
+            - type: string
+            - $ref: '#/components/schemas/User'
+        students:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - $ref: '#/components/schemas/User'
+        price:
+          type: number
+        schedule:
+          $ref: '#/components/schemas/CourseSchedule'
+        isDeleted:
+          type: boolean
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CourseSchedule:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+
+    Enrollment:
+      type: object
+      properties:
+        _id:
+          type: string
+        tenant:
+          type: string
+        student:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+        course:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                name:
+                  type: string
+                price:
+                  type: number
+        status:
+          type: string
+          enum: [active, completed, cancelled, paused]
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+        isDeleted:
+          type: boolean
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Payment:
+      type: object
+      properties:
+        amount:
+          type: number
+        date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [paid, pending]
+
+    Lesson:
+      type: object
+      properties:
+        _id:
+          type: string
+        tenant:
+          type: string
+        course:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        materials:
+          type: array
+          items:
+            $ref: '#/components/schemas/LessonMaterial'
+        isDeleted:
+          type: boolean
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    LessonMaterial:
+      type: object
+      required:
+        - type
+        - url
+      properties:
+        type:
+          type: string
+          enum: [pdf, video, presentation, link]
+        url:
+          type: string
+        storageKey:
+          type: string
+
+    Grade:
+      type: object
+      properties:
+        _id:
+          type: string
+        tenant:
+          type: string
+        student:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+        course:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                name:
+                  type: string
+        professor:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+        value:
+          type: number
+        comment:
+          type: string
+        attempt:
+          type: integer
+        date:
+          type: string
+          format: date-time
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeHistory'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    GradeHistory:
+      type: object
+      properties:
+        oldValue:
+          type: number
+        newValue:
+          type: number
+        changedBy:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+        changedAt:
+          type: string
+          format: date-time
+
+    Attendance:
+      type: object
+      properties:
+        _id:
+          type: string
+        tenant:
+          type: string
+        student:
+          type: string
+        course:
+          type: string
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [present, absent, late, excused]
+        recordedBy:
+          type: string
+        recordedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    BankAccount:
+      type: object
+      properties:
+        _id:
+          type: string
+        tenant:
+          type: string
+        accountHolderName:
+          type: string
+        bankName:
+          type: string
+        iban:
+          type: string
+        swiftCode:
+          type: string
+        currency:
+          type: string
+          enum: [EUR, USD, GBP, RSD, CHF, JPY, AUD, CAD]
+        isPrimary:
+          type: boolean
+        isDeleted:
+          type: boolean
+        deletedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized - Invalid or missing token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict - Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+

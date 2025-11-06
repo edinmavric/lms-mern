@@ -11,6 +11,11 @@ const env = {
     'change-me-refresh',
   corsOrigin: process.env.CORS_ORIGIN || '*',
   allowTenantSignup: process.env.ALLOW_TENANT_SIGNUP !== 'false',
+  mailjetPublicKey: process.env.MJ_APIKEY_PUBLIC || '',
+  mailjetPrivateKey: process.env.MJ_APIKEY_PRIVATE || '',
+  mailFromEmail: process.env.MAIL_FROM_EMAIL || 'edinmavric10@gmail.com',
+  mailFromName: process.env.MAIL_FROM_NAME || 'Edin Mavrić',
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
 };
 
 module.exports = env;

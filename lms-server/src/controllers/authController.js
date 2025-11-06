@@ -31,7 +31,6 @@ const login = asyncHandler(async (req, res) => {
   const { email, password, tenantId, tenantName } = req.body;
   const clientIp = req.ip || req.connection.remoteAddress;
 
-  // Sanitize inputs
   const sanitizedEmail = validateEmail(email);
   const sanitizedTenantName = tenantName
     ? sanitizeString(tenantName, 100)
@@ -414,14 +413,19 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   await user.save();
 
+  const resetLink = `${env.frontendUrl}/reset-password?token=${resetToken}&tenantId=${tenantId}`;
+  try {
+    await require('../utils/email').sendPasswordResetEmail(
+      sanitizedEmail,
+      resetLink,
+      tenant.name
+    );
+  } catch (e) {
+    console.warn('Failed to send password reset email:', e.message);
+  }
   if (env.nodeEnv === 'development') {
     console.log(`Password reset token for ${sanitizedEmail}: ${resetToken}`);
-    console.log(
-      `Reset link: /api/auth/reset-password?token=${resetToken}&tenantId=${tenantId}`
-    );
-  } else {
-    // TODO: Send email with reset link in production
-    // await sendPasswordResetEmail(sanitizedEmail, resetToken, tenantId);
+    console.log(`Reset link (frontend): ${resetLink}`);
   }
 
   logAuthAttempt('password_reset', true, {

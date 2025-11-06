@@ -49,7 +49,6 @@ const createBankAccount = asyncHandler(async (req, res) => {
     createdBy: req.user.id,
   };
 
-  // Check for duplicate IBAN within tenant
   const existing = await BankAccount.findOne({
     tenant: req.tenantId,
     iban: req.body.iban,

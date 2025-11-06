@@ -6,6 +6,8 @@ const {
   isValidObjectId,
   sanitizeUserOutput,
 } = require('../utils/validators');
+const env = require('../config/env');
+const { sendApprovalEmail } = require('../utils/email');
 
 const getAllUsers = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({});
@@ -85,7 +87,6 @@ const updateUser = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  // Prevent self-delete (handled in deleteUser, but also prevent self-demote here)
   if (String(user._id) === String(req.user.id)) {
     if (req.body.role && req.body.role !== user.role) {
       return res.status(400).json({
@@ -94,7 +95,6 @@ const updateUser = asyncHandler(async (req, res) => {
     }
   }
 
-  // Whitelist updatable fields
   const allowedFields = ['firstName', 'lastName', 'email', 'role', 'status'];
   const updateData = {};
 
@@ -104,12 +104,10 @@ const updateUser = asyncHandler(async (req, res) => {
     }
   }
 
-  // Handle password update separately
   if (req.body.password) {
     await user.setPassword(req.body.password);
   }
 
-  // Don't allow changing tenant
   delete updateData.tenant;
 
   Object.assign(user, updateData);
@@ -138,6 +136,13 @@ const approveUser = asyncHandler(async (req, res) => {
   user.approvedAt = new Date();
   await user.save();
 
+  try {
+    const loginLink = `${env.frontendUrl}/login`;
+    await sendApprovalEmail(user.email, null, loginLink);
+  } catch (e) {
+    // non-fatal
+  }
+
   res.json(sanitizeUserOutput(user));
 });
 
@@ -155,7 +160,6 @@ const deleteUser = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  // Prevent self-delete
   if (String(user._id) === String(req.user.id)) {
     return res.status(400).json({
       message: 'You cannot delete your own account',

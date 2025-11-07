@@ -1,6 +1,6 @@
 import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
-import type { AuthResponse, User, Tenant } from '../../types';
+import type { AuthResponse, User, TenantSummary } from '../../types';
 
 export interface LoginCredentials {
   email: string;
@@ -16,6 +16,7 @@ export interface RegisterData {
   lastName: string;
   tenantId?: string;
   tenantName?: string;
+  role?: 'student' | 'professor';
 }
 
 export interface TenantSignupData {
@@ -105,11 +106,16 @@ export const authApi = {
     return data;
   },
 
-  searchTenants: async (query: string): Promise<Tenant[]> => {
-    const { data } = await apiClient.get<Tenant[]>(
-      API_ENDPOINTS.auth.searchTenants,
-      { params: { query } }
-    );
-    return data;
+  searchTenants: async (query: string): Promise<TenantSummary[]> => {
+    const { data } = await apiClient.get<
+      Array<{ _id: string; name: string; domain?: string; contactEmail?: string }>
+    >(API_ENDPOINTS.auth.searchTenants, { params: { query } });
+
+    return data.map(item => ({
+      id: item._id,
+      name: item.name,
+      domain: item.domain,
+      contactEmail: item.contactEmail,
+    }));
   },
 };

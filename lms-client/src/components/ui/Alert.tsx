@@ -12,10 +12,11 @@ import {
 export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'success' | 'destructive' | 'warning' | 'info';
   onClose?: () => void;
+  description?: string;
 }
 
 const Alert = forwardRef<HTMLDivElement, AlertProps>(
-  ({ className, variant = 'default', onClose, children, ...props }, ref) => {
+  ({ className, variant = 'default', onClose, children, description, ...props }, ref) => {
     const variants = {
       default: 'bg-card border-border text-card-foreground',
       success: 'bg-success/10 border-success/20 text-success-foreground',
@@ -27,10 +28,10 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
 
     const icons = {
       default: null,
-      success: <CheckCircle2 className="h-4 w-4" />,
-      destructive: <AlertCircle className="h-4 w-4" />,
-      warning: <AlertTriangle className="h-4 w-4" />,
-      info: <Info className="h-4 w-4" />,
+      success: <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />,
+      destructive: <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />,
+      warning: <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />,
+      info: <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />,
     };
 
     return (
@@ -54,7 +55,10 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
         )}
         <div className="flex items-start gap-3">
           {icons[variant] && <div className="mt-0.5">{icons[variant]}</div>}
-          <div className="flex-1">{children}</div>
+          <div className="flex-1">
+            {children}
+            {description && <p className="text-sm text-muted-foreground">{description}</p>}
+          </div>
         </div>
       </div>
     );

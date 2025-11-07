@@ -27,6 +27,13 @@ export interface Tenant {
   updatedAt: string;
 }
 
+export interface TenantSummary {
+  id: string;
+  name: string;
+  domain?: string;
+  contactEmail?: string;
+}
+
 export interface TenantSettings {
   gradeScale: {
     min: number;
@@ -156,11 +163,7 @@ export interface AuthResponse {
   token: string;
   refreshToken: string;
   user: User;
-  tenant: {
-    id: string;
-    name: string;
-    domain?: string;
-  };
+  tenant: TenantSummary;
 }
 
 export interface ApiError {

@@ -13,7 +13,7 @@ export function PublicRoute({
   const { isAuthenticated } = useAuthStore();
 
   if (restricted && isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   return <>{children}</>;

@@ -43,7 +43,21 @@ class ApiClient {
       async (error: AxiosError) => {
         const originalRequest = error.config as any;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Don't try to refresh token for authentication endpoints
+        // These endpoints return 401 for invalid credentials, not expired tokens
+        const authEndpoints = [
+          '/auth/login',
+          '/auth/register',
+          '/auth/tenant-signup',
+          '/auth/forgot-password',
+          '/auth/reset-password',
+          '/auth/refresh-token',
+        ];
+        const isAuthEndpoint = authEndpoints.some(endpoint =>
+          originalRequest?.url?.includes(endpoint)
+        );
+
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
           originalRequest._retry = true;
 
           try {

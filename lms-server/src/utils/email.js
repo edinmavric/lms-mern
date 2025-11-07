@@ -33,9 +33,27 @@ function buildMessage(toEmail, subject, htmlPart, textPart) {
 }
 
 async function sendEmail(toEmail, subject, html, text) {
-  const client = getMailjetClient();
-  const payload = buildMessage(toEmail, subject, html, text);
-  await client.post('send', { version: 'v3.1' }).request(payload);
+  try {
+    const client = getMailjetClient();
+    const payload = buildMessage(toEmail, subject, html, text);
+    const result = await client.post('send', { version: 'v3.1' }).request(payload);
+    return result;
+  } catch (error) {
+    if (error.response) {
+      const statusCode = error.response.status;
+      const errorData = error.response.data;
+      console.error(`[EMAIL] Mailjet API error (${statusCode}):`, JSON.stringify(errorData, null, 2));
+      
+      if (statusCode === 401) {
+        throw new Error('Mailjet authentication failed. Check your API keys.');
+      } else if (statusCode === 400) {
+        throw new Error(`Mailjet validation error: ${errorData?.ErrorMessage || 'Invalid request'}`);
+      } else if (statusCode === 403) {
+        throw new Error('Mailjet access forbidden. Check sender email verification.');
+      }
+    }
+    throw error;
+  }
 }
 
 async function sendPasswordResetEmail(toEmail, resetLink, tenantName) {

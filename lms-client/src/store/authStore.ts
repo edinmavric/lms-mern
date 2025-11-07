@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User, Tenant } from '../types';
+import type { User, TenantSummary } from '../types';
 
 interface AuthState {
   user: User | null;
-  tenant: Tenant | null;
+  tenant: TenantSummary | null;
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
   setAuth: (data: {
     user: User;
-    tenant: Tenant | null;
+    tenant: TenantSummary | null;
     accessToken: string;
     refreshToken: string;
   }) => void;
@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         if (data.tenant) {
-          localStorage.setItem('tenantId', data.tenant._id);
+          localStorage.setItem('tenantId', data.tenant.id);
         }
 
         set({

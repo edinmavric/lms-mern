@@ -7,6 +7,7 @@ export interface FormFieldProps {
   labelProps?: LabelProps;
   error?: string;
   required?: boolean;
+  helperText?: string;
   children: ReactNode;
   className?: string;
 }
@@ -16,6 +17,7 @@ export function FormField({
   labelProps,
   error,
   required,
+  helperText,
   children,
   className,
 }: FormFieldProps) {
@@ -28,6 +30,9 @@ export function FormField({
       )}
       {children}
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {helperText && !error && (
+        <p className="text-sm text-muted-foreground">{helperText}</p>
+      )}
     </div>
   );
 }

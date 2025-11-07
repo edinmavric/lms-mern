@@ -148,7 +148,7 @@ const login = asyncHandler(async (req, res) => {
 const register = asyncHandler(async (req, res) => {
   requireFields(req.body, ['email', 'password', 'firstName', 'lastName']);
 
-  const { email, password, firstName, lastName, tenantId, tenantName } =
+  const { email, password, firstName, lastName, tenantId, tenantName, role } =
     req.body;
   const clientIp = req.ip || req.connection.remoteAddress;
 
@@ -170,6 +170,10 @@ const register = asyncHandler(async (req, res) => {
       message: 'Invalid first name or last name',
     });
   }
+
+  // Validate role - only student or professor allowed (admin cannot self-register)
+  const allowedRoles = ['student', 'professor'];
+  const userRole = role && allowedRoles.includes(role) ? role : 'student';
 
   let tenant;
 
@@ -224,7 +228,7 @@ const register = asyncHandler(async (req, res) => {
     firstName: sanitizedFirstName,
     lastName: sanitizedLastName,
     tenant: tenant._id,
-    role: 'student',
+    role: userRole,
     status: 'pending',
     pendingApproval: true,
   });
@@ -414,15 +418,32 @@ const forgotPassword = asyncHandler(async (req, res) => {
   await user.save();
 
   const resetLink = `${env.frontendUrl}/reset-password?token=${resetToken}&tenantId=${tenantId}`;
-  try {
-    await require('../utils/email').sendPasswordResetEmail(
-      sanitizedEmail,
-      resetLink,
-      tenant.name
-    );
-  } catch (e) {
-    console.warn('Failed to send password reset email:', e.message);
+  
+  if (!env.mailjetPublicKey || !env.mailjetPrivateKey) {
+    console.warn('[EMAIL] Mailjet API keys not configured. Email will not be sent.');
+    console.warn('[EMAIL] Set MJ_APIKEY_PUBLIC and MJ_APIKEY_PRIVATE in your .env file.');
+    if (env.nodeEnv === 'development') {
+      console.log(`[DEV] Password reset token for ${sanitizedEmail}: ${resetToken}`);
+      console.log(`[DEV] Reset link (frontend): ${resetLink}`);
+    }
+  } else {
+    try {
+      await require('../utils/email').sendPasswordResetEmail(
+        sanitizedEmail,
+        resetLink,
+        tenant.name
+      );
+      console.log(`[EMAIL] Password reset email sent to ${sanitizedEmail}`);
+    } catch (e) {
+      console.error('[EMAIL] Failed to send password reset email:', e.message);
+      console.error('[EMAIL] Error details:', e);
+      if (env.nodeEnv === 'development') {
+        console.log(`[DEV] Password reset token for ${sanitizedEmail}: ${resetToken}`);
+        console.log(`[DEV] Reset link (frontend): ${resetLink}`);
+      }
+    }
   }
+  
   if (env.nodeEnv === 'development') {
     console.log(`Password reset token for ${sanitizedEmail}: ${resetToken}`);
     console.log(`Reset link (frontend): ${resetLink}`);

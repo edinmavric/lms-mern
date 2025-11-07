@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Button, Link } from '../components/ui';
 
-export function AuthLayout() {
+export function PublicLayout() {
   const navigate = useNavigate();
 
   return (
@@ -40,9 +40,7 @@ export function AuthLayout() {
       <footer className="border-t border-border bg-card/50">
         <div className="container mx-auto px-4 py-6 text-sm text-muted-foreground">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <p>
-              © {new Date().getFullYear()} LMS Platform. All rights reserved.
-            </p>
+            <p>© {new Date().getFullYear()} LMS Platform. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <Link to="/signup" variant="muted">
                 Request access
@@ -57,3 +55,4 @@ export function AuthLayout() {
     </div>
   );
 }
+

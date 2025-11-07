@@ -33,3 +33,10 @@ export type { AlertProps } from './Alert';
 
 export { Badge } from './Badge';
 export type { BadgeProps } from './Badge';
+
+export { Dialog, DialogContent, DialogFooter } from './Dialog';
+export type {
+  DialogProps,
+  DialogContentProps,
+  DialogFooterProps,
+} from './Dialog';

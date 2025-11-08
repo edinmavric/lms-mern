@@ -70,13 +70,13 @@ export interface Course {
 export interface Lesson {
   _id: string;
   tenant: string;
-  course: string;
+  course: string | Course;
   title: string;
   content?: string;
   materials: LessonMaterial[];
   isDeleted: boolean;
-  createdBy?: string;
-  updatedBy?: string;
+  createdBy?: string | User;
+  updatedBy?: string | User;
   createdAt: string;
 }
 

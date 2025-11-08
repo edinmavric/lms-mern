@@ -53,14 +53,10 @@ export function TenantSelector({
 
   const options = useMemo(() => data ?? [], [data]);
 
-  // Show options when searching (query length >= 2) and we have results or no error
-  // The dropdown will close automatically when a selection is made because we clear the query
   const showOptions = isSearchEnabled && (options.length > 0 || !error);
 
   const handleSelect = (tenant: TenantSummary | null) => {
     onChange(tenant);
-    // Clear the search query immediately to close the dropdown
-    // The displayValue will show the selected tenant's name
     setQuery('');
   };
 

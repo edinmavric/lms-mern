@@ -4,9 +4,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
-import { usersApi } from '../../lib/api/users';
+import { lessonsApi } from '../../lib/api/lessons';
+import { coursesApi } from '../../lib/api/courses';
 import { getErrorMessage } from '../../lib/utils';
-import { UserForm, useUserForm, type UserFormData } from './UserForm';
+import { LessonForm, useLessonForm, type LessonFormData } from './LessonForm';
 import {
   Card,
   CardContent,
@@ -17,60 +18,62 @@ import {
   Alert,
 } from '../../components/ui';
 
-export function UserEdit() {
+export function LessonEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
-  const { data: user, isLoading } = useQuery({
-    queryKey: ['user', id],
-    queryFn: () => usersApi.getById(id!),
+  const { data: lesson, isLoading } = useQuery({
+    queryKey: ['lesson', id],
+    queryFn: () => lessonsApi.getById(id!),
     enabled: !!id,
   });
 
-  const form = useUserForm(user);
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses', 'all'],
+    queryFn: () => coursesApi.list({}),
+  });
+
+  const form = useLessonForm(lesson);
 
   useEffect(() => {
-    if (user) {
+    if (lesson) {
       form.reset({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        role: user.role || 'student',
-        status: user.status || 'active',
-        password: '',
+        course:
+          typeof lesson.course === 'string'
+            ? lesson.course
+            : (lesson.course as any)?._id || '',
+        title: lesson.title || '',
+        content: lesson.content || '',
+        materials: lesson.materials || [],
       });
     }
-  }, [user, form]);
+  }, [lesson, form]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: UserFormData) => {
+    mutationFn: (data: LessonFormData) => {
       const updateData: any = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: data.role,
-        status: data.status,
+        title: data.title,
+        content: data.content,
+        materials: data.materials,
       };
-      if (data.password && data.password.trim()) {
-        updateData.password = data.password;
-      }
-      return usersApi.update(id!, updateData);
+      return lessonsApi.update(id!, updateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['user', id] });
-      toast.success('User updated successfully');
-      navigate(`/app/admin/users/${id}`);
+      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['lesson', id] });
+      toast.success('Lesson updated successfully');
+      navigate(`/app/admin/lessons/${id}`);
     },
-    onError: (error) => {
-      const errorMessage = getErrorMessage(error, 'Failed to update user');
+    onError: error => {
+      const errorMessage = getErrorMessage(error, 'Failed to update lesson');
       setError(errorMessage);
       toast.error(errorMessage);
     },
   });
 
-  const handleSubmit = async (data: UserFormData) => {
+  const handleSubmit = async (data: LessonFormData) => {
     setError(null);
     await updateMutation.mutateAsync(data);
   };
@@ -83,19 +86,19 @@ export function UserEdit() {
     );
   }
 
-  if (!user) {
+  if (!lesson) {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
           <div className="space-y-1">
-            <p className="font-medium">User not found</p>
+            <p className="font-medium">Lesson not found</p>
             <p className="text-sm">
-              The user you're looking for doesn't exist or has been deleted.
+              The lesson you're looking for doesn't exist or has been deleted.
             </p>
           </div>
         </Alert>
-        <Button onClick={() => navigate('/app/admin/users')}>
-          Back to Users
+        <Button onClick={() => navigate('/app/admin/lessons')}>
+          Back to Lessons
         </Button>
       </div>
     );
@@ -107,24 +110,22 @@ export function UserEdit() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(`/app/admin/users/${id}`)}
+          onClick={() => navigate(`/app/admin/lessons/${id}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Edit User</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Edit Lesson</h1>
           <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Update user information and settings
+            Update lesson information and content
           </p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>User Details</CardTitle>
-          <CardDescription>
-            Update the user's information. Email cannot be changed.
-          </CardDescription>
+          <CardTitle>Lesson Details</CardTitle>
+          <CardDescription>Update the lesson's information.</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -132,10 +133,10 @@ export function UserEdit() {
             className="space-y-4"
             noValidate
           >
-            <UserForm
-              user={user}
+            <LessonForm
               isSubmitting={updateMutation.isPending}
               error={error}
+              courses={courses}
               register={form.register}
               control={form.control}
               errors={form.formState.errors}
@@ -144,7 +145,7 @@ export function UserEdit() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate(`/app/admin/users/${id}`)}
+                onClick={() => navigate(`/app/admin/lessons/${id}`)}
                 disabled={updateMutation.isPending}
               >
                 Cancel
@@ -154,7 +155,7 @@ export function UserEdit() {
                 disabled={updateMutation.isPending}
                 loading={updateMutation.isPending}
               >
-                {updateMutation.isPending ? 'Updating...' : 'Update User'}
+                {updateMutation.isPending ? 'Updating...' : 'Update Lesson'}
               </Button>
             </div>
           </form>
@@ -163,3 +164,4 @@ export function UserEdit() {
     </div>
   );
 }
+

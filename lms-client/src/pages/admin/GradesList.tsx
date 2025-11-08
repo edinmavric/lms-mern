@@ -1,22 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import {
-  BookOpen,
-  Search,
-  Edit,
-  Trash2,
-  Plus,
-  Users,
-  GraduationCap,
-} from 'lucide-react';
+import { Award, Search, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { coursesApi } from '../../lib/api/courses';
+import { gradesApi } from '../../lib/api/grades';
 import { usersApi } from '../../lib/api/users';
+import { coursesApi } from '../../lib/api/courses';
 import { getErrorMessage } from '../../lib/utils';
-import type { Course } from '../../types';
-import { CourseForm, useCourseForm, type CourseFormData } from './CourseForm';
+import type { Grade } from '../../types';
+import { GradeForm, useGradeForm, type GradeFormData } from './GradeForm';
 import {
   Button,
   Card,
@@ -29,166 +22,179 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-  Badge,
   Dialog,
   DialogContent,
   DialogFooter,
-  Alert,
   FormDialog,
+  Badge,
 } from '../../components/ui';
 
-export function CoursesList() {
+export function GradesList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [searchName, setSearchName] = useState('');
+  const [searchStudent, setSearchStudent] = useState('');
+  const [filterCourse, setFilterCourse] = useState<string>('');
   const [filterProfessor, setFilterProfessor] = useState<string>('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
-    course: Course | null;
-  }>({ open: false, course: null });
+    grade: Grade | null;
+  }>({ open: false, grade: null });
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
-    course: Course | null;
-  }>({ open: false, course: null });
+    grade: Grade | null;
+  }>({ open: false, grade: null });
+
+  const { data: students = [] } = useQuery({
+    queryKey: ['users', 'students'],
+    queryFn: () => usersApi.list({ role: 'student', status: 'active' }),
+  });
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses', 'all'],
+    queryFn: () => coursesApi.list({}),
+  });
 
   const { data: professors = [] } = useQuery({
     queryKey: ['users', 'professors'],
     queryFn: () => usersApi.list({ role: 'professor', status: 'active' }),
   });
 
-  const { data: courses = [], isLoading } = useQuery({
+  const { data: grades = [], isLoading } = useQuery({
     queryKey: [
-      'courses',
+      'grades',
       {
+        course: filterCourse || undefined,
         professor: filterProfessor || undefined,
-        name: searchName || undefined,
       },
     ],
     queryFn: () =>
-      coursesApi.list({
+      gradesApi.list({
+        course: filterCourse || undefined,
         professor: filterProfessor || undefined,
-        name: searchName || undefined,
       }),
   });
 
-  const { data: allCourses = [] } = useQuery({
-    queryKey: ['courses', 'all'],
-    queryFn: () => coursesApi.list({}),
+  const { data: allGrades = [] } = useQuery({
+    queryKey: ['grades', 'all'],
+    queryFn: () => gradesApi.list({}),
   });
 
+  const filteredGrades = searchStudent
+    ? grades.filter(grade => {
+        const student =
+          typeof grade.student === 'string'
+            ? students.find(s => s._id === grade.student)
+            : grade.student;
+        if (!student) return false;
+        const fullName =
+          `${student.firstName} ${student.lastName}`.toLowerCase();
+        const email = student.email.toLowerCase();
+        const search = searchStudent.toLowerCase();
+        return fullName.includes(search) || email.includes(search);
+      })
+    : grades;
+
   const createMutation = useMutation({
-    mutationFn: (data: CourseFormData) => {
-      return coursesApi.create({
-        name: data.name,
-        description: data.description,
-        professor: data.professor,
-        price:
-          data.price && data.price !== '' && typeof data.price === 'number'
-            ? data.price
-            : undefined,
-        schedule:
-          data.schedule &&
-          (data.schedule.days ||
-            data.schedule.startTime ||
-            data.schedule.endTime)
-            ? {
-                days: data.schedule.days || [],
-                startTime: data.schedule.startTime || '',
-                endTime: data.schedule.endTime || '',
-              }
-            : undefined,
+    mutationFn: (data: GradeFormData) => {
+      return gradesApi.create({
+        student: data.student,
+        course: data.course,
+        value: data.value,
+        comment: data.comment,
+        attempt: data.attempt || 1,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      toast.success('Course created successfully');
+      queryClient.invalidateQueries({ queryKey: ['grades'] });
+      toast.success('Grade created successfully');
       setCreateDialogOpen(false);
     },
     onError: error => {
-      toast.error(getErrorMessage(error, 'Failed to create course'));
+      toast.error(getErrorMessage(error, 'Failed to create grade'));
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: CourseFormData }) => {
-      const updateData: any = {
-        name: data.name,
-        description: data.description,
-        professor: data.professor,
-        price:
-          data.price && data.price !== '' && typeof data.price === 'number'
-            ? data.price
-            : undefined,
-        schedule:
-          data.schedule &&
-          (data.schedule.days ||
-            data.schedule.startTime ||
-            data.schedule.endTime)
-            ? {
-                days: data.schedule.days || [],
-                startTime: data.schedule.startTime || '',
-                endTime: data.schedule.endTime || '',
-              }
-            : undefined,
+    mutationFn: ({ id, data }: { id: string; data: GradeFormData }) => {
+      const updateData = {
+        value: data.value,
+        comment: data.comment,
       };
-      return coursesApi.update(id, updateData);
+      return gradesApi.update(id, updateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      toast.success('Course updated successfully');
-      setEditDialog({ open: false, course: null });
+      queryClient.invalidateQueries({ queryKey: ['grades'] });
+      toast.success('Grade updated successfully');
+      setEditDialog({ open: false, grade: null });
     },
     onError: error => {
-      toast.error(getErrorMessage(error, 'Failed to update course'));
+      toast.error(getErrorMessage(error, 'Failed to update grade'));
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => coursesApi.delete(id),
+    mutationFn: (id: string) => gradesApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      toast.success('Course deleted successfully');
-      setDeleteDialog({ open: false, course: null });
+      queryClient.invalidateQueries({ queryKey: ['grades'] });
+      toast.success('Grade deleted successfully');
+      setDeleteDialog({ open: false, grade: null });
     },
     onError: error => {
-      toast.error(getErrorMessage(error, 'Failed to delete course'));
+      toast.error(getErrorMessage(error, 'Failed to delete grade'));
     },
   });
 
-  const handleDelete = () => {
-    if (deleteDialog.course) {
-      deleteMutation.mutate(deleteDialog.course._id);
+  const getStudentName = (grade: Grade) => {
+    if (!grade?.student) return 'Unknown Student';
+    if (typeof grade.student === 'string') {
+      const student = students.find(s => s._id === grade.student);
+      return student
+        ? `${student.firstName} ${student.lastName}`
+        : 'Unknown Student';
     }
+    if (grade.student.firstName && grade.student.lastName) {
+      return `${grade.student.firstName} ${grade.student.lastName}`;
+    }
+    return 'Unknown Student';
   };
 
-  const coursesWithStudents = allCourses.filter(
-    c => Array.isArray(c.students) && c.students.length > 0
-  );
-  const totalStudents = allCourses.reduce((sum, c) => {
-    const students = Array.isArray(c.students) ? c.students.length : 0;
-    return sum + students;
-  }, 0);
-
-  const getProfessorName = (professor: Course['professor']) => {
-    if (typeof professor === 'string') return 'Unknown';
-    return `${professor.firstName} ${professor.lastName}`;
+  const getCourseName = (grade: Grade) => {
+    if (!grade?.course) return 'Unknown Course';
+    if (typeof grade.course === 'string') {
+      const course = courses.find(c => c._id === grade.course);
+      return course ? course.name : 'Unknown Course';
+    }
+    return grade.course.name || 'Unknown Course';
   };
 
-  const getStudentCount = (course: Course) => {
-    if (Array.isArray(course.students)) {
-      return course.students.length;
+  const getProfessorName = (grade: Grade) => {
+    if (!grade?.professor) return 'Unknown Professor';
+    if (typeof grade.professor === 'string') {
+      const professor = professors.find(p => p._id === grade.professor);
+      return professor
+        ? `${professor.firstName} ${professor.lastName}`
+        : 'Unknown Professor';
     }
-    return 0;
+    if (grade.professor.firstName && grade.professor.lastName) {
+      return `${grade.professor.firstName} ${grade.professor.lastName}`;
+    }
+    return 'Unknown Professor';
+  };
+
+  const getAverageGrade = () => {
+    if (allGrades.length === 0) return 0;
+    const sum = allGrades.reduce((acc, grade) => acc + grade.value, 0);
+    return sum / allGrades.length;
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Course Management</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Grades</h1>
           <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Manage courses, professors, and student enrollments
+            Manage student grades and assessments
           </p>
         </div>
         <Button
@@ -196,22 +202,22 @@ export function CoursesList() {
           className="w-full sm:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Course
+          Create Grade
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Courses
+                  Total Grades
                 </p>
-                <p className="text-2xl font-bold">{allCourses.length}</p>
+                <p className="text-2xl font-bold">{allGrades.length}</p>
               </div>
               <div className="rounded-full bg-primary/10 p-3">
-                <BookOpen className="h-5 w-5 text-primary" />
+                <Award className="h-6 w-6 text-primary" />
               </div>
             </div>
           </CardContent>
@@ -222,14 +228,14 @@ export function CoursesList() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Courses with Students
+                  Average Grade
                 </p>
                 <p className="text-2xl font-bold">
-                  {coursesWithStudents.length}
+                  {getAverageGrade().toFixed(2)}
                 </p>
               </div>
               <div className="rounded-full bg-success/10 p-3">
-                <Users className="h-5 w-5 text-success" />
+                <Award className="h-6 w-6 text-success" />
               </div>
             </div>
           </CardContent>
@@ -240,12 +246,46 @@ export function CoursesList() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Enrollments
+                  Unique Students
                 </p>
-                <p className="text-2xl font-bold">{totalStudents}</p>
+                <p className="text-2xl font-bold">
+                  {
+                    new Set(
+                      allGrades.map(g =>
+                        typeof g.student === 'string'
+                          ? g.student
+                          : g.student._id
+                      )
+                    ).size
+                  }
+                </p>
               </div>
-              <div className="rounded-full bg-secondary/10 p-3">
-                <GraduationCap className="h-5 w-5 text-secondary" />
+              <div className="rounded-full bg-warning/10 p-3">
+                <Award className="h-6 w-6 text-warning" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Unique Courses
+                </p>
+                <p className="text-2xl font-bold">
+                  {
+                    new Set(
+                      allGrades.map(g =>
+                        typeof g.course === 'string' ? g.course : g.course._id
+                      )
+                    ).size
+                  }
+                </p>
+              </div>
+              <div className="rounded-full bg-default/10 p-3">
+                <Award className="h-6 w-6 text-default" />
               </div>
             </div>
           </CardContent>
@@ -254,18 +294,37 @@ export function CoursesList() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg md:text-xl">Filters</CardTitle>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="relative">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
               <Input
-                placeholder="Search by course name..."
+                placeholder="Search by student name or email..."
                 icon={<Search className="h-4 w-4" />}
-                value={searchName}
-                onChange={e => setSearchName(e.target.value)}
+                value={searchStudent}
+                onChange={e => setSearchStudent(e.target.value)}
               />
             </div>
+
+            <Select
+              value={filterCourse || 'all'}
+              onValueChange={value =>
+                setFilterCourse(value === 'all' ? '' : value)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by course" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Courses</SelectItem>
+                {courses.map(course => (
+                  <SelectItem key={course._id} value={course._id}>
+                    {course.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             <Select
               value={filterProfessor || 'all'}
@@ -274,7 +333,7 @@ export function CoursesList() {
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="All Professors" />
+                <SelectValue placeholder="Filter by professor" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Professors</SelectItem>
@@ -291,16 +350,16 @@ export function CoursesList() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg md:text-xl">Courses</CardTitle>
+          <CardTitle>Grades</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
-              Loading courses...
+              Loading grades...
             </div>
-          ) : courses.length === 0 ? (
+          ) : filteredGrades.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No courses found
+              No grades found
             </div>
           ) : (
             <>
@@ -309,19 +368,22 @@ export function CoursesList() {
                   <thead>
                     <tr className="border-b border-border">
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Course Name
+                        Student
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                        Course
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
+                        Grade
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
                         Professor
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Students
+                        Attempt
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Price
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Created
+                        Date
                       </th>
                       <th className="text-right py-3 px-4 font-medium text-sm text-muted-foreground">
                         Actions
@@ -329,51 +391,52 @@ export function CoursesList() {
                     </tr>
                   </thead>
                   <tbody>
-                    {courses.map(course => (
+                    {filteredGrades.map(grade => (
                       <tr
-                        key={course._id}
+                        key={grade._id}
                         className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer"
                         onClick={e => {
                           if ((e.target as HTMLElement).closest('button')) {
                             return;
                           }
-                          navigate(`/app/admin/courses/${course._id}`);
+                          navigate(`/app/admin/grades/${grade._id}`);
                         }}
                         onKeyDown={e => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
                             if (!(e.target as HTMLElement).closest('button')) {
-                              navigate(`/app/admin/courses/${course._id}`);
+                              navigate(`/app/admin/grades/${grade._id}`);
                             }
                           }
                         }}
                         tabIndex={0}
                         role="button"
-                        aria-label={`View details for ${course.name}`}
+                        aria-label={`View details for ${getStudentName(grade)}`}
                       >
                         <td className="py-3 px-4">
-                          <div className="font-medium">{course.name}</div>
-                          {course.description && (
-                            <div className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                              {course.description}
-                            </div>
-                          )}
+                          <div className="font-medium">
+                            {getStudentName(grade)}
+                          </div>
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {getProfessorName(course.professor)}
+                          {getCourseName(grade)}
                         </td>
                         <td className="py-3 px-4">
-                          <Badge variant="default">
-                            {getStudentCount(course)} students
+                          <Badge
+                            variant="default"
+                            className="text-lg font-bold"
+                          >
+                            {grade.value.toFixed(2)}
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {course.price
-                            ? `$${course.price.toFixed(2)}`
-                            : 'Free'}
+                          {getProfessorName(grade)}
+                        </td>
+                        <td className="py-3 px-4 text-muted-foreground">
+                          {grade.attempt}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground text-sm">
-                          {new Date(course.createdAt).toLocaleDateString()}
+                          {new Date(grade.date).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-end gap-2">
@@ -381,7 +444,7 @@ export function CoursesList() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                setEditDialog({ open: true, course })
+                                setEditDialog({ open: true, grade })
                               }
                             >
                               <Edit className="h-4 w-4 mr-1" />
@@ -391,7 +454,7 @@ export function CoursesList() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                setDeleteDialog({ open: true, course })
+                                setDeleteDialog({ open: true, grade })
                               }
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
@@ -406,59 +469,54 @@ export function CoursesList() {
               </div>
 
               <div className="md:hidden space-y-3 p-4">
-                {courses.map(course => (
+                {filteredGrades.map(grade => (
                   <Card
-                    key={course._id}
+                    key={grade._id}
                     className="border-border cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={e => {
                       if ((e.target as HTMLElement).closest('button')) {
                         return;
                       }
-                      navigate(`/app/admin/courses/${course._id}`);
+                      navigate(`/app/admin/grades/${grade._id}`);
                     }}
                     onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         if (!(e.target as HTMLElement).closest('button')) {
-                          navigate(`/app/admin/courses/${course._id}`);
+                          navigate(`/app/admin/grades/${grade._id}`);
                         }
                       }
                     }}
                     tabIndex={0}
                     role="button"
-                    aria-label={`View details for ${course.name}`}
+                    aria-label={`View details for ${getStudentName(grade)}`}
                   >
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="font-semibold text-base">
-                            {course.name}
+                            {getStudentName(grade)}
                           </h3>
-                          {course.description && (
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {course.description}
-                            </p>
-                          )}
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {getCourseName(grade)}
+                          </p>
                         </div>
-                        <Badge variant="default">
-                          {getStudentCount(course)} students
+                        <Badge variant="default" className="text-lg font-bold">
+                          {grade.value.toFixed(2)}
                         </Badge>
                       </div>
 
                       <div className="space-y-1 text-sm">
                         <div className="text-muted-foreground">
                           <span className="font-medium">Professor:</span>{' '}
-                          {getProfessorName(course.professor)}
+                          {getProfessorName(grade)}
                         </div>
                         <div className="text-muted-foreground">
-                          <span className="font-medium">Price:</span>{' '}
-                          {course.price
-                            ? `$${course.price.toFixed(2)}`
-                            : 'Free'}
+                          <span className="font-medium">Attempt:</span>{' '}
+                          {grade.attempt}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Created:{' '}
-                          {new Date(course.createdAt).toLocaleDateString()}
+                          Date: {new Date(grade.date).toLocaleDateString()}
                         </div>
                       </div>
 
@@ -466,7 +524,7 @@ export function CoursesList() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setEditDialog({ open: true, course })}
+                          onClick={() => setEditDialog({ open: true, grade })}
                           className="flex-1 min-w-[100px]"
                         >
                           <Edit className="h-4 w-4 mr-1" />
@@ -475,9 +533,7 @@ export function CoursesList() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            setDeleteDialog({ open: true, course })
-                          }
+                          onClick={() => setDeleteDialog({ open: true, grade })}
                           className="flex-1 min-w-[100px]"
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
@@ -493,7 +549,7 @@ export function CoursesList() {
         </CardContent>
       </Card>
 
-      <CreateCourseDialog
+      <CreateGradeDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSubmit={async data => {
@@ -502,63 +558,74 @@ export function CoursesList() {
         isSubmitting={createMutation.isPending}
         error={
           createMutation.error
-            ? getErrorMessage(createMutation.error, 'Failed to create course')
+            ? getErrorMessage(createMutation.error, 'Failed to create grade')
             : null
         }
-        professors={professors}
+        students={students}
+        courses={courses}
       />
 
-      {editDialog.course && (
-        <EditCourseDialog
+      {editDialog.grade && (
+        <EditGradeDialog
           open={editDialog.open}
-          course={editDialog.course}
-          onClose={() => setEditDialog({ open: false, course: null })}
+          grade={editDialog.grade}
+          onClose={() => setEditDialog({ open: false, grade: null })}
           onSubmit={async data => {
             await updateMutation.mutateAsync({
-              id: editDialog.course!._id,
+              id: editDialog.grade!._id,
               data,
             });
           }}
           isSubmitting={updateMutation.isPending}
           error={
             updateMutation.error
-              ? getErrorMessage(updateMutation.error, 'Failed to update course')
+              ? getErrorMessage(updateMutation.error, 'Failed to update grade')
               : null
           }
-          professors={professors}
+          students={students}
+          courses={courses}
         />
       )}
 
       <Dialog
         open={deleteDialog.open}
-        onClose={() => setDeleteDialog({ open: false, course: null })}
-        title="Delete Course"
-        description={`Are you sure you want to delete ${deleteDialog.course?.name}? This action cannot be undone.`}
+        onClose={() => {
+          if (!deleteMutation.isPending) {
+            setDeleteDialog({ open: false, grade: null });
+          }
+        }}
+        title="Delete Grade"
+        description={
+          deleteDialog.grade
+            ? `Are you sure you want to delete the grade of ${
+                deleteDialog.grade.value
+              } for "${getStudentName(deleteDialog.grade)}" in "${getCourseName(
+                deleteDialog.grade
+              )}"? This action cannot be undone.`
+            : 'Are you sure you want to delete this grade? This action cannot be undone.'
+        }
+        maxWidth="md"
       >
         <DialogContent>
-          <Alert variant="destructive">
-            <div className="space-y-1">
-              <p className="font-medium">Warning</p>
-              <p className="text-sm">
-                Deleting this course will permanently remove it and all
-                associated data.
-              </p>
-            </div>
-          </Alert>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setDeleteDialog({ open: false, course: null })}
+              onClick={() => setDeleteDialog({ open: false, grade: null })}
+              disabled={deleteMutation.isPending}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
-              onClick={handleDelete}
+              onClick={() => {
+                if (deleteDialog.grade) {
+                  deleteMutation.mutate(deleteDialog.grade._id);
+                }
+              }}
               disabled={deleteMutation.isPending}
               loading={deleteMutation.isPending}
             >
-              Delete Course
+              Delete Grade
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -567,29 +634,35 @@ export function CoursesList() {
   );
 }
 
-interface CreateCourseDialogProps {
+interface CreateGradeDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: CourseFormData) => Promise<void>;
+  onSubmit: (data: GradeFormData) => Promise<void>;
   isSubmitting: boolean;
   error: string | null;
-  professors: Array<{
+  students: Array<{
     _id: string;
     firstName: string;
     lastName: string;
     email: string;
   }>;
+  courses: Array<{
+    _id: string;
+    name: string;
+    description?: string;
+  }>;
 }
 
-function CreateCourseDialog({
+function CreateGradeDialog({
   open,
   onClose,
   onSubmit,
   isSubmitting,
   error,
-  professors,
-}: CreateCourseDialogProps) {
-  const form = useCourseForm();
+  students,
+  courses,
+}: CreateGradeDialogProps) {
+  const form = useGradeForm();
 
   const handleSubmit = async () => {
     const isValid = await form.trigger();
@@ -612,70 +685,76 @@ function CreateCourseDialog({
     <FormDialog
       open={open}
       onClose={handleClose}
-      title="Create Course"
-      description="Fill in the information below to create a new course."
+      title="Create Grade"
+      description="Fill in the information below to create a new grade."
       onSubmit={handleSubmit}
-      submitLabel="Create Course"
+      submitLabel="Create Grade"
       cancelLabel="Cancel"
       isSubmitting={isSubmitting}
       maxWidth="lg"
     >
-      <CourseForm
-        isSubmitting={isSubmitting}
-        error={error}
-        professors={professors}
+      <GradeForm
+        students={students}
+        courses={courses}
         register={form.register}
         control={form.control}
         errors={form.formState.errors}
+        isSubmitting={isSubmitting}
+        error={error}
       />
     </FormDialog>
   );
 }
 
-interface EditCourseDialogProps {
+interface EditGradeDialogProps {
   open: boolean;
-  course: Course;
+  grade: Grade;
   onClose: () => void;
-  onSubmit: (data: CourseFormData) => Promise<void>;
+  onSubmit: (data: GradeFormData) => Promise<void>;
   isSubmitting: boolean;
   error: string | null;
-  professors: Array<{
+  students: Array<{
     _id: string;
     firstName: string;
     lastName: string;
     email: string;
   }>;
+  courses: Array<{
+    _id: string;
+    name: string;
+    description?: string;
+  }>;
 }
 
-function EditCourseDialog({
+function EditGradeDialog({
   open,
-  course,
   onClose,
   onSubmit,
+  grade,
   isSubmitting,
   error,
-  professors,
-}: EditCourseDialogProps) {
-  const form = useCourseForm(course);
+  students,
+  courses,
+}: EditGradeDialogProps) {
+  const form = useGradeForm(grade);
 
   useEffect(() => {
-    if (open && course) {
+    if (open && grade) {
       form.reset({
-        name: course.name || '',
-        description: course.description || '',
-        professor:
-          typeof course.professor === 'string'
-            ? course.professor
-            : course.professor?._id || '',
-        price: course.price || '',
-        schedule: course.schedule || {
-          days: [],
-          startTime: '',
-          endTime: '',
-        },
+        student:
+          typeof grade.student === 'string'
+            ? grade.student
+            : (grade.student as any)?._id || '',
+        course:
+          typeof grade.course === 'string'
+            ? grade.course
+            : (grade.course as any)?._id || '',
+        value: grade.value || 0,
+        comment: grade.comment || '',
+        attempt: grade.attempt || 1,
       });
     }
-  }, [open, course, form]);
+  }, [open, grade, form]);
 
   const handleSubmit = async () => {
     const isValid = await form.trigger();
@@ -696,22 +775,23 @@ function EditCourseDialog({
     <FormDialog
       open={open}
       onClose={handleClose}
-      title="Edit Course"
-      description="Update the course information."
+      title="Edit Grade"
+      description="Update the grade value and comment. Student and course cannot be changed."
       onSubmit={handleSubmit}
-      submitLabel="Update Course"
+      submitLabel="Update Grade"
       cancelLabel="Cancel"
       isSubmitting={isSubmitting}
       maxWidth="lg"
     >
-      <CourseForm
-        course={course}
-        isSubmitting={isSubmitting}
-        error={error}
-        professors={professors}
+      <GradeForm
+        students={students}
+        courses={courses}
         register={form.register}
         control={form.control}
         errors={form.formState.errors}
+        isSubmitting={isSubmitting}
+        error={error}
+        allowEditStudentCourse={false}
       />
     </FormDialog>
   );

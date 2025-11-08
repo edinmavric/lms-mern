@@ -4,9 +4,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
+import { gradesApi } from '../../lib/api/grades';
 import { usersApi } from '../../lib/api/users';
+import { coursesApi } from '../../lib/api/courses';
 import { getErrorMessage } from '../../lib/utils';
-import { UserForm, useUserForm, type UserFormData } from './UserForm';
+import { GradeForm, useGradeForm, type GradeFormData } from './GradeForm';
 import {
   Card,
   CardContent,
@@ -17,60 +19,70 @@ import {
   Alert,
 } from '../../components/ui';
 
-export function UserEdit() {
+export function GradeEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
-  const { data: user, isLoading } = useQuery({
-    queryKey: ['user', id],
-    queryFn: () => usersApi.getById(id!),
+  const { data: grade, isLoading } = useQuery({
+    queryKey: ['grade', id],
+    queryFn: () => gradesApi.getById(id!),
     enabled: !!id,
   });
 
-  const form = useUserForm(user);
+  const { data: students = [] } = useQuery({
+    queryKey: ['users', 'students'],
+    queryFn: () => usersApi.list({ role: 'student', status: 'active' }),
+  });
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses', 'all'],
+    queryFn: () => coursesApi.list({}),
+  });
+
+  const form = useGradeForm(grade);
 
   useEffect(() => {
-    if (user) {
+    if (grade) {
       form.reset({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        role: user.role || 'student',
-        status: user.status || 'active',
-        password: '',
+        student:
+          typeof grade.student === 'string'
+            ? grade.student
+            : (grade.student as any)?._id || '',
+        course:
+          typeof grade.course === 'string'
+            ? grade.course
+            : (grade.course as any)?._id || '',
+        value: grade.value || 0,
+        comment: grade.comment || '',
+        attempt: grade.attempt || 1,
       });
     }
-  }, [user, form]);
+  }, [grade, form]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: UserFormData) => {
-      const updateData: any = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: data.role,
-        status: data.status,
+    mutationFn: (data: GradeFormData) => {
+      const updateData = {
+        value: data.value,
+        comment: data.comment,
       };
-      if (data.password && data.password.trim()) {
-        updateData.password = data.password;
-      }
-      return usersApi.update(id!, updateData);
+      return gradesApi.update(id!, updateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['user', id] });
-      toast.success('User updated successfully');
-      navigate(`/app/admin/users/${id}`);
+      queryClient.invalidateQueries({ queryKey: ['grades'] });
+      queryClient.invalidateQueries({ queryKey: ['grade', id] });
+      toast.success('Grade updated successfully');
+      navigate(`/app/admin/grades/${id}`);
     },
-    onError: (error) => {
-      const errorMessage = getErrorMessage(error, 'Failed to update user');
+    onError: error => {
+      const errorMessage = getErrorMessage(error, 'Failed to update grade');
       setError(errorMessage);
       toast.error(errorMessage);
     },
   });
 
-  const handleSubmit = async (data: UserFormData) => {
+  const handleSubmit = async (data: GradeFormData) => {
     setError(null);
     await updateMutation.mutateAsync(data);
   };
@@ -83,19 +95,19 @@ export function UserEdit() {
     );
   }
 
-  if (!user) {
+  if (!grade) {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
           <div className="space-y-1">
-            <p className="font-medium">User not found</p>
+            <p className="font-medium">Grade not found</p>
             <p className="text-sm">
-              The user you're looking for doesn't exist or has been deleted.
+              The grade you're looking for doesn't exist or has been deleted.
             </p>
           </div>
         </Alert>
-        <Button onClick={() => navigate('/app/admin/users')}>
-          Back to Users
+        <Button onClick={() => navigate('/app/admin/grades')}>
+          Back to Grades
         </Button>
       </div>
     );
@@ -107,23 +119,25 @@ export function UserEdit() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(`/app/admin/users/${id}`)}
+          onClick={() => navigate(`/app/admin/grades/${id}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Edit User</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Edit Grade</h1>
           <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Update user information and settings
+            Update grade information and value
           </p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>User Details</CardTitle>
+          <CardTitle>Grade Details</CardTitle>
           <CardDescription>
-            Update the user's information. Email cannot be changed.
+            Update the grade value and comment. Student and course cannot be
+            changed after creation. Changing the grade value will create a
+            history entry.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -132,19 +146,21 @@ export function UserEdit() {
             className="space-y-4"
             noValidate
           >
-            <UserForm
-              user={user}
+            <GradeForm
               isSubmitting={updateMutation.isPending}
               error={error}
+              students={students}
+              courses={courses}
               register={form.register}
               control={form.control}
               errors={form.formState.errors}
+              allowEditStudentCourse={false}
             />
             <div className="flex justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate(`/app/admin/users/${id}`)}
+                onClick={() => navigate(`/app/admin/grades/${id}`)}
                 disabled={updateMutation.isPending}
               >
                 Cancel
@@ -154,7 +170,7 @@ export function UserEdit() {
                 disabled={updateMutation.isPending}
                 loading={updateMutation.isPending}
               >
-                {updateMutation.isPending ? 'Updating...' : 'Update User'}
+                {updateMutation.isPending ? 'Updating...' : 'Update Grade'}
               </Button>
             </div>
           </form>

@@ -96,7 +96,6 @@ export function UserDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button
@@ -127,9 +126,7 @@ export function UserDetail() {
         </div>
       </div>
 
-      {/* User Info Cards */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Personal Information */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -162,7 +159,6 @@ export function UserDetail() {
           </CardContent>
         </Card>
 
-        {/* Account Status */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -204,7 +200,6 @@ export function UserDetail() {
         </Card>
       </div>
 
-      {/* Account Details */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

@@ -1,5 +1,13 @@
 import { useLocation } from 'react-router-dom';
-import { Home as HomeIcon, Users, BookOpen, X } from 'lucide-react';
+import {
+  Home as HomeIcon,
+  Users,
+  BookOpen,
+  X,
+  FileText,
+  GraduationCap,
+  Award,
+} from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link } from './ui/Link';
 import { Button } from './ui/Button';
@@ -40,6 +48,24 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
       label: 'Courses',
       href: '/app/admin/courses',
       icon: BookOpen,
+      adminOnly: false,
+    },
+    {
+      label: 'Lessons',
+      href: '/app/admin/lessons',
+      icon: FileText,
+      adminOnly: false,
+    },
+    {
+      label: 'Enrollments',
+      href: '/app/admin/enrollments',
+      icon: GraduationCap,
+      adminOnly: false,
+    },
+    {
+      label: 'Grades',
+      href: '/app/admin/grades',
+      icon: Award,
       adminOnly: false,
     },
   ].filter(item => !item.adminOnly || isAdmin);

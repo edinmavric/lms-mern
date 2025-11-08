@@ -7,16 +7,14 @@ import {
   Edit,
   Trash2,
   Plus,
-  Users,
-  GraduationCap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { lessonsApi } from '../../lib/api/lessons';
 import { coursesApi } from '../../lib/api/courses';
-import { usersApi } from '../../lib/api/users';
 import { getErrorMessage } from '../../lib/utils';
-import type { Course } from '../../types';
-import { CourseForm, useCourseForm, type CourseFormData } from './CourseForm';
+import type { Lesson } from '../../types';
+import { LessonForm, useLessonForm, type LessonFormData } from './LessonForm';
 import {
   Button,
   Card,
@@ -29,166 +27,128 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-  Badge,
   Dialog,
   DialogContent,
   DialogFooter,
-  Alert,
   FormDialog,
 } from '../../components/ui';
 
-export function CoursesList() {
+export function LessonsList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [searchName, setSearchName] = useState('');
-  const [filterProfessor, setFilterProfessor] = useState<string>('');
+  const [searchTitle, setSearchTitle] = useState('');
+  const [filterCourse, setFilterCourse] = useState<string>('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
-    course: Course | null;
-  }>({ open: false, course: null });
+    lesson: Lesson | null;
+  }>({ open: false, lesson: null });
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
-    course: Course | null;
-  }>({ open: false, course: null });
+    lesson: Lesson | null;
+  }>({ open: false, lesson: null });
 
-  const { data: professors = [] } = useQuery({
-    queryKey: ['users', 'professors'],
-    queryFn: () => usersApi.list({ role: 'professor', status: 'active' }),
-  });
-
-  const { data: courses = [], isLoading } = useQuery({
-    queryKey: [
-      'courses',
-      {
-        professor: filterProfessor || undefined,
-        name: searchName || undefined,
-      },
-    ],
-    queryFn: () =>
-      coursesApi.list({
-        professor: filterProfessor || undefined,
-        name: searchName || undefined,
-      }),
-  });
-
-  const { data: allCourses = [] } = useQuery({
+  const { data: courses = [] } = useQuery({
     queryKey: ['courses', 'all'],
     queryFn: () => coursesApi.list({}),
   });
 
+  const { data: lessons = [], isLoading } = useQuery({
+    queryKey: [
+      'lessons',
+      {
+        course: filterCourse || undefined,
+        title: searchTitle || undefined,
+      },
+    ],
+    queryFn: () =>
+      lessonsApi.list({
+        course: filterCourse || undefined,
+      }),
+  });
+
+  const { data: allLessons = [] } = useQuery({
+    queryKey: ['lessons', 'all'],
+    queryFn: () => lessonsApi.list({}),
+  });
+
+  const filteredLessons = searchTitle
+    ? lessons.filter(lesson =>
+        lesson.title.toLowerCase().includes(searchTitle.toLowerCase())
+      )
+    : lessons;
+
   const createMutation = useMutation({
-    mutationFn: (data: CourseFormData) => {
-      return coursesApi.create({
-        name: data.name,
-        description: data.description,
-        professor: data.professor,
-        price:
-          data.price && data.price !== '' && typeof data.price === 'number'
-            ? data.price
-            : undefined,
-        schedule:
-          data.schedule &&
-          (data.schedule.days ||
-            data.schedule.startTime ||
-            data.schedule.endTime)
-            ? {
-                days: data.schedule.days || [],
-                startTime: data.schedule.startTime || '',
-                endTime: data.schedule.endTime || '',
-              }
-            : undefined,
+    mutationFn: (data: LessonFormData) => {
+      return lessonsApi.create({
+        course: data.course,
+        title: data.title,
+        content: data.content,
+        materials: data.materials,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      toast.success('Course created successfully');
+      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      toast.success('Lesson created successfully');
       setCreateDialogOpen(false);
     },
     onError: error => {
-      toast.error(getErrorMessage(error, 'Failed to create course'));
+      toast.error(getErrorMessage(error, 'Failed to create lesson'));
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: CourseFormData }) => {
-      const updateData: any = {
-        name: data.name,
-        description: data.description,
-        professor: data.professor,
-        price:
-          data.price && data.price !== '' && typeof data.price === 'number'
-            ? data.price
-            : undefined,
-        schedule:
-          data.schedule &&
-          (data.schedule.days ||
-            data.schedule.startTime ||
-            data.schedule.endTime)
-            ? {
-                days: data.schedule.days || [],
-                startTime: data.schedule.startTime || '',
-                endTime: data.schedule.endTime || '',
-              }
-            : undefined,
+    mutationFn: ({ id, data }: { id: string; data: LessonFormData }) => {
+      const updateData = {
+        title: data.title,
+        content: data.content,
+        materials: data.materials,
       };
-      return coursesApi.update(id, updateData);
+      return lessonsApi.update(id, updateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      toast.success('Course updated successfully');
-      setEditDialog({ open: false, course: null });
+      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      toast.success('Lesson updated successfully');
+      setEditDialog({ open: false, lesson: null });
     },
     onError: error => {
-      toast.error(getErrorMessage(error, 'Failed to update course'));
+      toast.error(getErrorMessage(error, 'Failed to update lesson'));
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => coursesApi.delete(id),
+    mutationFn: (id: string) => lessonsApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      toast.success('Course deleted successfully');
-      setDeleteDialog({ open: false, course: null });
+      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      toast.success('Lesson deleted successfully');
+      setDeleteDialog({ open: false, lesson: null });
     },
     onError: error => {
-      toast.error(getErrorMessage(error, 'Failed to delete course'));
+      toast.error(getErrorMessage(error, 'Failed to delete lesson'));
     },
   });
 
-  const handleDelete = () => {
-    if (deleteDialog.course) {
-      deleteMutation.mutate(deleteDialog.course._id);
+  const getCourseName = (courseId: string) => {
+    const course = courses.find(c => c._id === courseId);
+    if (typeof course === 'object' && course) {
+      return course.name;
     }
-  };
-
-  const coursesWithStudents = allCourses.filter(
-    c => Array.isArray(c.students) && c.students.length > 0
-  );
-  const totalStudents = allCourses.reduce((sum, c) => {
-    const students = Array.isArray(c.students) ? c.students.length : 0;
-    return sum + students;
-  }, 0);
-
-  const getProfessorName = (professor: Course['professor']) => {
-    if (typeof professor === 'string') return 'Unknown';
-    return `${professor.firstName} ${professor.lastName}`;
-  };
-
-  const getStudentCount = (course: Course) => {
-    if (Array.isArray(course.students)) {
-      return course.students.length;
+    const lesson = allLessons.find(l =>
+      typeof l.course === 'object' ? l.course._id === courseId : l.course === courseId
+    );
+    if (lesson && typeof lesson.course === 'object') {
+      return lesson.course.name || 'Unknown Course';
     }
-    return 0;
+    return 'Unknown Course';
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Course Management</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Lessons</h1>
           <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Manage courses, professors, and student enrollments
+            Manage lessons and course content
           </p>
         </div>
         <Button
@@ -196,7 +156,7 @@ export function CoursesList() {
           className="w-full sm:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Course
+          Create Lesson
         </Button>
       </div>
 
@@ -206,12 +166,12 @@ export function CoursesList() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Courses
+                  Total Lessons
                 </p>
-                <p className="text-2xl font-bold">{allCourses.length}</p>
+                <p className="text-2xl font-bold">{allLessons.length}</p>
               </div>
               <div className="rounded-full bg-primary/10 p-3">
-                <BookOpen className="h-5 w-5 text-primary" />
+                <BookOpen className="h-6 w-6 text-primary" />
               </div>
             </div>
           </CardContent>
@@ -222,14 +182,16 @@ export function CoursesList() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Courses with Students
+                  Courses with Lessons
                 </p>
                 <p className="text-2xl font-bold">
-                  {coursesWithStudents.length}
+                  {new Set(allLessons.map(l => 
+                    typeof l.course === 'string' ? l.course : l.course._id
+                  )).size}
                 </p>
               </div>
               <div className="rounded-full bg-success/10 p-3">
-                <Users className="h-5 w-5 text-success" />
+                <BookOpen className="h-6 w-6 text-success" />
               </div>
             </div>
           </CardContent>
@@ -240,12 +202,16 @@ export function CoursesList() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Enrollments
+                  Lessons with Materials
                 </p>
-                <p className="text-2xl font-bold">{totalStudents}</p>
+                <p className="text-2xl font-bold">
+                  {allLessons.filter(l => 
+                    Array.isArray(l.materials) && l.materials.length > 0
+                  ).length}
+                </p>
               </div>
-              <div className="rounded-full bg-secondary/10 p-3">
-                <GraduationCap className="h-5 w-5 text-secondary" />
+              <div className="rounded-full bg-warning/10 p-3">
+                <BookOpen className="h-6 w-6 text-warning" />
               </div>
             </div>
           </CardContent>
@@ -254,33 +220,31 @@ export function CoursesList() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg md:text-xl">Filters</CardTitle>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="relative">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
               <Input
-                placeholder="Search by course name..."
+                placeholder="Search by title..."
                 icon={<Search className="h-4 w-4" />}
-                value={searchName}
-                onChange={e => setSearchName(e.target.value)}
+                value={searchTitle}
+                onChange={e => setSearchTitle(e.target.value)}
               />
             </div>
 
             <Select
-              value={filterProfessor || 'all'}
-              onValueChange={value =>
-                setFilterProfessor(value === 'all' ? '' : value)
-              }
+              value={filterCourse || 'all'}
+              onValueChange={value => setFilterCourse(value === 'all' ? '' : value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="All Professors" />
+                <SelectValue placeholder="Filter by course" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Professors</SelectItem>
-                {professors.map(prof => (
-                  <SelectItem key={prof._id} value={prof._id}>
-                    {prof.firstName} {prof.lastName}
+                <SelectItem value="all">All Courses</SelectItem>
+                {courses.map(course => (
+                  <SelectItem key={course._id} value={course._id}>
+                    {course.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -291,16 +255,16 @@ export function CoursesList() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg md:text-xl">Courses</CardTitle>
+          <CardTitle>Lessons</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
-              Loading courses...
+              Loading lessons...
             </div>
-          ) : courses.length === 0 ? (
+          ) : filteredLessons.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No courses found
+              No lessons found
             </div>
           ) : (
             <>
@@ -309,16 +273,13 @@ export function CoursesList() {
                   <thead>
                     <tr className="border-b border-border">
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Course Name
+                        Title
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Professor
+                        Course
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Students
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Price
+                        Materials
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
                         Created
@@ -329,60 +290,54 @@ export function CoursesList() {
                     </tr>
                   </thead>
                   <tbody>
-                    {courses.map(course => (
+                    {filteredLessons.map(lesson => (
                       <tr
-                        key={course._id}
+                        key={lesson._id}
                         className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer"
                         onClick={e => {
                           if ((e.target as HTMLElement).closest('button')) {
                             return;
                           }
-                          navigate(`/app/admin/courses/${course._id}`);
+                          navigate(`/app/admin/lessons/${lesson._id}`);
                         }}
                         onKeyDown={e => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
                             if (!(e.target as HTMLElement).closest('button')) {
-                              navigate(`/app/admin/courses/${course._id}`);
+                              navigate(`/app/admin/lessons/${lesson._id}`);
                             }
                           }
                         }}
                         tabIndex={0}
                         role="button"
-                        aria-label={`View details for ${course.name}`}
+                        aria-label={`View details for ${lesson.title}`}
                       >
                         <td className="py-3 px-4">
-                          <div className="font-medium">{course.name}</div>
-                          {course.description && (
-                            <div className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                              {course.description}
-                            </div>
-                          )}
+                          <div className="font-medium">{lesson.title}</div>
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {getProfessorName(course.professor)}
-                        </td>
-                        <td className="py-3 px-4">
-                          <Badge variant="default">
-                            {getStudentCount(course)} students
-                          </Badge>
+                          {typeof lesson.course === 'string'
+                            ? getCourseName(lesson.course)
+                            : lesson.course.name || 'Unknown'}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {course.price
-                            ? `$${course.price.toFixed(2)}`
-                            : 'Free'}
+                          {Array.isArray(lesson.materials)
+                            ? lesson.materials.length
+                            : 0}{' '}
+                          {Array.isArray(lesson.materials) &&
+                          lesson.materials.length === 1
+                            ? 'material'
+                            : 'materials'}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground text-sm">
-                          {new Date(course.createdAt).toLocaleDateString()}
+                          {new Date(lesson.createdAt).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() =>
-                                setEditDialog({ open: true, course })
-                              }
+                              onClick={() => setEditDialog({ open: true, lesson })}
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
@@ -391,7 +346,7 @@ export function CoursesList() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                setDeleteDialog({ open: true, course })
+                                setDeleteDialog({ open: true, lesson })
                               }
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
@@ -406,59 +361,52 @@ export function CoursesList() {
               </div>
 
               <div className="md:hidden space-y-3 p-4">
-                {courses.map(course => (
+                {filteredLessons.map(lesson => (
                   <Card
-                    key={course._id}
+                    key={lesson._id}
                     className="border-border cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={e => {
                       if ((e.target as HTMLElement).closest('button')) {
                         return;
                       }
-                      navigate(`/app/admin/courses/${course._id}`);
+                      navigate(`/app/admin/lessons/${lesson._id}`);
                     }}
                     onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         if (!(e.target as HTMLElement).closest('button')) {
-                          navigate(`/app/admin/courses/${course._id}`);
+                          navigate(`/app/admin/lessons/${lesson._id}`);
                         }
                       }
                     }}
                     tabIndex={0}
                     role="button"
-                    aria-label={`View details for ${course.name}`}
+                    aria-label={`View details for ${lesson.title}`}
                   >
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="font-semibold text-base">
-                            {course.name}
+                            {lesson.title}
                           </h3>
-                          {course.description && (
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {course.description}
-                            </p>
-                          )}
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {typeof lesson.course === 'string'
+                              ? getCourseName(lesson.course)
+                              : lesson.course.name || 'Unknown'}
+                          </p>
                         </div>
-                        <Badge variant="default">
-                          {getStudentCount(course)} students
-                        </Badge>
                       </div>
 
                       <div className="space-y-1 text-sm">
                         <div className="text-muted-foreground">
-                          <span className="font-medium">Professor:</span>{' '}
-                          {getProfessorName(course.professor)}
-                        </div>
-                        <div className="text-muted-foreground">
-                          <span className="font-medium">Price:</span>{' '}
-                          {course.price
-                            ? `$${course.price.toFixed(2)}`
-                            : 'Free'}
+                          <span className="font-medium">Materials:</span>{' '}
+                          {Array.isArray(lesson.materials)
+                            ? lesson.materials.length
+                            : 0}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           Created:{' '}
-                          {new Date(course.createdAt).toLocaleDateString()}
+                          {new Date(lesson.createdAt).toLocaleDateString()}
                         </div>
                       </div>
 
@@ -466,7 +414,7 @@ export function CoursesList() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setEditDialog({ open: true, course })}
+                          onClick={() => setEditDialog({ open: true, lesson })}
                           className="flex-1 min-w-[100px]"
                         >
                           <Edit className="h-4 w-4 mr-1" />
@@ -476,7 +424,7 @@ export function CoursesList() {
                           variant="outline"
                           size="sm"
                           onClick={() =>
-                            setDeleteDialog({ open: true, course })
+                            setDeleteDialog({ open: true, lesson })
                           }
                           className="flex-1 min-w-[100px]"
                         >
@@ -493,7 +441,7 @@ export function CoursesList() {
         </CardContent>
       </Card>
 
-      <CreateCourseDialog
+      <CreateLessonDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSubmit={async data => {
@@ -502,63 +450,64 @@ export function CoursesList() {
         isSubmitting={createMutation.isPending}
         error={
           createMutation.error
-            ? getErrorMessage(createMutation.error, 'Failed to create course')
+            ? getErrorMessage(createMutation.error, 'Failed to create lesson')
             : null
         }
-        professors={professors}
+        courses={courses}
       />
 
-      {editDialog.course && (
-        <EditCourseDialog
+      {editDialog.lesson && (
+        <EditLessonDialog
           open={editDialog.open}
-          course={editDialog.course}
-          onClose={() => setEditDialog({ open: false, course: null })}
+          lesson={editDialog.lesson}
+          onClose={() => setEditDialog({ open: false, lesson: null })}
           onSubmit={async data => {
             await updateMutation.mutateAsync({
-              id: editDialog.course!._id,
+              id: editDialog.lesson!._id,
               data,
             });
           }}
           isSubmitting={updateMutation.isPending}
           error={
             updateMutation.error
-              ? getErrorMessage(updateMutation.error, 'Failed to update course')
+              ? getErrorMessage(updateMutation.error, 'Failed to update lesson')
               : null
           }
-          professors={professors}
+          courses={courses}
         />
       )}
 
       <Dialog
         open={deleteDialog.open}
-        onClose={() => setDeleteDialog({ open: false, course: null })}
-        title="Delete Course"
-        description={`Are you sure you want to delete ${deleteDialog.course?.name}? This action cannot be undone.`}
+        onClose={() => {
+          if (!deleteMutation.isPending) {
+            setDeleteDialog({ open: false, lesson: null });
+          }
+        }}
+        title="Delete Lesson"
+        description={`Are you sure you want to delete "${deleteDialog.lesson?.title}"? This action cannot be undone.`}
+        maxWidth="md"
       >
         <DialogContent>
-          <Alert variant="destructive">
-            <div className="space-y-1">
-              <p className="font-medium">Warning</p>
-              <p className="text-sm">
-                Deleting this course will permanently remove it and all
-                associated data.
-              </p>
-            </div>
-          </Alert>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setDeleteDialog({ open: false, course: null })}
+              onClick={() => setDeleteDialog({ open: false, lesson: null })}
+              disabled={deleteMutation.isPending}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
-              onClick={handleDelete}
+              onClick={() => {
+                if (deleteDialog.lesson) {
+                  deleteMutation.mutate(deleteDialog.lesson._id);
+                }
+              }}
               disabled={deleteMutation.isPending}
               loading={deleteMutation.isPending}
             >
-              Delete Course
+              Delete Lesson
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -567,29 +516,28 @@ export function CoursesList() {
   );
 }
 
-interface CreateCourseDialogProps {
+interface CreateLessonDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: CourseFormData) => Promise<void>;
+  onSubmit: (data: LessonFormData) => Promise<void>;
   isSubmitting: boolean;
   error: string | null;
-  professors: Array<{
+  courses: Array<{
     _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
+    name: string;
+    description?: string;
   }>;
 }
 
-function CreateCourseDialog({
+function CreateLessonDialog({
   open,
   onClose,
   onSubmit,
   isSubmitting,
   error,
-  professors,
-}: CreateCourseDialogProps) {
-  const form = useCourseForm();
+  courses,
+}: CreateLessonDialogProps) {
+  const form = useLessonForm();
 
   const handleSubmit = async () => {
     const isValid = await form.trigger();
@@ -612,70 +560,64 @@ function CreateCourseDialog({
     <FormDialog
       open={open}
       onClose={handleClose}
-      title="Create Course"
-      description="Fill in the information below to create a new course."
+      title="Create Lesson"
+      description="Fill in the information below to create a new lesson."
       onSubmit={handleSubmit}
-      submitLabel="Create Course"
+      submitLabel="Create Lesson"
       cancelLabel="Cancel"
       isSubmitting={isSubmitting}
       maxWidth="lg"
     >
-      <CourseForm
-        isSubmitting={isSubmitting}
-        error={error}
-        professors={professors}
+      <LessonForm
+        courses={courses}
         register={form.register}
         control={form.control}
         errors={form.formState.errors}
+        isSubmitting={isSubmitting}
+        error={error}
       />
     </FormDialog>
   );
 }
 
-interface EditCourseDialogProps {
+interface EditLessonDialogProps {
   open: boolean;
-  course: Course;
+  lesson: Lesson;
   onClose: () => void;
-  onSubmit: (data: CourseFormData) => Promise<void>;
+  onSubmit: (data: LessonFormData) => Promise<void>;
   isSubmitting: boolean;
   error: string | null;
-  professors: Array<{
+  courses: Array<{
     _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
+    name: string;
+    description?: string;
   }>;
 }
 
-function EditCourseDialog({
+function EditLessonDialog({
   open,
-  course,
   onClose,
   onSubmit,
+  lesson,
   isSubmitting,
   error,
-  professors,
-}: EditCourseDialogProps) {
-  const form = useCourseForm(course);
+  courses,
+}: EditLessonDialogProps) {
+  const form = useLessonForm(lesson);
 
   useEffect(() => {
-    if (open && course) {
+    if (open && lesson) {
       form.reset({
-        name: course.name || '',
-        description: course.description || '',
-        professor:
-          typeof course.professor === 'string'
-            ? course.professor
-            : course.professor?._id || '',
-        price: course.price || '',
-        schedule: course.schedule || {
-          days: [],
-          startTime: '',
-          endTime: '',
-        },
+        course:
+          typeof lesson.course === 'string'
+            ? lesson.course
+            : (lesson.course as any)?._id || '',
+        title: lesson.title || '',
+        content: lesson.content || '',
+        materials: lesson.materials || [],
       });
     }
-  }, [open, course, form]);
+  }, [open, lesson, form]);
 
   const handleSubmit = async () => {
     const isValid = await form.trigger();
@@ -696,23 +638,23 @@ function EditCourseDialog({
     <FormDialog
       open={open}
       onClose={handleClose}
-      title="Edit Course"
-      description="Update the course information."
+      title="Edit Lesson"
+      description="Update the lesson's information."
       onSubmit={handleSubmit}
-      submitLabel="Update Course"
+      submitLabel="Update Lesson"
       cancelLabel="Cancel"
       isSubmitting={isSubmitting}
       maxWidth="lg"
     >
-      <CourseForm
-        course={course}
-        isSubmitting={isSubmitting}
-        error={error}
-        professors={professors}
+      <LessonForm
+        courses={courses}
         register={form.register}
         control={form.control}
         errors={form.formState.errors}
+        isSubmitting={isSubmitting}
+        error={error}
       />
     </FormDialog>
   );
 }
+

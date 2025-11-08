@@ -345,7 +345,6 @@ export function UsersList() {
                         key={user._id}
                         className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer"
                         onClick={(e) => {
-                          // Don't navigate if clicking on action buttons
                           if ((e.target as HTMLElement).closest('button')) {
                             return;
                           }
@@ -429,7 +428,6 @@ export function UsersList() {
                     key={user._id} 
                     className="border-border cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={(e) => {
-                      // Don't navigate if clicking on action buttons
                       if ((e.target as HTMLElement).closest('button')) {
                         return;
                       }
@@ -512,7 +510,6 @@ export function UsersList() {
         </CardContent>
       </Card>
 
-      {/* Create User Dialog */}
       <CreateUserDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
@@ -523,7 +520,6 @@ export function UsersList() {
         error={createMutation.error ? getErrorMessage(createMutation.error, 'Failed to create user') : null}
       />
 
-      {/* Edit User Dialog */}
       {editDialog.user && (
         <EditUserDialog
           open={editDialog.open}
@@ -537,7 +533,6 @@ export function UsersList() {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, user: null })}
@@ -576,7 +571,6 @@ export function UsersList() {
   );
 }
 
-// Create User Dialog Component
 interface CreateUserDialogProps {
   open: boolean;
   onClose: () => void;
@@ -601,7 +595,6 @@ function CreateUserDialog({
         await onSubmit(form.getValues());
         form.reset();
       } catch (err) {
-        // Error is handled by parent component
       }
     }
   };
@@ -636,7 +629,6 @@ function CreateUserDialog({
   );
 }
 
-// Edit User Dialog Component
 interface EditUserDialogProps {
   open: boolean;
   user: User;
@@ -656,7 +648,6 @@ function EditUserDialog({
 }: EditUserDialogProps) {
   const form = useUserForm(user);
 
-  // Reset form when user changes
   useEffect(() => {
     if (open && user) {
       form.reset({
@@ -676,7 +667,6 @@ function EditUserDialog({
       try {
         await onSubmit(form.getValues());
       } catch (err) {
-        // Error is handled by parent component
       }
     }
   };

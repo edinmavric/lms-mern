@@ -22,8 +22,19 @@ export type { FormFieldProps } from './FormField';
 export { Textarea } from './Textarea';
 export type { TextareaProps } from './Textarea';
 
-export { Select } from './Select';
-export type { SelectProps } from './Select';
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+} from './Select';
+export type { SelectTriggerProps } from './Select';
 
 export { Link } from './Link';
 export type { LinkProps } from './Link';
@@ -40,3 +51,9 @@ export type {
   DialogContentProps,
   DialogFooterProps,
 } from './Dialog';
+
+export { FormDialog } from './FormDialog';
+export type { FormDialogProps } from './FormDialog';
+
+export { Sheet, SheetContent } from './Sheet';
+export type { SheetProps, SheetContentProps } from './Sheet';

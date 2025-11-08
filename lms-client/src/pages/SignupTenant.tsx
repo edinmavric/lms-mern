@@ -28,6 +28,10 @@ import {
   FormField,
   Input,
   Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
   Alert,
   Badge,
 } from '../components/ui';
@@ -388,14 +392,28 @@ export function SignupTenant() {
                       required
                       error={errors.currency?.message}
                     >
-                      <Select {...register('currency')}>
-                        <option value="EUR">EUR · Euro</option>
-                        <option value="USD">USD · US Dollar</option>
-                        <option value="GBP">GBP · British Pound</option>
-                        <option value="BAM">
-                          BAM · Bosnia Convertible Mark
-                        </option>
-                      </Select>
+                      <Controller
+                        name="currency"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger error={!!errors.currency}>
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="EUR">EUR · Euro</SelectItem>
+                              <SelectItem value="USD">USD · US Dollar</SelectItem>
+                              <SelectItem value="GBP">GBP · British Pound</SelectItem>
+                              <SelectItem value="BAM">
+                                BAM · Bosnia Convertible Mark
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </FormField>
 
                     <FormField
@@ -403,12 +421,26 @@ export function SignupTenant() {
                       required
                       error={errors.locale?.message}
                     >
-                      <Select {...register('locale')}>
-                        <option value="en">English</option>
-                        <option value="bs">Bosnian</option>
-                        <option value="de">German</option>
-                        <option value="fr">French</option>
-                      </Select>
+                      <Controller
+                        name="locale"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger error={!!errors.locale}>
+                              <SelectValue placeholder="Select locale" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="en">English</SelectItem>
+                              <SelectItem value="bs">Bosnian</SelectItem>
+                              <SelectItem value="de">German</SelectItem>
+                              <SelectItem value="fr">French</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </FormField>
                   </div>
 
@@ -427,19 +459,20 @@ export function SignupTenant() {
                             error={errors.gradeLabel?.message}
                           >
                             <Select
-                              ref={field.ref}
                               value={field.value}
-                              onChange={event => {
-                                const value = event.target
-                                  .value as TenantSignupForm['gradeLabel'];
+                              onValueChange={(value: TenantSignupForm['gradeLabel']) => {
                                 field.onChange(value);
                                 handleGradePresetChange(value);
                               }}
-                              onBlur={field.onBlur}
                             >
-                              <option value="1-5">1 - 5</option>
-                              <option value="1-10">1 - 10</option>
-                              <option value="6-10">6 - 10</option>
+                              <SelectTrigger error={!!errors.gradeLabel}>
+                                <SelectValue placeholder="Select preset" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1-5">1 - 5</SelectItem>
+                                <SelectItem value="1-10">1 - 10</SelectItem>
+                                <SelectItem value="6-10">6 - 10</SelectItem>
+                              </SelectContent>
                             </Select>
                           </FormField>
                         )}

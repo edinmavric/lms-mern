@@ -21,6 +21,10 @@ import {
   Alert,
   Link,
   Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '../components/ui';
 
 const tenantSchema = z.object({
@@ -190,10 +194,25 @@ export function SignupIndividual() {
                 error={errors.role?.message}
                 helperText="Select whether you'll be a student or a teacher in this organisation."
               >
-                <Select {...register('role')} disabled={isSubmitting}>
-                  <option value="student">Student</option>
-                  <option value="professor">Teacher / Professor</option>
-                </Select>
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={isSubmitting}
+                    >
+                      <SelectTrigger error={!!errors.role}>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="professor">Teacher / Professor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </FormField>
 
               <div className="grid gap-4 md:grid-cols-2">

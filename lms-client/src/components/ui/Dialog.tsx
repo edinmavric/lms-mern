@@ -3,6 +3,14 @@ import { Dialog as HeadlessDialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
+const maxWidthClasses = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',
+  '2xl': 'max-w-2xl',
+};
+
 export interface DialogProps {
   open: boolean;
   onClose: () => void;
@@ -10,6 +18,7 @@ export interface DialogProps {
   description?: string;
   children?: ReactNode;
   showCloseButton?: boolean;
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 export function Dialog({
@@ -19,6 +28,7 @@ export function Dialog({
   description,
   children,
   showCloseButton = true,
+  maxWidth = 'md',
 }: DialogProps) {
   return (
     <HeadlessDialog open={open} onClose={onClose} className="relative z-50">
@@ -35,7 +45,7 @@ export function Dialog({
           aria-hidden="true"
         />
 
-        <div className="fixed inset-0 flex items-center justify-center p-4">
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
           <Transition.Child
             as="div"
             enter="ease-out duration-300"
@@ -44,8 +54,12 @@ export function Dialog({
             leave="ease-in duration-200"
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
+            className="w-full flex items-center justify-center"
           >
-            <HeadlessDialog.Panel className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
+            <HeadlessDialog.Panel className={cn(
+              "w-full rounded-lg border border-border bg-card p-4 md:p-6 shadow-lg mx-auto",
+              maxWidthClasses[maxWidth]
+            )}>
               {showCloseButton && (
                 <button
                   type="button"

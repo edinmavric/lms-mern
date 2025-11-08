@@ -18,12 +18,12 @@ export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
 const Alert = forwardRef<HTMLDivElement, AlertProps>(
   ({ className, variant = 'default', onClose, children, description, ...props }, ref) => {
     const variants = {
-      default: 'bg-card border-border text-card-foreground',
-      success: 'bg-success/10 border-success/20 text-success-foreground',
+      default: 'bg-card border-border text-foreground',
+      success: 'bg-success/10 border-success/20 text-green-700 dark:text-green-300',
       destructive:
-        'bg-destructive/10 border-destructive/20 text-destructive-foreground',
-      warning: 'bg-warning/10 border-warning/20 text-warning-foreground',
-      info: 'bg-info/10 border-info/20 text-info-foreground',
+        'bg-destructive/10 border-destructive/20 text-red-700 dark:text-red-300',
+      warning: 'bg-warning/10 border-warning/20 text-yellow-700 dark:text-yellow-300',
+      info: 'bg-info/10 border-info/20 text-blue-700 dark:text-blue-300',
     };
 
     const icons = {

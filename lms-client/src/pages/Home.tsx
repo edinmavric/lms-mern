@@ -1,5 +1,5 @@
 import { useAuthStore } from '../store/authStore';
-import { BookOpen, GraduationCap, Calendar } from 'lucide-react';
+import { BookOpen, GraduationCap, Calendar, Users } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Card } from '../components/ui/Card';
 import { Link } from '../components/ui/Link';
@@ -27,6 +27,15 @@ export function Home() {
       href: '/attendance',
     },
   ];
+
+  if (user?.role === 'admin') {
+    dashboardCards.push({
+      title: 'User Management',
+      description: 'Manage users and approvals',
+      icon: Users,
+      href: '/app/admin/users',
+    });
+  }
 
   return (
     <div className="space-y-6">

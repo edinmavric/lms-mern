@@ -1,66 +1,127 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useAuthStore } from '../store/authStore';
+import { Sidebar } from '../components/Sidebar';
 import { Button, Dialog, DialogContent, DialogFooter } from '../components/ui';
+import { cn } from '../lib/utils';
 
 export function MainLayout() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const { clearAuth, user } = useAuthStore();
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        setSidebarOpen(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleLogout = () => {
     clearAuth();
     navigate('/login', { replace: true });
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(prev => !prev);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card text-card-foreground shadow-sm border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">LMS Platform</h1>
-          <div className="flex items-center gap-4">
-            {user && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="hidden sm:inline">
-                  {user.firstName} {user.lastName}
-                </span>
-                <span className="hidden md:inline text-xs">({user.role})</span>
+    <div className="min-h-screen bg-background flex">
+      {!isMobile && (
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} mobile={false} />
+      )}
+
+      {isMobile && (
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} mobile={true} />
+      )}
+
+      <div className={cn(
+        "flex-1 flex flex-col transition-all duration-300",
+        !isMobile && sidebarOpen && "lg:pl-64"
+      )}>
+        <header className="bg-card text-card-foreground shadow-sm border-b border-border sticky top-0 z-30">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleSidebar}
+                  aria-label="Toggle sidebar"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <h1 className="text-2xl font-semibold">LMS Platform</h1>
               </div>
-            )}
-            <div className="relative group">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowLogoutDialog(true)}
-                className="relative"
-                aria-label="Logout"
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-              <div className="absolute right-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                <div className="whitespace-nowrap rounded-md bg-popover border border-border px-3 py-1.5 text-sm text-popover-foreground shadow-md">
-                  Logout
+              <div className="flex items-center gap-4">
+                {user && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="hidden sm:inline">
+                      {user.firstName} {user.lastName}
+                    </span>
+                    <span className="hidden md:inline">({user.role})</span>
+                  </div>
+                )}
+                <div className="relative group">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowLogoutDialog(true)}
+                    className="relative"
+                    aria-label="Logout"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </Button>
+                  <div className="absolute right-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                    <div className="whitespace-nowrap rounded-md bg-popover border border-border px-3 py-1.5 text-sm text-popover-foreground shadow-md">
+                      Logout
+                    </div>
+                  </div>
                 </div>
+                <ThemeToggle />
               </div>
             </div>
-            <ThemeToggle />
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <Outlet />
-      </main>
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <Outlet />
+        </main>
 
-      <footer className="bg-card text-card-foreground border-t border-border mt-auto">
-        <div className="container mx-auto px-4 py-4">
-          <p className="text-sm text-muted-foreground text-center">
-            © {new Date().getFullYear()} Learning Management System
-          </p>
-        </div>
-      </footer>
+        <footer className="bg-card text-card-foreground border-t border-border mt-auto">
+          <div className="container mx-auto px-4 py-4">
+            <p className="text-sm text-muted-foreground text-center">
+              © {new Date().getFullYear()} Learning Management System
+            </p>
+          </div>
+        </footer>
+      </div>
 
       <Dialog
         open={showLogoutDialog}

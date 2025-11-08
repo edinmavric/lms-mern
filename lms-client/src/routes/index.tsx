@@ -14,6 +14,12 @@ import { ResetPassword } from '../pages/ResetPassword';
 import { NotFound } from '../pages/NotFound';
 import { Unauthorized } from '../pages/Unauthorized';
 import { PendingApproval } from '../pages/PendingApproval';
+import { UsersList } from '../pages/admin/UsersList';
+import { UserEdit } from '../pages/admin/UserEdit';
+import { UserDetail } from '../pages/admin/UserDetail';
+import { CoursesList } from '../pages/admin/CoursesList';
+import { CourseEdit } from '../pages/admin/CourseEdit';
+import { CourseDetail } from '../pages/admin/CourseDetail';
 
 const router = createBrowserRouter([
   {
@@ -28,14 +34,59 @@ const router = createBrowserRouter([
         index: true,
         element: <Home />,
       },
-      // {
-      //   path: 'courses',
-      //   element: <Courses />,
-      // },
-      // {
-      //   path: 'grades',
-      //   element: <Grades />,
-      // },
+      {
+        path: 'admin',
+        children: [
+          {
+            path: 'users',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UsersList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'users/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UserDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'users/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UserEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'courses',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'professor']}>
+                <CoursesList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'courses/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'professor']}>
+                <CourseDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'courses/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'professor']}>
+                <CourseEdit />
+              </ProtectedRoute>
+            ),
+          },
+        ],
+      },
     ],
   },
   {

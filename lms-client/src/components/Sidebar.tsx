@@ -7,6 +7,8 @@ import {
   FileText,
   GraduationCap,
   Award,
+  ClipboardCheck,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link } from './ui/Link';
@@ -67,6 +69,18 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
       href: '/app/admin/grades',
       icon: Award,
       adminOnly: false,
+    },
+    {
+      label: 'Attendance',
+      href: '/app/admin/attendances',
+      icon: ClipboardCheck,
+      adminOnly: false,
+    },
+    {
+      label: 'Bank Accounts',
+      href: '/app/admin/bank-accounts',
+      icon: Wallet,
+      adminOnly: true,
     },
   ].filter(item => !item.adminOnly || isAdmin);
 

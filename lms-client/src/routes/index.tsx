@@ -29,6 +29,12 @@ import { EnrollmentDetail } from '../pages/admin/EnrollmentDetail';
 import { GradesList } from '../pages/admin/GradesList';
 import { GradeEdit } from '../pages/admin/GradeEdit';
 import { GradeDetail } from '../pages/admin/GradeDetail';
+import { AttendancesList } from '../pages/admin/AttendancesList';
+import { AttendanceEdit } from '../pages/admin/AttendanceEdit';
+import { AttendanceDetail } from '../pages/admin/AttendanceDetail';
+import { BankAccountsList } from '../pages/admin/BankAccountsList';
+import { BankAccountEdit } from '../pages/admin/BankAccountEdit';
+import { BankAccountDetail } from '../pages/admin/BankAccountDetail';
 
 const router = createBrowserRouter([
   {
@@ -163,6 +169,54 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['admin', 'professor']}>
                 <GradeEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'attendances',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'professor']}>
+                <AttendancesList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'attendances/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'professor']}>
+                <AttendanceDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'attendances/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'professor']}>
+                <AttendanceEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'bank-accounts',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <BankAccountsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'bank-accounts/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <BankAccountDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'bank-accounts/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <BankAccountEdit />
               </ProtectedRoute>
             ),
           },

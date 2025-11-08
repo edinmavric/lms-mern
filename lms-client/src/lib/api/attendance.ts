@@ -17,6 +17,7 @@ export interface UpdateAttendanceData {
 export interface AttendanceListParams {
   student?: string;
   course?: string;
+  status?: 'present' | 'absent' | 'late' | 'excused';
   date?: string;
 }
 

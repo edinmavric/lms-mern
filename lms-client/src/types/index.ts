@@ -132,11 +132,11 @@ export interface GradeHistory {
 export interface Attendance {
   _id: string;
   tenant: string;
-  student: string;
-  course?: string;
+  student: string | User;
+  course?: string | Course;
   date: string;
   status: 'present' | 'absent' | 'late' | 'excused';
-  recordedBy?: string;
+  recordedBy?: string | User;
   recordedAt: string;
   createdBy?: string;
   updatedBy?: string;

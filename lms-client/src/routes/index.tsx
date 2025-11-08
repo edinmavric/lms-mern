@@ -35,6 +35,19 @@ import { AttendanceDetail } from '../pages/admin/AttendanceDetail';
 import { BankAccountsList } from '../pages/admin/BankAccountsList';
 import { BankAccountEdit } from '../pages/admin/BankAccountEdit';
 import { BankAccountDetail } from '../pages/admin/BankAccountDetail';
+import { DepartmentsList } from '../pages/admin/DepartmentsList';
+import { DepartmentEdit } from '../pages/admin/DepartmentEdit';
+import { DepartmentDetail } from '../pages/admin/DepartmentDetail';
+import { StudentCourses } from '../pages/student/StudentCourses';
+import { StudentCourseDetail } from '../pages/student/StudentCourseDetail';
+import { StudentEnrollmentsList } from '../pages/student/StudentEnrollmentsList';
+import { StudentEnrollmentDetail } from '../pages/student/StudentEnrollmentDetail';
+import { ProfessorCoursesList } from '../pages/professor/ProfessorCoursesList';
+import { ProfessorCourseDetail } from '../pages/professor/ProfessorCourseDetail';
+import { ProfessorLessonsList } from '../pages/professor/ProfessorLessonsList';
+import { ProfessorLessonDetail } from '../pages/professor/ProfessorLessonDetail';
+import { ProfessorGradesList } from '../pages/professor/ProfessorGradesList';
+import { ProfessorGradeDetail } from '../pages/professor/ProfessorGradeDetail';
 
 const router = createBrowserRouter([
   {
@@ -73,6 +86,30 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['admin']}>
                 <UserEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'departments',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <DepartmentsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'departments/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <DepartmentDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'departments/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <DepartmentEdit />
               </ProtectedRoute>
             ),
           },
@@ -217,6 +254,96 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['admin']}>
                 <BankAccountEdit />
+              </ProtectedRoute>
+            ),
+          },
+        ],
+      },
+      {
+        path: 'student',
+        children: [
+          {
+            path: 'courses',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentCourses />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'courses/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentCourseDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'enrollments',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentEnrollmentsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'enrollments/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentEnrollmentDetail />
+              </ProtectedRoute>
+            ),
+          },
+        ],
+      },
+      {
+        path: 'professor',
+        children: [
+          {
+            path: 'courses',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorCoursesList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'courses/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorCourseDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lessons',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorLessonsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lessons/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorLessonDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'grades',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorGradesList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'grades/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorGradeDetail />
               </ProtectedRoute>
             ),
           },

@@ -15,6 +15,7 @@ const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const lessonRoutes = require('./routes/lessonRoutes');
 const bankAccountRoutes = require('./routes/bankAccountRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
 const docsRoutes = require('./routes/docsRoutes');
 
 const app = express();
@@ -66,6 +67,7 @@ app.use(tenant);
 
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/departments', departmentRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/lessons', lessonRoutes);

@@ -1,5 +1,18 @@
 export { Button } from './Button';
 export type { ButtonProps } from './Button';
+export {
+  Calendar,
+  CalendarCurrentDate,
+  CalendarDayView,
+  CalendarMonthView,
+  CalendarNextTrigger,
+  CalendarPrevTrigger,
+  CalendarTodayTrigger,
+  CalendarViewSelect,
+  CalendarWeekView,
+  useCalendar,
+} from './Calendar';
+export type { CalendarView, EventType } from './Calendar';
 
 export { Input } from './Input';
 export type { InputProps } from './Input';

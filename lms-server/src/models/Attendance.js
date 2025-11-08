@@ -11,8 +11,11 @@ const attendanceSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  classSession: { type: mongoose.Schema.Types.ObjectId, ref: 'ClassSession' },
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+  lesson: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Lesson',
+    required: true,
+  },
   date: { type: Date, required: true },
   status: {
     type: String,
@@ -25,6 +28,6 @@ const attendanceSchema = new mongoose.Schema({
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 });
 
-attendanceSchema.index({ tenant: 1, student: 1, date: 1 }, { unique: true });
+attendanceSchema.index({ tenant: 1, student: 1, lesson: 1 }, { unique: true });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);

@@ -9,6 +9,7 @@ import {
   Award,
   ClipboardCheck,
   Wallet,
+  Building2,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link } from './ui/Link';
@@ -26,63 +27,133 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
-  adminOnly?: boolean;
+  roles?: ('admin' | 'professor' | 'student')[];
 }
 
 export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
   const location = useLocation();
   const { user } = useAuthStore();
-  const isAdmin = user?.role === 'admin';
+  const userRole = user?.role;
 
-  const navItems: NavItem[] = [
+  const adminNavItems: NavItem[] = [
     {
       label: 'Dashboard',
       href: '/app',
       icon: HomeIcon,
+      roles: ['admin'],
     },
     {
       label: 'Users',
       href: '/app/admin/users',
       icon: Users,
-      adminOnly: true,
+      roles: ['admin'],
+    },
+    {
+      label: 'Departments',
+      href: '/app/admin/departments',
+      icon: Building2,
+      roles: ['admin'],
     },
     {
       label: 'Courses',
       href: '/app/admin/courses',
       icon: BookOpen,
-      adminOnly: false,
+      roles: ['admin', 'professor'],
     },
     {
       label: 'Lessons',
       href: '/app/admin/lessons',
       icon: FileText,
-      adminOnly: false,
+      roles: ['admin', 'professor'],
     },
     {
       label: 'Enrollments',
       href: '/app/admin/enrollments',
       icon: GraduationCap,
-      adminOnly: false,
+      roles: ['admin', 'professor'],
     },
     {
       label: 'Grades',
       href: '/app/admin/grades',
       icon: Award,
-      adminOnly: false,
+      roles: ['admin', 'professor'],
     },
     {
       label: 'Attendance',
       href: '/app/admin/attendances',
       icon: ClipboardCheck,
-      adminOnly: false,
+      roles: ['admin', 'professor'],
     },
     {
       label: 'Bank Accounts',
       href: '/app/admin/bank-accounts',
       icon: Wallet,
-      adminOnly: true,
+      roles: ['admin'],
     },
-  ].filter(item => !item.adminOnly || isAdmin);
+  ];
+
+  const professorNavItems: NavItem[] = [
+    {
+      label: 'Dashboard',
+      href: '/app',
+      icon: HomeIcon,
+      roles: ['professor'],
+    },
+    {
+      label: 'My Courses',
+      href: '/app/professor/courses',
+      icon: BookOpen,
+      roles: ['professor'],
+    },
+    {
+      label: 'My Lessons',
+      href: '/app/professor/lessons',
+      icon: FileText,
+      roles: ['professor'],
+    },
+    {
+      label: 'My Grades',
+      href: '/app/professor/grades',
+      icon: Award,
+      roles: ['professor'],
+    },
+  ];
+
+  const studentNavItems: NavItem[] = [
+    {
+      label: 'Dashboard',
+      href: '/app',
+      icon: HomeIcon,
+      roles: ['student'],
+    },
+    {
+      label: 'My Courses',
+      href: '/app/student/courses',
+      icon: BookOpen,
+      roles: ['student'],
+    },
+    {
+      label: 'My Enrollments',
+      href: '/app/student/enrollments',
+      icon: GraduationCap,
+      roles: ['student'],
+    },
+  ];
+
+  const getNavItems = (): NavItem[] => {
+    if (userRole === 'admin') {
+      return adminNavItems;
+    }
+    if (userRole === 'professor') {
+      return professorNavItems;
+    }
+    if (userRole === 'student') {
+      return studentNavItems;
+    }
+    return [];
+  };
+
+  const navItems = getNavItems();
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-card border-r border-border">

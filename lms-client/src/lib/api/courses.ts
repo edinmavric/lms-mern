@@ -6,8 +6,10 @@ export interface CreateCourseData {
   name: string;
   description?: string;
   professor: string;
+  department?: string;
   students?: string[];
   price?: number;
+  enrollmentPassword?: string;
   schedule?: {
     days: string[];
     startTime: string;
@@ -19,8 +21,10 @@ export interface UpdateCourseData {
   name?: string;
   description?: string;
   professor?: string;
+  department?: string;
   students?: string[];
   price?: number;
+  enrollmentPassword?: string;
   schedule?: {
     days: string[];
     startTime: string;
@@ -30,6 +34,7 @@ export interface UpdateCourseData {
 
 export interface CourseListParams {
   professor?: string;
+  department?: string;
   name?: string;
 }
 

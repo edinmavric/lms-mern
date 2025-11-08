@@ -1194,6 +1194,18 @@ paths:
           in: query
           schema:
             type: string
+          description: Filter by course ID
+        - name: title
+          in: query
+          schema:
+            type: string
+          description: Filter by lesson title (case-insensitive partial match)
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter lessons by date
       responses:
         '200':
           description: List of lessons
@@ -1209,7 +1221,7 @@ paths:
       tags:
         - Lessons
       summary: Create lesson
-      description: Create new lesson (admin or professor)
+      description: Create new lesson with date and time (admin or professor)
       operationId: createLesson
       security:
         - bearerAuth: []
@@ -1222,17 +1234,38 @@ paths:
               required:
                 - course
                 - title
+                - date
+                - startTime
+                - endTime
               properties:
                 course:
                   type: string
+                  description: Course ID
                 title:
                   type: string
+                  description: Lesson title
                 content:
                   type: string
+                  description: Lesson content (optional)
                 materials:
                   type: array
                   items:
                     $ref: '#/components/schemas/LessonMaterial'
+                  description: Lesson materials (optional)
+                date:
+                  type: string
+                  format: date
+                  description: Lesson date
+                startTime:
+                  type: string
+                  pattern: '^([0-1][0-9]|2[0-3]):[0-5][0-9]$'
+                  example: '09:00'
+                  description: Lesson start time in HH:mm format
+                endTime:
+                  type: string
+                  pattern: '^([0-1][0-9]|2[0-3]):[0-5][0-9]$'
+                  example: '11:00'
+                  description: Lesson end time in HH:mm format (must be after startTime)
       responses:
         '201':
           description: Lesson created
@@ -1288,12 +1321,29 @@ paths:
               properties:
                 title:
                   type: string
+                  description: Lesson title
                 content:
                   type: string
+                  description: Lesson content
                 materials:
                   type: array
                   items:
                     $ref: '#/components/schemas/LessonMaterial'
+                  description: Lesson materials
+                date:
+                  type: string
+                  format: date
+                  description: Lesson date
+                startTime:
+                  type: string
+                  pattern: '^([0-1][0-9]|2[0-3]):[0-5][0-9]$'
+                  example: '09:00'
+                  description: Lesson start time in HH:mm format
+                endTime:
+                  type: string
+                  pattern: '^([0-1][0-9]|2[0-3]):[0-5][0-9]$'
+                  example: '11:00'
+                  description: Lesson end time in HH:mm format (must be after startTime)
       responses:
         '200':
           description: Lesson updated
@@ -1518,15 +1568,30 @@ paths:
           in: query
           schema:
             type: string
-        - name: course
+          description: Filter by student ID
+        - name: lesson
           in: query
           schema:
             type: string
-        - name: date
+          description: Filter by lesson ID
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [present, absent, late, excused]
+          description: Filter by attendance status
+        - name: startDate
           in: query
           schema:
             type: string
             format: date
+          description: Filter by start date (inclusive)
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter by end date (inclusive)
       responses:
         '200':
           description: List of attendance records
@@ -1542,7 +1607,7 @@ paths:
       tags:
         - Attendance
       summary: Create attendance record
-      description: Record attendance (admin or professor only, prevents duplicates)
+      description: Record attendance for a specific lesson (admin or course professor only, prevents duplicates per student+lesson)
       operationId: createAttendance
       security:
         - bearerAuth: []
@@ -1554,19 +1619,24 @@ paths:
               type: object
               required:
                 - student
+                - lesson
                 - date
                 - status
               properties:
                 student:
                   type: string
-                course:
+                  description: Student ID
+                lesson:
                   type: string
+                  description: Lesson ID (required)
                 date:
                   type: string
                   format: date
+                  description: Attendance date
                 status:
                   type: string
                   enum: [present, absent, late, excused]
+                  description: Attendance status
       responses:
         '201':
           description: Attendance recorded
@@ -2161,7 +2231,27 @@ components:
         tenant:
           type: string
         course:
-          type: string
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                name:
+                  type: string
+                professor:
+                  oneOf:
+                    - type: string
+                    - type: object
+                      properties:
+                        _id:
+                          type: string
+                        firstName:
+                          type: string
+                        lastName:
+                          type: string
+                        email:
+                          type: string
         title:
           type: string
         content:
@@ -2170,12 +2260,48 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LessonMaterial'
+        date:
+          type: string
+          format: date
+          description: Lesson date
+        startTime:
+          type: string
+          pattern: '^([0-1][0-9]|2[0-3]):[0-5][0-9]$'
+          example: '09:00'
+          description: Lesson start time in HH:mm format
+        endTime:
+          type: string
+          pattern: '^([0-1][0-9]|2[0-3]):[0-5][0-9]$'
+          example: '11:00'
+          description: Lesson end time in HH:mm format
         isDeleted:
           type: boolean
         createdBy:
-          type: string
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
         updatedBy:
-          type: string
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
         createdAt:
           type: string
           format: date-time
@@ -2290,20 +2416,68 @@ components:
         tenant:
           type: string
         student:
-          type: string
-        course:
-          type: string
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+        lesson:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                title:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                startTime:
+                  type: string
+                endTime:
+                  type: string
+                course:
+                  oneOf:
+                    - type: string
+                    - type: object
+                      properties:
+                        _id:
+                          type: string
+                        name:
+                          type: string
         date:
           type: string
           format: date
+          description: Attendance date
         status:
           type: string
           enum: [present, absent, late, excused]
+          description: Attendance status
         recordedBy:
-          type: string
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                _id:
+                  type: string
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
         recordedAt:
           type: string
           format: date-time
+          description: When the attendance was recorded
         createdBy:
           type: string
         updatedBy:

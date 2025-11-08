@@ -18,7 +18,7 @@ router.post('/', requireRole('admin', 'professor'), createEnrollment);
 
 router.put('/:id', requireRole('admin', 'professor'), updateEnrollment);
 
-router.post('/:id/payments', requireRole('admin', 'professor'), addPayment);
+router.post('/:id/payments', addPayment);
 
 router.delete('/:id', requireRole('admin'), deleteEnrollment);
 

@@ -1,17 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import {
-  BookOpen,
-  GraduationCap,
-  Award,
-  ClipboardCheck,
-  TrendingUp,
-} from 'lucide-react';
+import { BookOpen, FileText, Award, TrendingUp } from 'lucide-react';
 
 import { coursesApi } from '../../lib/api/courses';
 import { enrollmentsApi } from '../../lib/api/enrollments';
 import { gradesApi } from '../../lib/api/grades';
-import { attendanceApi } from '../../lib/api/attendance';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
 
@@ -31,11 +24,6 @@ export function ProfessorDashboard() {
   const { data: grades = [] } = useQuery({
     queryKey: ['grades', 'all'],
     queryFn: () => gradesApi.list({}),
-  });
-
-  const { data: attendances = [] } = useQuery({
-    queryKey: ['attendances', 'all'],
-    queryFn: () => attendanceApi.list({}),
   });
 
   const myCourses = courses.filter(course =>
@@ -60,15 +48,6 @@ export function ProfessorDashboard() {
         : grade.professor?._id) === user?._id
   );
 
-  const myAttendances = attendances.filter(attendance =>
-    myCourses.some(
-      course =>
-        (typeof attendance.course === 'string'
-          ? attendance.course
-          : attendance.course?._id) === course._id
-    )
-  );
-
   const stats = {
     totalCourses: myCourses.length,
     totalEnrollments: myEnrollments.length,
@@ -78,8 +57,6 @@ export function ProfessorDashboard() {
       myGrades.length > 0
         ? myGrades.reduce((sum, g) => sum + g.value, 0) / myGrades.length
         : 0,
-    totalAttendance: myAttendances.length,
-    presentAttendance: myAttendances.filter(a => a.status === 'present').length,
   };
 
   const dashboardCards = [
@@ -87,36 +64,22 @@ export function ProfessorDashboard() {
       title: 'My Courses',
       description: `${stats.totalCourses} courses`,
       icon: BookOpen,
-      href: '/app/admin/courses',
+      href: '/app/professor/courses',
     },
     {
-      title: 'Enrollments',
-      description: `${stats.activeEnrollments} active students`,
-      icon: GraduationCap,
-      href: '/app/admin/enrollments',
-      stats: {
-        total: stats.totalEnrollments,
-        active: stats.activeEnrollments,
-      },
+      title: 'My Lessons',
+      description: 'Manage your lessons',
+      icon: FileText,
+      href: '/app/professor/lessons',
     },
     {
-      title: 'Grades',
+      title: 'My Grades',
       description: `Average: ${stats.averageGrade.toFixed(2)}`,
       icon: Award,
-      href: '/app/admin/grades',
+      href: '/app/professor/grades',
       stats: {
         total: stats.totalGrades,
         average: stats.averageGrade.toFixed(2),
-      },
-    },
-    {
-      title: 'Attendance',
-      description: `${stats.presentAttendance} present records`,
-      icon: ClipboardCheck,
-      href: '/app/admin/attendances',
-      stats: {
-        total: stats.totalAttendance,
-        present: stats.presentAttendance,
       },
     },
   ];
@@ -157,19 +120,6 @@ export function ProfessorDashboard() {
             </div>
             <p className="text-xs text-muted-foreground">
               {stats.totalGrades} grades recorded
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Attendance</CardTitle>
-            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.presentAttendance}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalAttendance} total records
             </p>
           </CardContent>
         </Card>

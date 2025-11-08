@@ -5,8 +5,10 @@ const courseSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
   professor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
   students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   price: Number,
+  enrollmentPassword: String,
   schedule: {
     days: [String],
     startTime: String,

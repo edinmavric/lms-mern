@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import {
-  BookOpen,
-  Search,
-  Edit,
-  Trash2,
-  Plus,
-} from 'lucide-react';
+import { BookOpen, Search, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { lessonsApi } from '../../lib/api/lessons';
@@ -85,6 +79,9 @@ export function LessonsList() {
         title: data.title,
         content: data.content,
         materials: data.materials,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
       });
     },
     onSuccess: () => {
@@ -103,6 +100,9 @@ export function LessonsList() {
         title: data.title,
         content: data.content,
         materials: data.materials,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
       };
       return lessonsApi.update(id, updateData);
     },
@@ -134,7 +134,9 @@ export function LessonsList() {
       return course.name;
     }
     const lesson = allLessons.find(l =>
-      typeof l.course === 'object' ? l.course._id === courseId : l.course === courseId
+      typeof l.course === 'object'
+        ? l.course._id === courseId
+        : l.course === courseId
     );
     if (lesson && typeof lesson.course === 'object') {
       return lesson.course.name || 'Unknown Course';
@@ -185,9 +187,13 @@ export function LessonsList() {
                   Courses with Lessons
                 </p>
                 <p className="text-2xl font-bold">
-                  {new Set(allLessons.map(l => 
-                    typeof l.course === 'string' ? l.course : l.course._id
-                  )).size}
+                  {
+                    new Set(
+                      allLessons.map(l =>
+                        typeof l.course === 'string' ? l.course : l.course._id
+                      )
+                    ).size
+                  }
                 </p>
               </div>
               <div className="rounded-full bg-success/10 p-3">
@@ -205,9 +211,11 @@ export function LessonsList() {
                   Lessons with Materials
                 </p>
                 <p className="text-2xl font-bold">
-                  {allLessons.filter(l => 
-                    Array.isArray(l.materials) && l.materials.length > 0
-                  ).length}
+                  {
+                    allLessons.filter(
+                      l => Array.isArray(l.materials) && l.materials.length > 0
+                    ).length
+                  }
                 </p>
               </div>
               <div className="rounded-full bg-warning/10 p-3">
@@ -235,7 +243,9 @@ export function LessonsList() {
 
             <Select
               value={filterCourse || 'all'}
-              onValueChange={value => setFilterCourse(value === 'all' ? '' : value)}
+              onValueChange={value =>
+                setFilterCourse(value === 'all' ? '' : value)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by course" />
@@ -337,7 +347,9 @@ export function LessonsList() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setEditDialog({ open: true, lesson })}
+                              onClick={() =>
+                                setEditDialog({ open: true, lesson })
+                              }
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
@@ -657,4 +669,3 @@ function EditLessonDialog({
     </FormDialog>
   );
 }
-

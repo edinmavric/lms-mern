@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const User = require('../models/User');
+const Department = require('../models/Department');
 const { asyncHandler } = require('../utils/async');
 const {
   requireFields,
@@ -10,10 +11,12 @@ const {
 const getAllCourses = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({ isDeleted: false });
   if (req.query.professor) criteria.professor = req.query.professor;
+  if (req.query.department) criteria.department = req.query.department;
   if (req.query.name) criteria.name = new RegExp(req.query.name, 'i');
 
   const courses = await Course.find(criteria)
     .populate('professor', 'firstName lastName email')
+    .populate('department', 'name description')
     .populate('students', 'firstName lastName email')
     .sort({ createdAt: -1 });
 
@@ -35,6 +38,7 @@ const getCourseById = asyncHandler(async (req, res) => {
     isDeleted: false,
   })
     .populate('professor', 'firstName lastName email')
+    .populate('department', 'name description')
     .populate('students', 'firstName lastName email');
 
   if (!course) {
@@ -66,8 +70,23 @@ const createCourse = asyncHandler(async (req, res) => {
       .json({ message: 'Invalid professor ID or not part of tenant' });
   }
 
+  if (req.body.department) {
+    const department = await Department.findOne({
+      _id: req.body.department,
+      tenant: req.tenantId,
+      isDeleted: false,
+    });
+
+    if (!department) {
+      return res.status(400).json({
+        message: 'Invalid department ID or department not found in tenant',
+      });
+    }
+  }
+
   const course = await Course.create(courseData);
   await course.populate('professor', 'firstName lastName email');
+  await course.populate('department', 'name description');
 
   res.status(201).json(course);
 });
@@ -86,6 +105,20 @@ const updateCourse = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Course not found' });
   }
 
+  if (req.body.department) {
+    const department = await Department.findOne({
+      _id: req.body.department,
+      tenant: req.tenantId,
+      isDeleted: false,
+    });
+
+    if (!department) {
+      return res.status(400).json({
+        message: 'Invalid department ID or department not found in tenant',
+      });
+    }
+  }
+
   delete req.body.tenant;
   req.body.updatedBy = req.user.id;
 
@@ -93,6 +126,7 @@ const updateCourse = asyncHandler(async (req, res) => {
   await course.save();
 
   await course.populate('professor', 'firstName lastName email');
+  await course.populate('department', 'name description');
   await course.populate('students', 'firstName lastName email');
 
   res.json(course);

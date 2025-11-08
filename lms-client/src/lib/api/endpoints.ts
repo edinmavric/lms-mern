@@ -30,6 +30,14 @@ export const API_ENDPOINTS = {
     delete: (id: string) => `${API_BASE}/tenants/${id}`,
   },
 
+  departments: {
+    list: `${API_BASE}/departments`,
+    create: `${API_BASE}/departments`,
+    detail: (id: string) => `${API_BASE}/departments/${id}`,
+    update: (id: string) => `${API_BASE}/departments/${id}`,
+    delete: (id: string) => `${API_BASE}/departments/${id}`,
+  },
+
   courses: {
     list: `${API_BASE}/courses`,
     create: `${API_BASE}/courses`,

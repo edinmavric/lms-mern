@@ -17,7 +17,7 @@ import {
 
 const attendanceFormSchema = z.object({
   student: z.string().min(1, 'Student is required'),
-  course: z.string().optional(),
+  lesson: z.string().min(1, 'Lesson is required'),
   date: z.string().min(1, 'Date is required'),
   status: z.enum(['present', 'absent', 'late', 'excused']),
 });
@@ -33,26 +33,33 @@ interface AttendanceFormProps {
     lastName: string;
     email: string;
   }>;
-  courses?: Array<{
+  lessons?: Array<{
     _id: string;
-    name: string;
-    description?: string;
+    title: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    course?:
+      | string
+      | {
+          _id: string;
+          name: string;
+        };
   }>;
   register: ReturnType<typeof useForm<AttendanceFormData>>['register'];
   control: ReturnType<typeof useForm<AttendanceFormData>>['control'];
   errors: ReturnType<typeof useForm<AttendanceFormData>>['formState']['errors'];
-  allowEditStudentCourse?: boolean;
+  allowEditStudentLesson?: boolean;
 }
 
 export function AttendanceForm({
   isSubmitting = false,
   error,
   students = [],
-  courses = [],
-  register,
+  lessons = [],
   control,
   errors,
-  allowEditStudentCourse = true,
+  allowEditStudentLesson = true,
 }: AttendanceFormProps) {
   return (
     <div className="space-y-4">
@@ -74,7 +81,7 @@ export function AttendanceForm({
             <Select
               value={field.value}
               onValueChange={field.onChange}
-              disabled={isSubmitting || !allowEditStudentCourse}
+              disabled={isSubmitting || !allowEditStudentLesson}
             >
               <SelectTrigger error={!!errors.student}>
                 <SelectValue placeholder="Select student" />
@@ -91,28 +98,33 @@ export function AttendanceForm({
         />
       </FormField>
 
-      <FormField label="Course" error={errors.course?.message}>
+      <FormField label="Lesson" required error={errors.lesson?.message}>
         <Controller
-          name="course"
+          name="lesson"
           control={control}
           render={({ field }) => (
             <Select
-              value={field.value || '__none__'}
-              onValueChange={value =>
-                field.onChange(value === '__none__' ? undefined : value)
-              }
-              disabled={isSubmitting || !allowEditStudentCourse}
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={isSubmitting || !allowEditStudentLesson}
             >
-              <SelectTrigger error={!!errors.course}>
-                <SelectValue placeholder="Select course (optional)" />
+              <SelectTrigger error={!!errors.lesson}>
+                <SelectValue placeholder="Select lesson" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">No course</SelectItem>
-                {courses.map(course => (
-                  <SelectItem key={course._id} value={course._id}>
-                    {course.name}
-                  </SelectItem>
-                ))}
+                {lessons.map(lesson => {
+                  const courseName =
+                    typeof lesson.course === 'object'
+                      ? lesson.course?.name
+                      : 'Unknown Course';
+                  const lessonDate = new Date(lesson.date).toLocaleDateString();
+                  return (
+                    <SelectItem key={lesson._id} value={lesson._id}>
+                      {lesson.title} - {courseName} ({lessonDate}{' '}
+                      {lesson.startTime}-{lesson.endTime})
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           )}
@@ -120,12 +132,19 @@ export function AttendanceForm({
       </FormField>
 
       <FormField label="Date" required error={errors.date?.message}>
-        <Input
-          type="date"
-          disabled={isSubmitting}
-          error={errors.date?.message}
-          icon={<Calendar className="h-4 w-4" />}
-          {...register('date')}
+        <Controller
+          name="date"
+          control={control}
+          render={({ field }) => (
+            <Input
+              type="date"
+              disabled={isSubmitting}
+              error={errors.date?.message}
+              icon={<Calendar className="h-4 w-4" />}
+              value={field.value}
+              onChange={e => field.onChange(e.target.value)}
+            />
+          )}
         />
       </FormField>
 
@@ -169,12 +188,10 @@ export function useAttendanceForm(attendance?: Attendance) {
         typeof attendance?.student === 'string'
           ? attendance.student
           : (attendance?.student as any)?._id || '',
-      course:
-        typeof attendance?.course === 'string'
-          ? attendance.course
-          : attendance?.course
-            ? (attendance.course as any)?._id
-            : undefined,
+      lesson:
+        typeof attendance?.lesson === 'string'
+          ? attendance.lesson
+          : (attendance?.lesson as any)?._id || '',
       date: attendance?.date
         ? new Date(attendance.date).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0],

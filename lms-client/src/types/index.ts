@@ -48,14 +48,28 @@ export interface TenantSettings {
   locale: string;
 }
 
+export interface Department {
+  _id: string;
+  tenant: string;
+  name: string;
+  description?: string;
+  isDeleted: boolean;
+  createdBy?: string | User;
+  updatedBy?: string | User;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Course {
   _id: string;
   tenant: string;
   name: string;
   description?: string;
   professor: string | User;
+  department?: string | Department;
   students: string[] | User[];
   price?: number;
+  enrollmentPassword?: string;
   schedule?: {
     days: string[];
     startTime: string;
@@ -74,6 +88,9 @@ export interface Lesson {
   title: string;
   content?: string;
   materials: LessonMaterial[];
+  date: string;
+  startTime: string;
+  endTime: string;
   isDeleted: boolean;
   createdBy?: string | User;
   updatedBy?: string | User;
@@ -133,7 +150,7 @@ export interface Attendance {
   _id: string;
   tenant: string;
   student: string | User;
-  course?: string | Course;
+  lesson: string | Lesson;
   date: string;
   status: 'present' | 'absent' | 'late' | 'excused';
   recordedBy?: string | User;

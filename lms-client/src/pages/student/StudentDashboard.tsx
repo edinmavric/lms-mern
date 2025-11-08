@@ -77,7 +77,7 @@ export function StudentDashboard() {
       title: 'My Courses',
       description: `${stats.activeEnrollments} active courses`,
       icon: BookOpen,
-      href: '#', // TODO: Create student courses page
+      href: '/app/student/courses',
       stats: {
         active: stats.activeEnrollments,
         completed: stats.completedEnrollments,

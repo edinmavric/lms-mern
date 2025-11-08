@@ -1,6 +1,6 @@
 const Attendance = require('../models/Attendance');
+const Lesson = require('../models/Lesson');
 const User = require('../models/User');
-const Course = require('../models/Course');
 const { asyncHandler } = require('../utils/async');
 const {
   requireFields,
@@ -11,7 +11,7 @@ const {
 const getAllAttendance = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({});
   if (req.query.student) criteria.student = req.query.student;
-  if (req.query.course) criteria.course = req.query.course;
+  if (req.query.lesson) criteria.lesson = req.query.lesson;
   if (req.query.status) criteria.status = req.query.status;
   if (req.query.startDate || req.query.endDate) {
     criteria.date = {};
@@ -21,7 +21,13 @@ const getAllAttendance = asyncHandler(async (req, res) => {
 
   const attendance = await Attendance.find(criteria)
     .populate('student', 'firstName lastName email')
-    .populate('course', 'name')
+    .populate({
+      path: 'lesson',
+      populate: {
+        path: 'course',
+        select: 'name',
+      },
+    })
     .populate('recordedBy', 'firstName lastName email')
     .sort({ date: -1 });
 
@@ -39,7 +45,13 @@ const getAttendanceById = asyncHandler(async (req, res) => {
 
   const attendance = await Attendance.findById(id)
     .populate('student', 'firstName lastName email')
-    .populate('course', 'name')
+    .populate({
+      path: 'lesson',
+      populate: {
+        path: 'course',
+        select: 'name',
+      },
+    })
     .populate('recordedBy', 'firstName lastName email');
 
   if (!attendance) {
@@ -50,7 +62,7 @@ const getAttendanceById = asyncHandler(async (req, res) => {
 });
 
 const createAttendance = asyncHandler(async (req, res) => {
-  requireFields(req.body, ['student', 'date', 'status']);
+  requireFields(req.body, ['student', 'lesson', 'date', 'status']);
 
   if (!['professor', 'admin'].includes(req.user.role)) {
     return res.status(403).json({
@@ -58,31 +70,25 @@ const createAttendance = asyncHandler(async (req, res) => {
     });
   }
 
-  const attendanceData = {
-    ...req.body,
+  const lesson = await Lesson.findOne({
+    _id: req.body.lesson,
     tenant: req.tenantId,
-    recordedBy: req.user.id,
-    createdBy: req.user.id,
-  };
+    isDeleted: false,
+  }).populate('course', 'professor');
 
-  const dateValue = new Date(req.body.date);
-  const startOfDay = new Date(dateValue);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(dateValue);
-  endOfDay.setHours(23, 59, 59, 999);
-
-  const existing = await Attendance.findOne({
-    tenant: req.tenantId,
-    student: req.body.student,
-    date: {
-      $gte: startOfDay,
-      $lte: endOfDay,
-    },
-  });
-
-  if (existing) {
+  if (!lesson) {
     return res.status(400).json({
-      message: 'Attendance record already exists for this date',
+      message: 'Invalid lesson ID or lesson not found in tenant',
+    });
+  }
+
+  const courseProfessorId = lesson.course?.professor?.toString();
+  const isCourseProfessor = courseProfessorId === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isCourseProfessor && !isAdmin) {
+    return res.status(403).json({
+      message: 'Only the course professor or admin can record attendance for this lesson',
     });
   }
 
@@ -98,23 +104,34 @@ const createAttendance = asyncHandler(async (req, res) => {
     });
   }
 
-  if (req.body.course) {
-    const course = await Course.findOne({
-      _id: req.body.course,
-      tenant: req.tenantId,
-      isDeleted: false,
-    });
+  const existing = await Attendance.findOne({
+    tenant: req.tenantId,
+    student: req.body.student,
+    lesson: req.body.lesson,
+  });
 
-    if (!course) {
-      return res.status(400).json({
-        message: 'Invalid course ID or course not found in tenant',
-      });
-    }
+  if (existing) {
+    return res.status(400).json({
+      message: 'Attendance record already exists for this student and lesson',
+    });
   }
+
+  const attendanceData = {
+    ...req.body,
+    tenant: req.tenantId,
+    recordedBy: req.user.id,
+    createdBy: req.user.id,
+  };
 
   const attendance = await Attendance.create(attendanceData);
   await attendance.populate('student', 'firstName lastName email');
-  await attendance.populate('course', 'name');
+  await attendance.populate({
+    path: 'lesson',
+    populate: {
+      path: 'course',
+      select: 'name',
+    },
+  });
   await attendance.populate('recordedBy', 'firstName lastName email');
 
   res.status(201).json(attendance);
@@ -129,12 +146,31 @@ const updateAttendance = asyncHandler(async (req, res) => {
 
   await assertSameTenantForDoc(Attendance, id, req.tenantId);
 
-  const attendance = await Attendance.findById(id);
+  const attendance = await Attendance.findById(id).populate({
+    path: 'lesson',
+    populate: {
+      path: 'course',
+      select: 'professor',
+    },
+  });
+
   if (!attendance) {
     return res.status(404).json({ message: 'Attendance not found' });
   }
 
+  const courseProfessorId = attendance.lesson?.course?.professor?.toString();
+  const isCourseProfessor = courseProfessorId === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isCourseProfessor && !isAdmin) {
+    return res.status(403).json({
+      message: 'Only the course professor or admin can update attendance',
+    });
+  }
+
   delete req.body.tenant;
+  delete req.body.lesson;
+  delete req.body.student;
   delete req.body.recordedBy;
   req.body.updatedBy = req.user.id;
 
@@ -142,7 +178,13 @@ const updateAttendance = asyncHandler(async (req, res) => {
   await attendance.save();
 
   await attendance.populate('student', 'firstName lastName email');
-  await attendance.populate('course', 'name');
+  await attendance.populate({
+    path: 'lesson',
+    populate: {
+      path: 'course',
+      select: 'name',
+    },
+  });
   await attendance.populate('recordedBy', 'firstName lastName email');
 
   res.json(attendance);

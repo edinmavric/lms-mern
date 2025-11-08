@@ -75,12 +75,38 @@ export function AttendanceDetail() {
     return attendance.student.email;
   };
 
+  const getLessonTitle = () => {
+    if (!attendance.lesson) return 'Unknown Lesson';
+    if (typeof attendance.lesson === 'string') {
+      return 'Unknown Lesson';
+    }
+    return attendance.lesson.title || 'Unknown Lesson';
+  };
+
   const getCourseName = () => {
-    if (!attendance.course) return 'No course';
-    if (typeof attendance.course === 'string') {
+    if (!attendance.lesson) return 'Unknown Course';
+    if (typeof attendance.lesson === 'string') {
       return 'Unknown Course';
     }
-    return attendance.course.name || 'Unknown Course';
+    const lesson = attendance.lesson;
+    if (typeof lesson.course === 'string') {
+      return 'Unknown Course';
+    }
+    return lesson.course?.name || 'Unknown Course';
+  };
+
+  const getLessonDate = () => {
+    if (!attendance.lesson || typeof attendance.lesson === 'string') {
+      return null;
+    }
+    return attendance.lesson.date;
+  };
+
+  const getLessonTime = () => {
+    if (!attendance.lesson || typeof attendance.lesson === 'string') {
+      return null;
+    }
+    return `${attendance.lesson.startTime} - ${attendance.lesson.endTime}`;
   };
 
   const getRecordedByName = () => {
@@ -229,9 +255,22 @@ export function AttendanceDetail() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Course
+                Lesson
               </p>
-              <p className="text-base font-semibold mt-1">{getCourseName()}</p>
+              <p className="text-base font-semibold mt-1">{getLessonTitle()}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Course: {getCourseName()}
+              </p>
+              {getLessonDate() && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Lesson Date: {new Date(getLessonDate()!).toLocaleDateString()}
+                </p>
+              )}
+              {getLessonTime() && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Time: {getLessonTime()}
+                </p>
+              )}
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">

@@ -12,10 +12,22 @@ const getAllLessons = asyncHandler(async (req, res) => {
   if (req.query.course) criteria.course = req.query.course;
   if (req.query.title) criteria.title = new RegExp(req.query.title, 'i');
 
+  if (req.query.date) {
+    const queryDate = new Date(req.query.date);
+    const startOfDay = new Date(queryDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(queryDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    criteria.date = {
+      $gte: startOfDay,
+      $lte: endOfDay,
+    };
+  }
+
   const lessons = await Lesson.find(criteria)
-    .populate('course', 'name')
+    .populate('course', 'name professor')
     .populate('createdBy', 'firstName lastName email')
-    .sort({ createdAt: -1 });
+    .sort({ date: -1, startTime: 1 });
 
   res.json(lessons);
 });
@@ -46,7 +58,7 @@ const getLessonById = asyncHandler(async (req, res) => {
 });
 
 const createLesson = asyncHandler(async (req, res) => {
-  requireFields(req.body, ['course', 'title']);
+  requireFields(req.body, ['course', 'title', 'date', 'startTime', 'endTime']);
 
   const lessonData = {
     ...req.body,
@@ -66,8 +78,29 @@ const createLesson = asyncHandler(async (req, res) => {
     });
   }
 
+  const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+  if (
+    !timeRegex.test(req.body.startTime) ||
+    !timeRegex.test(req.body.endTime)
+  ) {
+    return res.status(400).json({
+      message: 'Invalid time format. Use HH:mm format (e.g., 09:00)',
+    });
+  }
+
+  const [startHours, startMinutes] = req.body.startTime.split(':').map(Number);
+  const [endHours, endMinutes] = req.body.endTime.split(':').map(Number);
+  const startTotalMinutes = startHours * 60 + startMinutes;
+  const endTotalMinutes = endHours * 60 + endMinutes;
+
+  if (endTotalMinutes <= startTotalMinutes) {
+    return res.status(400).json({
+      message: 'End time must be after start time',
+    });
+  }
+
   const lesson = await Lesson.create(lessonData);
-  await lesson.populate('course', 'name');
+  await lesson.populate('course', 'name professor');
   await lesson.populate('createdBy', 'firstName lastName email');
 
   res.status(201).json(lesson);
@@ -99,6 +132,29 @@ const updateLesson = asyncHandler(async (req, res) => {
 
   delete req.body.tenant;
   req.body.updatedBy = req.user.id;
+
+  if (req.body.startTime || req.body.endTime) {
+    const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+    const startTime = req.body.startTime || lesson.startTime;
+    const endTime = req.body.endTime || lesson.endTime;
+
+    if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
+      return res.status(400).json({
+        message: 'Invalid time format. Use HH:mm format (e.g., 09:00)',
+      });
+    }
+
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
+
+    if (endTotalMinutes <= startTotalMinutes) {
+      return res.status(400).json({
+        message: 'End time must be after start time',
+      });
+    }
+  }
 
   Object.assign(lesson, req.body);
   await lesson.save();

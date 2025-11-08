@@ -7,16 +7,23 @@ export interface CreateLessonData {
   title: string;
   content?: string;
   materials?: LessonMaterial[];
+  date: string;
+  startTime: string;
+  endTime: string;
 }
 
 export interface UpdateLessonData {
   title?: string;
   content?: string;
   materials?: LessonMaterial[];
+  date?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface LessonListParams {
   course?: string;
+  date?: string;
 }
 
 export const lessonsApi = {

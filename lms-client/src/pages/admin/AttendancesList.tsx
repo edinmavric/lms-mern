@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardCheck, Search, Edit, Trash2, Plus } from 'lucide-react';
+import {
+  ClipboardCheck,
+  Search,
+  Edit,
+  Trash2,
+  Plus,
+  Calendar,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { attendanceApi } from '../../lib/api/attendance';
 import { usersApi } from '../../lib/api/users';
-import { coursesApi } from '../../lib/api/courses';
+import { lessonsApi } from '../../lib/api/lessons';
 import { getErrorMessage } from '../../lib/utils';
 import type { Attendance } from '../../types';
 import {
@@ -37,8 +44,11 @@ export function AttendancesList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchStudent, setSearchStudent] = useState('');
-  const [filterCourse, setFilterCourse] = useState<string>('');
+  const [filterLesson, setFilterLesson] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
@@ -54,22 +64,29 @@ export function AttendancesList() {
     queryFn: () => usersApi.list({ role: 'student', status: 'active' }),
   });
 
-  const { data: courses = [] } = useQuery({
-    queryKey: ['courses', 'all'],
-    queryFn: () => coursesApi.list({}),
+  // Fetch active lessons for the selected date
+  const { data: activeLessons = [] } = useQuery({
+    queryKey: ['lessons', 'active', selectedDate],
+    queryFn: () => lessonsApi.list({ date: selectedDate }),
+  });
+
+  // Fetch all lessons for edit dialog (to populate lesson dropdown)
+  const { data: allLessons = [] } = useQuery({
+    queryKey: ['lessons', 'all'],
+    queryFn: () => lessonsApi.list({}),
   });
 
   const { data: attendances = [], isLoading } = useQuery({
     queryKey: [
       'attendances',
       {
-        course: filterCourse || undefined,
+        lesson: filterLesson || undefined,
         status: filterStatus || undefined,
       },
     ],
     queryFn: () =>
       attendanceApi.list({
-        course: filterCourse || undefined,
+        lesson: filterLesson || undefined,
         status: (filterStatus as any) || undefined,
       }),
   });
@@ -98,7 +115,7 @@ export function AttendancesList() {
     mutationFn: (data: AttendanceFormData) => {
       return attendanceApi.create({
         student: data.student,
-        course: data.course || undefined,
+        lesson: data.lesson,
         date: data.date,
         status: data.status,
       });
@@ -157,13 +174,25 @@ export function AttendancesList() {
     return 'Unknown Student';
   };
 
-  const getCourseName = (attendance: Attendance) => {
-    if (!attendance?.course) return 'No course';
-    if (typeof attendance.course === 'string') {
-      const course = courses.find(c => c._id === attendance.course);
-      return course ? course.name : 'Unknown Course';
+  const getLessonName = (attendance: Attendance) => {
+    if (!attendance?.lesson) return 'Unknown Lesson';
+    if (typeof attendance.lesson === 'string') {
+      const lesson = activeLessons.find(l => l._id === attendance.lesson);
+      if (lesson) {
+        const courseName =
+          typeof lesson.course === 'object'
+            ? lesson.course?.name
+            : 'Unknown Course';
+        return `${lesson.title} - ${courseName}`;
+      }
+      return 'Unknown Lesson';
     }
-    return attendance.course.name || 'Unknown Course';
+    const lesson = attendance.lesson;
+    const courseName =
+      typeof lesson.course === 'object'
+        ? lesson.course?.name
+        : 'Unknown Course';
+    return `${lesson.title} - ${courseName}`;
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -337,7 +366,7 @@ export function AttendancesList() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <div>
               <Input
                 placeholder="Search by student name or email..."
@@ -347,22 +376,37 @@ export function AttendancesList() {
               />
             </div>
 
+            <div>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={e => setSelectedDate(e.target.value)}
+                icon={<Calendar className="h-4 w-4" />}
+              />
+            </div>
+
             <Select
-              value={filterCourse || 'all'}
+              value={filterLesson || 'all'}
               onValueChange={value =>
-                setFilterCourse(value === 'all' ? '' : value)
+                setFilterLesson(value === 'all' ? '' : value)
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Filter by course" />
+                <SelectValue placeholder="Filter by lesson" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Courses</SelectItem>
-                {courses.map(course => (
-                  <SelectItem key={course._id} value={course._id}>
-                    {course.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">All Lessons</SelectItem>
+                {activeLessons.map(lesson => {
+                  const courseName =
+                    typeof lesson.course === 'object'
+                      ? lesson.course?.name
+                      : 'Unknown Course';
+                  return (
+                    <SelectItem key={lesson._id} value={lesson._id}>
+                      {lesson.title} - {courseName}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -410,7 +454,7 @@ export function AttendancesList() {
                         Student
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
-                        Course
+                        Lesson
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-sm text-muted-foreground">
                         Date
@@ -456,7 +500,7 @@ export function AttendancesList() {
                           </div>
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {getCourseName(attendance)}
+                          {getLessonName(attendance)}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
                           {new Date(attendance.date).toLocaleDateString()}
@@ -530,7 +574,7 @@ export function AttendancesList() {
                             {getStudentName(attendance)}
                           </h3>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {getCourseName(attendance)}
+                            {getLessonName(attendance)}
                           </p>
                         </div>
                         <Badge
@@ -596,7 +640,8 @@ export function AttendancesList() {
             : null
         }
         students={students}
-        courses={courses}
+        lessons={activeLessons}
+        selectedDate={selectedDate}
       />
 
       {editDialog.attendance && (
@@ -620,7 +665,7 @@ export function AttendancesList() {
               : null
           }
           students={students}
-          courses={courses}
+          lessons={allLessons}
         />
       )}
 
@@ -636,9 +681,9 @@ export function AttendancesList() {
           deleteDialog.attendance
             ? `Are you sure you want to delete the attendance record for "${getStudentName(
                 deleteDialog.attendance
-              )}" on ${new Date(
-                deleteDialog.attendance.date
-              ).toLocaleDateString()}? This action cannot be undone.`
+              )}" in "${getLessonName(
+                deleteDialog.attendance
+              )}"? This action cannot be undone.`
             : 'Are you sure you want to delete this attendance record? This action cannot be undone.'
         }
         maxWidth="md"
@@ -683,11 +728,20 @@ interface CreateAttendanceDialogProps {
     lastName: string;
     email: string;
   }>;
-  courses: Array<{
+  lessons: Array<{
     _id: string;
-    name: string;
-    description?: string;
+    title: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    course?:
+      | string
+      | {
+          _id: string;
+          name: string;
+        };
   }>;
+  selectedDate: string;
 }
 
 function CreateAttendanceDialog({
@@ -697,9 +751,23 @@ function CreateAttendanceDialog({
   isSubmitting,
   error,
   students,
-  courses,
+  lessons,
+  selectedDate,
 }: CreateAttendanceDialogProps) {
   const form = useAttendanceForm();
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        student: '',
+        lesson: '',
+        date: selectedDate,
+        status: 'present',
+      });
+      // Update form date when selectedDate changes
+      form.setValue('date', selectedDate);
+    }
+  }, [open, selectedDate, form]);
 
   const handleSubmit = async () => {
     const isValid = await form.trigger();
@@ -723,7 +791,7 @@ function CreateAttendanceDialog({
       open={open}
       onClose={handleClose}
       title="Record Attendance"
-      description="Fill in the information below to record attendance."
+      description="Fill in the information below to record attendance for a lesson."
       onSubmit={handleSubmit}
       submitLabel="Record Attendance"
       cancelLabel="Cancel"
@@ -732,7 +800,7 @@ function CreateAttendanceDialog({
     >
       <AttendanceForm
         students={students}
-        courses={courses}
+        lessons={lessons}
         register={form.register}
         control={form.control}
         errors={form.formState.errors}
@@ -756,10 +824,18 @@ interface EditAttendanceDialogProps {
     lastName: string;
     email: string;
   }>;
-  courses: Array<{
+  lessons: Array<{
     _id: string;
-    name: string;
-    description?: string;
+    title: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    course?:
+      | string
+      | {
+          _id: string;
+          name: string;
+        };
   }>;
 }
 
@@ -771,7 +847,7 @@ function EditAttendanceDialog({
   isSubmitting,
   error,
   students,
-  courses,
+  lessons,
 }: EditAttendanceDialogProps) {
   const form = useAttendanceForm(attendance);
 
@@ -782,12 +858,10 @@ function EditAttendanceDialog({
           typeof attendance.student === 'string'
             ? attendance.student
             : (attendance.student as any)?._id || '',
-        course:
-          typeof attendance.course === 'string'
-            ? attendance.course
-            : attendance.course
-              ? (attendance.course as any)?._id
-              : undefined,
+        lesson:
+          typeof attendance.lesson === 'string'
+            ? attendance.lesson
+            : (attendance.lesson as any)?._id || '',
         date: attendance.date
           ? new Date(attendance.date).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0],
@@ -816,7 +890,7 @@ function EditAttendanceDialog({
       open={open}
       onClose={handleClose}
       title="Edit Attendance"
-      description="Update the attendance status and date. Student and course cannot be changed after creation."
+      description="Update the attendance status and date. Student and lesson cannot be changed after creation."
       onSubmit={handleSubmit}
       submitLabel="Update Attendance"
       cancelLabel="Cancel"
@@ -825,13 +899,13 @@ function EditAttendanceDialog({
     >
       <AttendanceForm
         students={students}
-        courses={courses}
+        lessons={lessons}
         register={form.register}
         control={form.control}
         errors={form.formState.errors}
         isSubmitting={isSubmitting}
         error={error}
-        allowEditStudentCourse={false}
+        allowEditStudentLesson={false}
       />
     </FormDialog>
   );

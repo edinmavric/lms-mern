@@ -47,6 +47,11 @@ export function LessonEdit() {
         title: lesson.title || '',
         content: lesson.content || '',
         materials: lesson.materials || [],
+        date: lesson.date
+          ? new Date(lesson.date).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+        startTime: lesson.startTime || '09:00',
+        endTime: lesson.endTime || '11:00',
       });
     }
   }, [lesson, form]);
@@ -57,6 +62,9 @@ export function LessonEdit() {
         title: data.title,
         content: data.content,
         materials: data.materials,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
       };
       return lessonsApi.update(id!, updateData);
     },
@@ -164,4 +172,3 @@ export function LessonEdit() {
     </div>
   );
 }
-

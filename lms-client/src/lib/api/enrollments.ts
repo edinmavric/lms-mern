@@ -3,8 +3,9 @@ import { API_ENDPOINTS } from './endpoints';
 import type { Enrollment } from '../../types';
 
 export interface CreateEnrollmentData {
-  student: string;
+  student?: string;
   course: string;
+  enrollmentPassword?: string;
   status?: 'active' | 'completed' | 'cancelled' | 'paused';
 }
 

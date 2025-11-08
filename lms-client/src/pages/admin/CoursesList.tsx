@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 
 import { coursesApi } from '../../lib/api/courses';
 import { usersApi } from '../../lib/api/users';
+import { departmentsApi } from '../../lib/api/departments';
 import { getErrorMessage } from '../../lib/utils';
 import type { Course } from '../../types';
 import { CourseForm, useCourseForm, type CourseFormData } from './CourseForm';
@@ -57,6 +58,11 @@ export function CoursesList() {
     queryFn: () => usersApi.list({ role: 'professor', status: 'active' }),
   });
 
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments', 'all'],
+    queryFn: () => departmentsApi.list({}),
+  });
+
   const { data: courses = [], isLoading } = useQuery({
     queryKey: [
       'courses',
@@ -83,10 +89,15 @@ export function CoursesList() {
         name: data.name,
         description: data.description,
         professor: data.professor,
+        department:
+          data.department && data.department !== '__none__'
+            ? data.department
+            : undefined,
         price:
           data.price && data.price !== '' && typeof data.price === 'number'
             ? data.price
             : undefined,
+        enrollmentPassword: data.enrollmentPassword || undefined,
         schedule:
           data.schedule &&
           (data.schedule.days ||
@@ -506,6 +517,7 @@ export function CoursesList() {
             : null
         }
         professors={professors}
+        departments={departments}
       />
 
       {editDialog.course && (
@@ -526,6 +538,7 @@ export function CoursesList() {
               : null
           }
           professors={professors}
+          departments={departments}
         />
       )}
 
@@ -579,6 +592,11 @@ interface CreateCourseDialogProps {
     lastName: string;
     email: string;
   }>;
+  departments: Array<{
+    _id: string;
+    name: string;
+    description?: string;
+  }>;
 }
 
 function CreateCourseDialog({
@@ -588,6 +606,7 @@ function CreateCourseDialog({
   isSubmitting,
   error,
   professors,
+  departments,
 }: CreateCourseDialogProps) {
   const form = useCourseForm();
 
@@ -624,6 +643,7 @@ function CreateCourseDialog({
         isSubmitting={isSubmitting}
         error={error}
         professors={professors}
+        departments={departments}
         register={form.register}
         control={form.control}
         errors={form.formState.errors}
@@ -645,6 +665,11 @@ interface EditCourseDialogProps {
     lastName: string;
     email: string;
   }>;
+  departments: Array<{
+    _id: string;
+    name: string;
+    description?: string;
+  }>;
 }
 
 function EditCourseDialog({
@@ -655,6 +680,7 @@ function EditCourseDialog({
   isSubmitting,
   error,
   professors,
+  departments,
 }: EditCourseDialogProps) {
   const form = useCourseForm(course);
 
@@ -667,7 +693,12 @@ function EditCourseDialog({
           typeof course.professor === 'string'
             ? course.professor
             : course.professor?._id || '',
+        department:
+          typeof course.department === 'string'
+            ? course.department
+            : course.department?._id || undefined,
         price: course.price || '',
+        enrollmentPassword: course.enrollmentPassword || '',
         schedule: course.schedule || {
           days: [],
           startTime: '',
@@ -709,6 +740,7 @@ function EditCourseDialog({
         isSubmitting={isSubmitting}
         error={error}
         professors={professors}
+        departments={departments}
         register={form.register}
         control={form.control}
         errors={form.formState.errors}

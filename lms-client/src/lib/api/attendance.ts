@@ -4,7 +4,7 @@ import type { Attendance } from '../../types';
 
 export interface CreateAttendanceData {
   student: string;
-  course?: string;
+  lesson: string;
   date: string;
   status: 'present' | 'absent' | 'late' | 'excused';
 }
@@ -16,7 +16,7 @@ export interface UpdateAttendanceData {
 
 export interface AttendanceListParams {
   student?: string;
-  course?: string;
+  lesson?: string;
   status?: 'present' | 'absent' | 'late' | 'excused';
   date?: string;
 }

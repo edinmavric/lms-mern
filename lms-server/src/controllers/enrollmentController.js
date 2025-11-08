@@ -47,43 +47,21 @@ const getEnrollmentById = asyncHandler(async (req, res) => {
 });
 
 const createEnrollment = asyncHandler(async (req, res) => {
-  requireFields(req.body, ['student', 'course']);
+  requireFields(req.body, ['course']);
 
-  if (!['admin', 'professor'].includes(req.user.role)) {
+  let studentId = req.body.student;
+
+  if (req.user.role === 'student') {
+    studentId = req.user.id;
+  } else if (!['admin', 'professor'].includes(req.user.role)) {
     return res.status(403).json({
       message: 'Not allowed to create enrollments',
     });
   }
 
-  const enrollmentData = {
-    ...req.body,
-    tenant: req.tenantId,
-    status: req.body.status || 'active',
-    createdBy: req.user.id,
-  };
-
-  const existing = await Enrollment.findOne({
-    tenant: req.tenantId,
-    student: req.body.student,
-    course: req.body.course,
-    status: { $ne: 'cancelled' },
-  });
-
-  if (existing && !existing.isDeleted) {
+  if (!studentId) {
     return res.status(400).json({
-      message: 'Student is already enrolled in this course',
-    });
-  }
-
-  const student = await User.findOne({
-    _id: req.body.student,
-    tenant: req.tenantId,
-    role: 'student',
-  });
-
-  if (!student) {
-    return res.status(400).json({
-      message: 'Invalid student ID or not a student in this tenant',
+      message: 'Student ID is required',
     });
   }
 
@@ -98,6 +76,52 @@ const createEnrollment = asyncHandler(async (req, res) => {
       message: 'Invalid course ID or course not found in tenant',
     });
   }
+
+  if (course.enrollmentPassword && req.user.role === 'student') {
+    if (!req.body.enrollmentPassword) {
+      return res.status(400).json({
+        message: 'Enrollment password is required for this course',
+      });
+    }
+    if (course.enrollmentPassword !== req.body.enrollmentPassword) {
+      return res.status(403).json({
+        message: 'Invalid enrollment password',
+      });
+    }
+  }
+
+  const student = await User.findOne({
+    _id: studentId,
+    tenant: req.tenantId,
+    role: 'student',
+  });
+
+  if (!student) {
+    return res.status(400).json({
+      message: 'Invalid student ID or not a student in this tenant',
+    });
+  }
+
+  const existing = await Enrollment.findOne({
+    tenant: req.tenantId,
+    student: studentId,
+    course: req.body.course,
+    status: { $ne: 'cancelled' },
+  });
+
+  if (existing && !existing.isDeleted) {
+    return res.status(400).json({
+      message: 'Student is already enrolled in this course',
+    });
+  }
+
+  const enrollmentData = {
+    student: studentId,
+    course: req.body.course,
+    tenant: req.tenantId,
+    status: req.body.status || 'active',
+    createdBy: req.user.id,
+  };
 
   const enrollment = await Enrollment.create(enrollmentData);
   await enrollment.populate('student', 'firstName lastName email');
@@ -143,12 +167,6 @@ const addPayment = asyncHandler(async (req, res) => {
   const { id } = req.params;
   requireFields(req.body, ['amount']);
 
-  if (!['admin', 'accountant'].includes(req.user.role)) {
-    return res.status(403).json({
-      message: 'Only admins or accountants can register payments',
-    });
-  }
-
   if (!isValidObjectId(id)) {
     return res.status(400).json({ message: 'Invalid enrollment ID' });
   }
@@ -163,6 +181,22 @@ const addPayment = asyncHandler(async (req, res) => {
 
   if (!enrollment) {
     return res.status(404).json({ message: 'Enrollment not found' });
+  }
+
+  if (req.user.role === 'student') {
+    const studentId =
+      typeof enrollment.student === 'string'
+        ? enrollment.student.toString()
+        : enrollment.student._id.toString();
+    if (studentId !== req.user.id) {
+      return res.status(403).json({
+        message: 'You can only add payments to your own enrollments',
+      });
+    }
+  } else if (!['admin', 'professor'].includes(req.user.role)) {
+    return res.status(403).json({
+      message: 'Only admins or professors can register payments',
+    });
   }
 
   if (req.body.amount <= 0) {
@@ -183,17 +217,30 @@ const addPayment = asyncHandler(async (req, res) => {
     });
   }
 
+  // Students can only submit payments with 'pending' status
+  // Admins, accountants, and professors can set status
+  const paymentStatus =
+    req.user.role === 'student' ? 'pending' : req.body.status || 'pending';
+
   enrollment.payments.push({
     amount: req.body.amount,
     date: req.body.date || new Date(),
-    status: req.body.status || 'pending',
+    status: paymentStatus,
   });
 
-  const newTotalPaid = totalPaid + req.body.amount;
-  if (coursePrice > 0 && newTotalPaid >= coursePrice) {
-    enrollment.payments.forEach((payment) => {
-      payment.status = 'paid';
-    });
+  // Only admins/accountants can automatically mark payments as paid
+  // If an admin/accountant sets status to 'paid' and total matches or exceeds course price,
+  // mark all payments as paid
+  if (
+    ['admin', 'accountant'].includes(req.user.role) &&
+    paymentStatus === 'paid'
+  ) {
+    const newTotalPaid = totalPaid + req.body.amount;
+    if (coursePrice > 0 && newTotalPaid >= coursePrice) {
+      enrollment.payments.forEach(payment => {
+        payment.status = 'paid';
+      });
+    }
   }
 
   enrollment.updatedBy = req.user.id;

@@ -3,6 +3,7 @@ export { apiClient } from './client';
 export { authApi } from './auth';
 export { usersApi } from './users';
 export { tenantsApi } from './tenants';
+export { departmentsApi } from './departments';
 export { coursesApi } from './courses';
 export { enrollmentsApi } from './enrollments';
 export { lessonsApi } from './lessons';
@@ -31,6 +32,12 @@ export type {
   TenantListParams,
   TenantListResponse,
 } from './tenants';
+
+export type {
+  CreateDepartmentData,
+  UpdateDepartmentData,
+  DepartmentListParams,
+} from './departments';
 
 export type {
   CreateCourseData,

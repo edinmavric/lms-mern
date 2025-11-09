@@ -16,7 +16,7 @@ export function PublicLayout() {
         <div className="container mx-auto px-4 py-6 text-sm text-muted-foreground">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <p>
-              © {new Date().getFullYear()} LMS Platform. All rights reserved.
+              © {new Date().getFullYear()} LMS++. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
               <Link to="/signup" variant="muted">

@@ -325,7 +325,7 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
             mobile ? 'text-xl' : 'text-lg'
           )}
         >
-          LMS Platform
+          LMS++
         </h2>
         {mobile && (
           <Button

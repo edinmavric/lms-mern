@@ -48,7 +48,7 @@ export function PublicHeader() {
               }}
               className="text-lg sm:text-xl font-semibold text-foreground hover:text-primary shrink-0"
             >
-              LMS Platform
+              LMS++
             </button>
 
             <nav className="hidden md:flex items-center gap-3 lg:gap-4 shrink-0">

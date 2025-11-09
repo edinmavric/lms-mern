@@ -164,7 +164,7 @@ export function AdminDashboard() {
           Welcome back, {user?.firstName} {user?.lastName}!
         </h1>
         <p className="text-muted-foreground mt-2">
-          Here's an overview of your LMS platform
+          Here's an overview of your LMS++
         </p>
       </div>
 

@@ -89,7 +89,7 @@ export function MainLayout() {
                   <Menu className="h-5 w-5" />
                 </Button>
                 <h1 className="text-lg sm:text-2xl font-semibold truncate">
-                  LMS Platform
+                  LMS++
                 </h1>
               </div>
               <div className="flex items-center gap-2 sm:gap-4 shrink-0">

@@ -37,7 +37,6 @@ export function ProfessorGradeDetail() {
     enabled: !!id,
   });
 
-  // Verify the grade belongs to a course the professor teaches
   const { data: myCourses = [] } = useQuery({
     queryKey: ['courses', 'professor', user?._id],
     queryFn: () => coursesApi.list({ professor: user?._id }),
@@ -70,12 +69,10 @@ export function ProfessorGradeDetail() {
     );
   }
 
-  // Verify that the grade belongs to a course the professor teaches
   const gradeCourseId =
     typeof grade.course === 'string' ? grade.course : grade.course._id;
   const isMyGrade = myCourses.some(course => course._id === gradeCourseId);
 
-  // Also verify the professor matches
   const isMyProfessorGrade =
     typeof grade.professor === 'string'
       ? grade.professor === user?._id

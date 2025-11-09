@@ -170,7 +170,6 @@ export const Calendar = ({
     enabled: enableHotkeys,
   });
 
-  // Ensure date is always a valid Date object
   const safeDate = date || new Date();
 
   return (
@@ -794,7 +793,6 @@ export const CalendarCurrentDate = ({
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    // If custom onClick is provided, use it, otherwise jump to today
     if (onClick) {
       onClick(e);
     } else {

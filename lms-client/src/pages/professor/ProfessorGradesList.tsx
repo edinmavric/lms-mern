@@ -50,13 +50,11 @@ export function ProfessorGradesList() {
     grade: Grade | null;
   }>({ open: false, grade: null });
 
-  // Get only courses where the professor is assigned
   const { data: myCourses = [] } = useQuery({
     queryKey: ['courses', 'professor', user?._id],
     queryFn: () => coursesApi.list({ professor: user?._id }),
   });
 
-  // Get all students
   const { data: students = [] } = useQuery({
     queryKey: ['users', 'students'],
     queryFn: () => usersApi.list({ role: 'student', status: 'active' }),
@@ -200,7 +198,6 @@ export function ProfessorGradesList() {
     return grade.course.name || 'Unknown Course';
   };
 
-  // Get students enrolled in the selected course (or all students if no course selected)
   const getAvailableStudents = () => {
     if (filterCourse) {
       const course = myCourses.find(c => c._id === filterCourse);
@@ -261,12 +258,11 @@ export function ProfessorGradesList() {
         <>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                icon={<Search className="h-4 w-4" />}
                 placeholder="Search by student name or email..."
                 value={searchStudent}
                 onChange={e => setSearchStudent(e.target.value)}
-                className="pl-10"
               />
             </div>
             <Select

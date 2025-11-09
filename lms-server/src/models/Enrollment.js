@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { activityLogPlugin } = require('../middleware/activityLog');
 
 const enrollmentSchema = new mongoose.Schema({
   tenant: {
@@ -44,5 +45,7 @@ enrollmentSchema.pre('validate', async function (next) {
 });
 
 enrollmentSchema.index({ tenant: 1, student: 1, course: 1 }, { unique: true });
+
+enrollmentSchema.plugin(activityLogPlugin, { entityType: 'Enrollment' });
 
 module.exports = mongoose.model('Enrollment', enrollmentSchema);

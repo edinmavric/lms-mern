@@ -10,6 +10,12 @@ import {
   Award,
   ClipboardCheck,
   Clock,
+  Link as LinkIcon,
+  File,
+  Video,
+  Image,
+  Presentation,
+  ExternalLink,
 } from 'lucide-react';
 
 import { coursesApi } from '../../lib/api/courses';
@@ -17,6 +23,7 @@ import { lessonsApi } from '../../lib/api/lessons';
 import { gradesApi } from '../../lib/api/grades';
 import { attendanceApi } from '../../lib/api/attendance';
 import { enrollmentsApi } from '../../lib/api/enrollments';
+import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { useAuthStore } from '../../store/authStore';
 import type { Course } from '../../types';
 import {
@@ -47,6 +54,12 @@ export function StudentCourseDetail() {
   const { data: lessons = [] } = useQuery({
     queryKey: ['lessons', 'course', id],
     queryFn: () => lessonsApi.list({ course: id }),
+    enabled: !!id,
+  });
+
+  const { data: courseMaterials = [], isLoading: materialsLoading } = useQuery({
+    queryKey: ['lessonMaterials', 'course', id],
+    queryFn: () => lessonMaterialsApi.list({ course: id }),
     enabled: !!id,
   });
 
@@ -463,6 +476,94 @@ export function StudentCourseDetail() {
         </Card>
       )}
 
+      {materialsLoading ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
+          </CardContent>
+        </Card>
+      ) : courseMaterials.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Course Materials
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {courseMaterials.map(material => {
+                const getMaterialTypeIcon = (type: string) => {
+                  switch (type) {
+                    case 'pdf':
+                    case 'document':
+                      return <File className="h-4 w-4" />;
+                    case 'video':
+                      return <Video className="h-4 w-4" />;
+                    case 'presentation':
+                      return <Presentation className="h-4 w-4" />;
+                    case 'image':
+                      return <Image className="h-4 w-4" />;
+                    case 'link':
+                      return <LinkIcon className="h-4 w-4" />;
+                    default:
+                      return <File className="h-4 w-4" />;
+                  }
+                };
+
+                const getMaterialTypeLabel = (type: string) => {
+                  return type.charAt(0).toUpperCase() + type.slice(1);
+                };
+
+                const lessonTitle =
+                  typeof material.lesson === 'object' && material.lesson
+                    ? material.lesson.title
+                    : lessons.find(l => l._id === material.lesson)?.title ||
+                      'Unknown Lesson';
+
+                return (
+                  <div
+                    key={material._id}
+                    className="flex items-start gap-3 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      {getMaterialTypeIcon(material.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-medium text-base">
+                          {material.name}
+                        </h3>
+                        <Badge variant="outline">
+                          {getMaterialTypeLabel(material.type)}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        From: {lessonTitle}
+                      </p>
+                      {material.description && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {material.description}
+                        </p>
+                      )}
+                      <a
+                        href={material.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 break-all"
+                      >
+                        <ExternalLink className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{material.url}</span>
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {courseGrades.length > 0 && (
         <Card>
           <CardHeader>
@@ -524,25 +625,19 @@ export function StudentCourseDetail() {
                 <p className="text-2xl font-bold">{attendanceStats.total}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-success">
-                  Present
-                </p>
+                <p className="text-sm font-medium text-success">Present</p>
                 <p className="text-2xl font-bold text-success">
                   {attendanceStats.present}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-destructive">
-                  Absent
-                </p>
+                <p className="text-sm font-medium text-destructive">Absent</p>
                 <p className="text-2xl font-bold text-destructive">
                   {attendanceStats.absent}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-warning">
-                  Late
-                </p>
+                <p className="text-sm font-medium text-warning">Late</p>
                 <p className="text-2xl font-bold text-warning">
                   {attendanceStats.late}
                 </p>

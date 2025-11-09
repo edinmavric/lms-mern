@@ -23,6 +23,7 @@ const {
   hashResetToken,
   verifyResetToken,
 } = require('../utils/logger');
+const { logActivity } = require('../middleware/activityLog');
 const env = require('../config/env');
 
 const login = asyncHandler(async (req, res) => {
@@ -133,6 +134,23 @@ const login = asyncHandler(async (req, res) => {
     ip: clientIp,
   });
 
+  await logActivity(
+    {
+      tenant: tenant._id,
+      user: user._id,
+      action: 'user.login',
+      entityType: 'User',
+      entityId: user._id,
+      metadata: {
+        email: sanitizedEmail,
+        role: user.role,
+        loginMethod: 'password',
+      },
+      severity: 'low',
+    },
+    req
+  );
+
   res.json({
     token,
     refreshToken,
@@ -171,7 +189,6 @@ const register = asyncHandler(async (req, res) => {
     });
   }
 
-  // Validate role - only student or professor allowed (admin cannot self-register)
   const allowedRoles = ['student', 'professor'];
   const userRole = role && allowedRoles.includes(role) ? role : 'student';
 
@@ -418,12 +435,18 @@ const forgotPassword = asyncHandler(async (req, res) => {
   await user.save();
 
   const resetLink = `${env.frontendUrl}/reset-password?token=${resetToken}&tenantId=${tenantId}`;
-  
+
   if (!env.mailjetPublicKey || !env.mailjetPrivateKey) {
-    console.warn('[EMAIL] Mailjet API keys not configured. Email will not be sent.');
-    console.warn('[EMAIL] Set MJ_APIKEY_PUBLIC and MJ_APIKEY_PRIVATE in your .env file.');
+    console.warn(
+      '[EMAIL] Mailjet API keys not configured. Email will not be sent.'
+    );
+    console.warn(
+      '[EMAIL] Set MJ_APIKEY_PUBLIC and MJ_APIKEY_PRIVATE in your .env file.'
+    );
     if (env.nodeEnv === 'development') {
-      console.log(`[DEV] Password reset token for ${sanitizedEmail}: ${resetToken}`);
+      console.log(
+        `[DEV] Password reset token for ${sanitizedEmail}: ${resetToken}`
+      );
       console.log(`[DEV] Reset link (frontend): ${resetLink}`);
     }
   } else {
@@ -438,12 +461,14 @@ const forgotPassword = asyncHandler(async (req, res) => {
       console.error('[EMAIL] Failed to send password reset email:', e.message);
       console.error('[EMAIL] Error details:', e);
       if (env.nodeEnv === 'development') {
-        console.log(`[DEV] Password reset token for ${sanitizedEmail}: ${resetToken}`);
+        console.log(
+          `[DEV] Password reset token for ${sanitizedEmail}: ${resetToken}`
+        );
         console.log(`[DEV] Reset link (frontend): ${resetLink}`);
       }
     }
   }
-  
+
   if (env.nodeEnv === 'development') {
     console.log(`Password reset token for ${sanitizedEmail}: ${resetToken}`);
     console.log(`Reset link (frontend): ${resetLink}`);

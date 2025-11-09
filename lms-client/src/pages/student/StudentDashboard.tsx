@@ -87,7 +87,7 @@ export function StudentDashboard() {
       title: 'My Grades',
       description: `Average: ${stats.averageGrade.toFixed(2)}`,
       icon: Award,
-      href: '#', // TODO: Create student grades page
+      href: '#',
       stats: {
         total: stats.totalGrades,
         average: stats.averageGrade.toFixed(2),
@@ -97,7 +97,7 @@ export function StudentDashboard() {
       title: 'My Attendance',
       description: `${stats.attendanceRate.toFixed(1)}% attendance rate`,
       icon: ClipboardCheck,
-      href: '#', // TODO: Create student attendance page
+      href: '#',
       stats: {
         present: stats.presentAttendance,
         total: stats.totalAttendance,

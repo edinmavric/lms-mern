@@ -140,7 +140,6 @@ const approveUser = asyncHandler(async (req, res) => {
     const loginLink = `${env.frontendUrl}/login`;
     await sendApprovalEmail(user.email, null, loginLink);
   } catch (e) {
-    // non-fatal
   }
 
   res.json(sanitizeUserOutput(user));

@@ -16,18 +16,11 @@ import {
   Textarea,
 } from '../../components/ui';
 
-const lessonMaterialSchema = z.object({
-  type: z.enum(['pdf', 'video', 'presentation', 'link']),
-  url: z.string().min(1, 'URL is required'),
-  storageKey: z.string().optional(),
-});
-
 const lessonFormSchema = z
   .object({
     course: z.string().min(1, 'Course is required'),
     title: z.string().min(1, 'Title is required'),
     content: z.string().optional(),
-    materials: z.array(lessonMaterialSchema).optional(),
     date: z.string().min(1, 'Date is required'),
     startTime: z
       .string()
@@ -211,7 +204,6 @@ export function useLessonForm(lesson?: Lesson) {
           : (lesson?.course as any)?._id || '',
       title: lesson?.title || '',
       content: lesson?.content || '',
-      materials: lesson?.materials || [],
       date: lesson?.date
         ? new Date(lesson.date).toISOString().split('T')[0]
         : today,

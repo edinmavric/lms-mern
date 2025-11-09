@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
+const { activityLogPlugin } = require('../middleware/activityLog');
 
 const departmentSchema = new mongoose.Schema({
-  tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
+  tenant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    required: true,
+  },
   name: { type: String, required: true },
   description: String,
   isDeleted: { type: Boolean, default: false },
@@ -12,5 +17,7 @@ const departmentSchema = new mongoose.Schema({
 });
 
 departmentSchema.index({ tenant: 1, name: 1 }, { unique: true });
+
+departmentSchema.plugin(activityLogPlugin, { entityType: 'Department' });
 
 module.exports = mongoose.model('Department', departmentSchema);

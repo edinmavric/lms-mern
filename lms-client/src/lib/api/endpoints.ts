@@ -63,6 +63,14 @@ export const API_ENDPOINTS = {
     delete: (id: string) => `${API_BASE}/lessons/${id}`,
   },
 
+  lessonMaterials: {
+    list: `${API_BASE}/lesson-materials`,
+    create: `${API_BASE}/lesson-materials`,
+    detail: (id: string) => `${API_BASE}/lesson-materials/${id}`,
+    update: (id: string) => `${API_BASE}/lesson-materials/${id}`,
+    delete: (id: string) => `${API_BASE}/lesson-materials/${id}`,
+  },
+
   grades: {
     list: `${API_BASE}/grades`,
     create: `${API_BASE}/grades`,
@@ -85,5 +93,37 @@ export const API_ENDPOINTS = {
     detail: (id: string) => `${API_BASE}/bank-accounts/${id}`,
     update: (id: string) => `${API_BASE}/bank-accounts/${id}`,
     delete: (id: string) => `${API_BASE}/bank-accounts/${id}`,
+  },
+
+  points: {
+    list: `${API_BASE}/points`,
+    create: `${API_BASE}/points`,
+    detail: (id: string) => `${API_BASE}/points/${id}`,
+    update: (id: string) => `${API_BASE}/points/${id}`,
+    delete: (id: string) => `${API_BASE}/points/${id}`,
+  },
+
+  exams: {
+    list: `${API_BASE}/exams`,
+    create: `${API_BASE}/exams`,
+    detail: (id: string) => `${API_BASE}/exams/${id}`,
+    update: (id: string) => `${API_BASE}/exams/${id}`,
+    delete: (id: string) => `${API_BASE}/exams/${id}`,
+  },
+
+  examSubscriptions: {
+    list: `${API_BASE}/exam-subscriptions`,
+    detail: (id: string) => `${API_BASE}/exam-subscriptions/${id}`,
+    subscribe: (examId: string) =>
+      `${API_BASE}/exam-subscriptions/exam/${examId}/subscribe`,
+    unsubscribe: (id: string) => `${API_BASE}/exam-subscriptions/${id}`,
+    grade: (id: string) => `${API_BASE}/exam-subscriptions/${id}/grade`,
+  },
+
+  activityLogs: {
+    list: `${API_BASE}/activity-logs`,
+    stats: `${API_BASE}/activity-logs/stats`,
+    entity: (entityType: string, entityId: string) =>
+      `${API_BASE}/activity-logs/entity/${entityType}/${entityId}`,
   },
 } as const;

@@ -46,7 +46,6 @@ export function LessonEdit() {
             : (lesson.course as any)?._id || '',
         title: lesson.title || '',
         content: lesson.content || '',
-        materials: lesson.materials || [],
         date: lesson.date
           ? new Date(lesson.date).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0],
@@ -61,7 +60,6 @@ export function LessonEdit() {
       const updateData: any = {
         title: data.title,
         content: data.content,
-        materials: data.materials,
         date: data.date,
         startTime: data.startTime,
         endTime: data.endTime,

@@ -54,35 +54,48 @@ export function MainLayout() {
   return (
     <div className="min-h-screen bg-background flex">
       {!isMobile && (
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} mobile={false} />
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          mobile={false}
+        />
       )}
 
       {isMobile && (
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} mobile={true} />
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          mobile={true}
+        />
       )}
 
-      <div className={cn(
-        "flex-1 flex flex-col transition-all duration-300",
-        !isMobile && sidebarOpen && "lg:pl-64"
-      )}>
+      <div
+        className={cn(
+          'flex-1 flex flex-col transition-all duration-300',
+          !isMobile && sidebarOpen && 'lg:pl-64'
+        )}
+      >
         <header className="bg-card text-card-foreground shadow-sm border-b border-border sticky top-0 z-30">
           <div className="px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={toggleSidebar}
                   aria-label="Toggle sidebar"
+                  className="shrink-0"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
-                <h1 className="text-2xl font-semibold">LMS Platform</h1>
+                <h1 className="text-lg sm:text-2xl font-semibold truncate">
+                  LMS Platform
+                </h1>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 {user && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="hidden sm:inline">
+                    <span className="hidden sm:inline truncate max-w-[120px] md:max-w-none">
                       {user.firstName} {user.lastName}
                     </span>
                     <span className="hidden md:inline">({user.role})</span>
@@ -93,7 +106,7 @@ export function MainLayout() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowLogoutDialog(true)}
-                    className="relative"
+                    className="relative shrink-0"
                     aria-label="Logout"
                   >
                     <LogOut className="h-5 w-5" />

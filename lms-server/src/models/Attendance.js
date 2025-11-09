@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { activityLogPlugin } = require('../middleware/activityLog');
 
 const attendanceSchema = new mongoose.Schema({
   tenant: {
@@ -29,5 +30,7 @@ const attendanceSchema = new mongoose.Schema({
 });
 
 attendanceSchema.index({ tenant: 1, student: 1, lesson: 1 }, { unique: true });
+
+attendanceSchema.plugin(activityLogPlugin, { entityType: 'Attendance' });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);

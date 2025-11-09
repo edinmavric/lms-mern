@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   Wallet,
   TrendingUp,
+  Activity,
 } from 'lucide-react';
 
 import { usersApi } from '../../lib/api/users';
@@ -16,6 +17,7 @@ import { enrollmentsApi } from '../../lib/api/enrollments';
 import { gradesApi } from '../../lib/api/grades';
 import { attendanceApi } from '../../lib/api/attendance';
 import { bankAccountsApi } from '../../lib/api/bankAccounts';
+import { activityLogsApi } from '../../lib/api/activityLogs';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
 
@@ -50,6 +52,11 @@ export function AdminDashboard() {
   const { data: bankAccounts = [] } = useQuery({
     queryKey: ['bankAccounts', 'all'],
     queryFn: () => bankAccountsApi.list({}),
+  });
+
+  const { data: activityLogsStats } = useQuery({
+    queryKey: ['activityLogs', 'stats', 7],
+    queryFn: () => activityLogsApi.getStats(7),
   });
 
   const stats = {
@@ -125,6 +132,27 @@ export function AdminDashboard() {
       stats: {
         total: stats.totalBankAccounts,
         primary: stats.primaryBankAccounts,
+      },
+    },
+    {
+      title: 'Activity Logs',
+      description: `${
+        activityLogsStats?.actionStats.reduce(
+          (sum, stat) => sum + stat.count,
+          0
+        ) || 0
+      } actions (7 days)`,
+      icon: Activity,
+      href: '/app/admin/activity-logs',
+      stats: {
+        total:
+          activityLogsStats?.actionStats.reduce(
+            (sum, stat) => sum + stat.count,
+            0
+          ) || 0,
+        critical:
+          activityLogsStats?.severityStats.find(s => s._id === 'critical')
+            ?.count || 0,
       },
     },
   ];

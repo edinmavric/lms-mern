@@ -56,34 +56,40 @@ export function Dialog({
             leaveTo="opacity-0 scale-95"
             className="w-full flex items-center justify-center"
           >
-            <HeadlessDialog.Panel className={cn(
-              "w-full rounded-lg border border-border bg-card p-4 md:p-6 shadow-lg mx-auto",
-              maxWidthClasses[maxWidth]
-            )}>
-              {showCloseButton && (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Close</span>
-                </button>
+            <HeadlessDialog.Panel
+              className={cn(
+                'w-full rounded-lg border border-border bg-card shadow-lg mx-auto flex flex-col max-h-[90vh]',
+                maxWidthClasses[maxWidth]
               )}
+            >
+              <div className="flex-shrink-0 p-4 md:p-6 pb-0 relative">
+                {showCloseButton && (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring z-10"
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Close</span>
+                  </button>
+                )}
 
-              {title && (
-                <HeadlessDialog.Title className="text-lg font-semibold text-foreground mb-2">
-                  {title}
-                </HeadlessDialog.Title>
-              )}
+                {title && (
+                  <HeadlessDialog.Title className="text-lg font-semibold text-foreground mb-2 pr-8">
+                    {title}
+                  </HeadlessDialog.Title>
+                )}
 
-              {description && (
-                <HeadlessDialog.Description className="text-sm text-muted-foreground mb-4">
-                  {description}
-                </HeadlessDialog.Description>
-              )}
+                {description && (
+                  <HeadlessDialog.Description className="text-sm text-muted-foreground mb-4">
+                    {description}
+                  </HeadlessDialog.Description>
+                )}
+              </div>
 
-              {children}
+              <div className="flex-1 overflow-y-auto min-h-0 px-4 md:px-6">
+                {children}
+              </div>
             </HeadlessDialog.Panel>
           </Transition.Child>
         </div>
@@ -98,7 +104,7 @@ export interface DialogContentProps {
 }
 
 export function DialogContent({ children, className }: DialogContentProps) {
-  return <div className={cn('space-y-4', className)}>{children}</div>;
+  return <div className={cn('space-y-4 py-4', className)}>{children}</div>;
 }
 
 export interface DialogFooterProps {
@@ -108,7 +114,12 @@ export interface DialogFooterProps {
 
 export function DialogFooter({ children, className }: DialogFooterProps) {
   return (
-    <div className={cn('flex items-center justify-end gap-3 mt-6', className)}>
+    <div
+      className={cn(
+        'flex items-center justify-end gap-3 mt-6 pt-4 border-t border-border flex-shrink-0',
+        className
+      )}
+    >
       {children}
     </div>
   );

@@ -73,3 +73,5 @@ lms-server/dist/
 # Ignore all test directories
 **/__tests__/**
 lms-server/src/__tests__/**
+
+DEVELOPMENT_PLAN.md

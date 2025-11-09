@@ -64,13 +64,11 @@ export function AttendancesList() {
     queryFn: () => usersApi.list({ role: 'student', status: 'active' }),
   });
 
-  // Fetch active lessons for the selected date
   const { data: activeLessons = [] } = useQuery({
     queryKey: ['lessons', 'active', selectedDate],
     queryFn: () => lessonsApi.list({ date: selectedDate }),
   });
 
-  // Fetch all lessons for edit dialog (to populate lesson dropdown)
   const { data: allLessons = [] } = useQuery({
     queryKey: ['lessons', 'all'],
     queryFn: () => lessonsApi.list({}),
@@ -764,7 +762,6 @@ function CreateAttendanceDialog({
         date: selectedDate,
         status: 'present',
       });
-      // Update form date when selectedDate changes
       form.setValue('date', selectedDate);
     }
   }, [open, selectedDate, form]);

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { activityLogPlugin } = require('../middleware/activityLog');
 
 const tenantSettingsSchema = new mongoose.Schema(
   {
@@ -50,5 +51,7 @@ const tenantSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+tenantSchema.plugin(activityLogPlugin, { entityType: 'Tenant' });
 
 module.exports = mongoose.model('Tenant', tenantSchema);

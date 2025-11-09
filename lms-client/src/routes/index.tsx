@@ -36,11 +36,16 @@ import { BankAccountsList } from '../pages/admin/BankAccountsList';
 import { BankAccountEdit } from '../pages/admin/BankAccountEdit';
 import { BankAccountDetail } from '../pages/admin/BankAccountDetail';
 import { DepartmentsList } from '../pages/admin/DepartmentsList';
+import { ActivityLogsList } from '../pages/admin/ActivityLogsList';
 import { DepartmentEdit } from '../pages/admin/DepartmentEdit';
 import { DepartmentDetail } from '../pages/admin/DepartmentDetail';
 import { StudentCourses } from '../pages/student/StudentCourses';
 import { StudentCourseDetail } from '../pages/student/StudentCourseDetail';
 import { StudentEnrollmentsList } from '../pages/student/StudentEnrollmentsList';
+import { StudentLessonsList } from '../pages/student/StudentLessonsList';
+import { StudentGradesList } from '../pages/student/StudentGradesList';
+import { StudentExamsList } from '../pages/student/StudentExamsList';
+import { StudentPointsList } from '../pages/student/StudentPointsList';
 import { StudentEnrollmentDetail } from '../pages/student/StudentEnrollmentDetail';
 import { ProfessorCoursesList } from '../pages/professor/ProfessorCoursesList';
 import { ProfessorCourseDetail } from '../pages/professor/ProfessorCourseDetail';
@@ -48,6 +53,9 @@ import { ProfessorLessonsList } from '../pages/professor/ProfessorLessonsList';
 import { ProfessorLessonDetail } from '../pages/professor/ProfessorLessonDetail';
 import { ProfessorGradesList } from '../pages/professor/ProfessorGradesList';
 import { ProfessorGradeDetail } from '../pages/professor/ProfessorGradeDetail';
+import { ProfessorExamsList } from '../pages/professor/ProfessorExamsList';
+import { ProfessorExamDetail } from '../pages/professor/ProfessorExamDetail';
+import { ProfessorPointsList } from '../pages/professor/ProfessorPointsList';
 
 const router = createBrowserRouter([
   {
@@ -257,6 +265,14 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
+          {
+            path: 'activity-logs',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ActivityLogsList />
+              </ProtectedRoute>
+            ),
+          },
         ],
       },
       {
@@ -291,6 +307,38 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentEnrollmentDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lessons',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLessonsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'grades',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentGradesList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exams',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentExamsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'points',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentPointsList />
               </ProtectedRoute>
             ),
           },
@@ -344,6 +392,30 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['professor']}>
                 <ProfessorGradeDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exams',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorExamsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exams/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorExamDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'points',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorPointsList />
               </ProtectedRoute>
             ),
           },

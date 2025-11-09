@@ -56,7 +56,6 @@ async function shutdown(signal) {
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   if (env.nodeEnv === 'production') {
-    // Log to monitoring service in production
   }
 });
 

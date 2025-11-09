@@ -173,7 +173,6 @@ export function StudentEnrollmentDetail() {
     }
   };
 
-  // Set default payment amount to remaining balance
   const updateDefaultAmount = () => {
     if (remaining > 0) {
       paymentForm.setValue('amount', remaining);

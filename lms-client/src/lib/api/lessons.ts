@@ -1,12 +1,11 @@
 import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
-import type { Lesson, LessonMaterial } from '../../types';
+import type { Lesson } from '../../types';
 
 export interface CreateLessonData {
   course: string;
   title: string;
   content?: string;
-  materials?: LessonMaterial[];
   date: string;
   startTime: string;
   endTime: string;
@@ -15,7 +14,6 @@ export interface CreateLessonData {
 export interface UpdateLessonData {
   title?: string;
   content?: string;
-  materials?: LessonMaterial[];
   date?: string;
   startTime?: string;
   endTime?: string;
@@ -35,7 +33,9 @@ export const lessonsApi = {
   },
 
   getById: async (id: string): Promise<Lesson> => {
-    const { data } = await apiClient.get<Lesson>(API_ENDPOINTS.lessons.detail(id));
+    const { data } = await apiClient.get<Lesson>(
+      API_ENDPOINTS.lessons.detail(id)
+    );
     return data;
   },
 

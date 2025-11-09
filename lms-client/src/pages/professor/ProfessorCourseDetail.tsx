@@ -69,7 +69,6 @@ export function ProfessorCourseDetail() {
     );
   }
 
-  // Verify that the professor is assigned to this course
   const isAssignedProfessor =
     typeof course.professor === 'string'
       ? course.professor === user?._id

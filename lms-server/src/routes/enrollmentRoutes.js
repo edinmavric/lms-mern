@@ -14,7 +14,7 @@ router.get('/', getAllEnrollments);
 
 router.get('/:id', getEnrollmentById);
 
-router.post('/', requireRole('admin', 'professor'), createEnrollment);
+router.post('/', createEnrollment);
 
 router.put('/:id', requireRole('admin', 'professor'), updateEnrollment);
 

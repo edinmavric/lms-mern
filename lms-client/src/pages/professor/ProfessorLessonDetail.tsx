@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -6,11 +7,23 @@ import {
   Calendar,
   Clock,
   FileText,
+  Plus,
+  Edit,
+  Trash2,
+  Link as LinkIcon,
+  File,
+  Video,
+  Image,
+  Presentation,
+  ExternalLink,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { lessonsApi } from '../../lib/api/lessons';
 import { coursesApi } from '../../lib/api/courses';
+import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { useAuthStore } from '../../store/authStore';
+import type { LessonMaterial } from '../../types';
 import {
   Card,
   CardContent,
@@ -18,12 +31,144 @@ import {
   CardTitle,
   Button,
   Alert,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  FormField,
+  Input,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  Badge,
 } from '../../components/ui';
+
+interface MaterialFormData {
+  name: string;
+  description?: string;
+  type:
+    | 'pdf'
+    | 'video'
+    | 'presentation'
+    | 'link'
+    | 'document'
+    | 'image'
+    | 'other';
+  url: string;
+}
+
+function MaterialForm({
+  material,
+  onSubmit,
+  onCancel,
+}: {
+  material?: LessonMaterial | null;
+  onSubmit: (data: MaterialFormData) => void;
+  onCancel: () => void;
+}) {
+  const [formData, setFormData] = useState<MaterialFormData>({
+    name: material?.name || '',
+    description: material?.description || '',
+    type: material?.type || 'link',
+    url: material?.url || '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      toast.error('Material name is required');
+      return;
+    }
+    if (!formData.url.trim()) {
+      toast.error('Material URL is required');
+      return;
+    }
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FormField label="Material Name" required>
+        <Input
+          value={formData.name}
+          onChange={e => setFormData({ ...formData, name: e.target.value })}
+          placeholder="e.g., Lecture Slides, Reading Material"
+          required
+        />
+      </FormField>
+
+      <FormField label="Description">
+        <textarea
+          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border rounded-md bg-background resize-none"
+          value={formData.description}
+          onChange={e =>
+            setFormData({ ...formData, description: e.target.value })
+          }
+          placeholder="Optional description of the material"
+        />
+      </FormField>
+
+      <FormField label="Type" required>
+        <Select
+          value={formData.type}
+          onValueChange={value =>
+            setFormData({
+              ...formData,
+              type: value as MaterialFormData['type'],
+            })
+          }
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pdf">PDF</SelectItem>
+            <SelectItem value="video">Video</SelectItem>
+            <SelectItem value="presentation">Presentation</SelectItem>
+            <SelectItem value="link">Link</SelectItem>
+            <SelectItem value="document">Document</SelectItem>
+            <SelectItem value="image">Image</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </FormField>
+
+      <FormField label="URL" required>
+        <Input
+          type="url"
+          value={formData.url}
+          onChange={e => setFormData({ ...formData, url: e.target.value })}
+          placeholder="https://example.com/material.pdf"
+          required
+        />
+      </FormField>
+
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">Save Material</Button>
+      </DialogFooter>
+    </form>
+  );
+}
 
 export function ProfessorLessonDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const [createMaterialDialogOpen, setCreateMaterialDialogOpen] =
+    useState(false);
+  const [editMaterialDialog, setEditMaterialDialog] = useState<{
+    open: boolean;
+    material: LessonMaterial | null;
+  }>({ open: false, material: null });
+  const [deleteMaterialDialog, setDeleteMaterialDialog] = useState<{
+    open: boolean;
+    material: LessonMaterial | null;
+  }>({ open: false, material: null });
 
   const {
     data: lesson,
@@ -35,11 +180,63 @@ export function ProfessorLessonDetail() {
     enabled: !!id,
   });
 
-  // Verify the lesson belongs to a course the professor teaches
   const { data: myCourses = [] } = useQuery({
     queryKey: ['courses', 'professor', user?._id],
     queryFn: () => coursesApi.list({ professor: user?._id }),
     enabled: !!user?._id,
+  });
+
+  const { data: materials = [], isLoading: materialsLoading } = useQuery({
+    queryKey: ['lessonMaterials', 'lesson', id],
+    queryFn: () => lessonMaterialsApi.list({ lesson: id }),
+    enabled: !!id,
+  });
+
+  const createMaterialMutation = useMutation({
+    mutationFn: lessonMaterialsApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['lessonMaterials', 'lesson', id],
+      });
+      setCreateMaterialDialogOpen(false);
+      toast.success('Material added successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to add material');
+    },
+  });
+
+  const updateMaterialMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      lessonMaterialsApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['lessonMaterials', 'lesson', id],
+      });
+      setEditMaterialDialog({ open: false, material: null });
+      toast.success('Material updated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message || 'Failed to update material'
+      );
+    },
+  });
+
+  const deleteMaterialMutation = useMutation({
+    mutationFn: lessonMaterialsApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['lessonMaterials', 'lesson', id],
+      });
+      setDeleteMaterialDialog({ open: false, material: null });
+      toast.success('Material deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message || 'Failed to delete material'
+      );
+    },
   });
 
   if (isLoading) {
@@ -68,7 +265,6 @@ export function ProfessorLessonDetail() {
     );
   }
 
-  // Verify that the lesson belongs to a course the professor teaches
   const lessonCourseId =
     typeof lesson.course === 'string' ? lesson.course : lesson.course._id;
   const isMyLesson = myCourses.some(course => course._id === lessonCourseId);
@@ -97,6 +293,49 @@ export function ProfessorLessonDetail() {
       return course?.name || 'Unknown Course';
     }
     return lesson.course.name || 'Unknown Course';
+  };
+
+  const getMaterialTypeIcon = (type: string) => {
+    switch (type) {
+      case 'pdf':
+      case 'document':
+        return <File className="h-4 w-4" />;
+      case 'video':
+        return <Video className="h-4 w-4" />;
+      case 'presentation':
+        return <Presentation className="h-4 w-4" />;
+      case 'image':
+        return <Image className="h-4 w-4" />;
+      case 'link':
+        return <LinkIcon className="h-4 w-4" />;
+      default:
+        return <File className="h-4 w-4" />;
+    }
+  };
+
+  const getMaterialTypeLabel = (type: string) => {
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  const handleCreateMaterial = (data: MaterialFormData) => {
+    if (!id) return;
+    createMaterialMutation.mutate({
+      lesson: id,
+      ...data,
+    });
+  };
+
+  const handleUpdateMaterial = (data: MaterialFormData) => {
+    if (!editMaterialDialog.material) return;
+    updateMaterialMutation.mutate({
+      id: editMaterialDialog.material._id,
+      data,
+    });
+  };
+
+  const handleDeleteMaterial = () => {
+    if (!deleteMaterialDialog.material) return;
+    deleteMaterialMutation.mutate(deleteMaterialDialog.material._id);
   };
 
   return (
@@ -212,6 +451,152 @@ export function ProfessorLessonDetail() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Lesson Materials
+            </CardTitle>
+            <Button size="sm" onClick={() => setCreateMaterialDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Material
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {materialsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : materials.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No materials added yet. Click "Add Material" to add resources for
+              this lesson.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {materials.map(material => (
+                <div
+                  key={material._id}
+                  className="flex items-start justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="mt-0.5 shrink-0">
+                      {getMaterialTypeIcon(material.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-medium text-base">
+                          {material.name}
+                        </h3>
+                        <Badge variant="outline">
+                          {getMaterialTypeLabel(material.type)}
+                        </Badge>
+                      </div>
+                      {material.description && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {material.description}
+                        </p>
+                      )}
+                      <a
+                        href={material.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 break-all"
+                      >
+                        <ExternalLink className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{material.url}</span>
+                      </a>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() =>
+                        setEditMaterialDialog({ open: true, material })
+                      }
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive"
+                      onClick={() =>
+                        setDeleteMaterialDialog({ open: true, material })
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog
+        open={createMaterialDialogOpen}
+        onClose={() => setCreateMaterialDialogOpen(false)}
+        title="Add Material"
+        description="Add a new material resource for this lesson"
+      >
+        <DialogContent>
+          <MaterialForm
+            onSubmit={handleCreateMaterial}
+            onCancel={() => setCreateMaterialDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={editMaterialDialog.open}
+        onClose={() => setEditMaterialDialog({ open: false, material: null })}
+        title="Edit Material"
+        description="Update material details"
+      >
+        <DialogContent>
+          <MaterialForm
+            material={editMaterialDialog.material}
+            onSubmit={handleUpdateMaterial}
+            onCancel={() =>
+              setEditMaterialDialog({ open: false, material: null })
+            }
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteMaterialDialog.open}
+        onClose={() => setDeleteMaterialDialog({ open: false, material: null })}
+        title="Delete Material"
+        description={`Are you sure you want to delete "${deleteMaterialDialog.material?.name}"? This action cannot be undone.`}
+      >
+        <DialogContent>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setDeleteMaterialDialog({ open: false, material: null })
+              }
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteMaterial}
+              disabled={deleteMaterialMutation.isPending}
+            >
+              {deleteMaterialMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

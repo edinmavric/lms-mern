@@ -217,8 +217,6 @@ const addPayment = asyncHandler(async (req, res) => {
     });
   }
 
-  // Students can only submit payments with 'pending' status
-  // Admins, accountants, and professors can set status
   const paymentStatus =
     req.user.role === 'student' ? 'pending' : req.body.status || 'pending';
 
@@ -228,9 +226,6 @@ const addPayment = asyncHandler(async (req, res) => {
     status: paymentStatus,
   });
 
-  // Only admins/accountants can automatically mark payments as paid
-  // If an admin/accountant sets status to 'paid' and total matches or exceeds course price,
-  // mark all payments as paid
   if (
     ['admin', 'accountant'].includes(req.user.role) &&
     paymentStatus === 'paid'

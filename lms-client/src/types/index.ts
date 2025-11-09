@@ -87,7 +87,6 @@ export interface Lesson {
   course: string | Course;
   title: string;
   content?: string;
-  materials: LessonMaterial[];
   date: string;
   startTime: string;
   endTime: string;
@@ -98,9 +97,110 @@ export interface Lesson {
 }
 
 export interface LessonMaterial {
-  type: 'pdf' | 'video' | 'presentation' | 'link';
+  _id: string;
+  tenant: string;
+  lesson: string | Lesson;
+  course: string | Course;
+  professor: string | User;
+  name: string;
+  description?: string;
+  type:
+    | 'pdf'
+    | 'video'
+    | 'presentation'
+    | 'link'
+    | 'document'
+    | 'image'
+    | 'other';
   url: string;
   storageKey?: string;
+  isDeleted: boolean;
+  createdBy?: string | User;
+  updatedBy?: string | User;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActivityLog {
+  _id: string;
+  tenant: string;
+  user: string | User;
+  action:
+    | 'user.created'
+    | 'user.updated'
+    | 'user.deleted'
+    | 'user.approved'
+    | 'user.disabled'
+    | 'user.login'
+    | 'user.logout'
+    | 'user.password_reset'
+    | 'course.created'
+    | 'course.updated'
+    | 'course.deleted'
+    | 'course.enrolled'
+    | 'course.unenrolled'
+    | 'lesson.created'
+    | 'lesson.updated'
+    | 'lesson.deleted'
+    | 'lesson.material_added'
+    | 'lesson.material_deleted'
+    | 'grade.created'
+    | 'grade.updated'
+    | 'grade.deleted'
+    | 'exam.created'
+    | 'exam.updated'
+    | 'exam.deleted'
+    | 'exam.subscribed'
+    | 'exam.graded'
+    | 'attendance.marked'
+    | 'attendance.updated'
+    | 'payment.received'
+    | 'payment.updated'
+    | 'department.created'
+    | 'department.updated'
+    | 'department.deleted'
+    | 'settings.updated'
+    | 'bank_account.created'
+    | 'bank_account.updated'
+    | 'bank_account.deleted'
+    | 'point.created'
+    | 'point.updated'
+    | 'point.deleted'
+    | 'enrollment.created'
+    | 'enrollment.updated'
+    | 'enrollment.deleted';
+  entityType:
+    | 'User'
+    | 'Course'
+    | 'Lesson'
+    | 'Grade'
+    | 'Exam'
+    | 'ExamSubscription'
+    | 'Attendance'
+    | 'Enrollment'
+    | 'Payment'
+    | 'Department'
+    | 'BankAccount'
+    | 'LessonMaterial'
+    | 'Point'
+    | 'Tenant';
+  entityId: string;
+  changes?: Record<string, { old: any; new: any }>;
+  metadata?: Record<string, any>;
+  ipAddress?: string;
+  userAgent?: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActivityLogStats {
+  actionStats: Array<{ _id: string; count: number }>;
+  severityStats: Array<{ _id: string; count: number }>;
+  entityTypeStats: Array<{ _id: string; count: number }>;
+  period: string;
+  startDate: string;
+  endDate: string;
 }
 
 export interface Enrollment {
@@ -174,6 +274,60 @@ export interface BankAccount {
   createdBy?: string;
   updatedBy?: string;
   createdAt: string;
+}
+
+export interface Point {
+  _id: string;
+  tenant: string;
+  student: string | User;
+  course: string | Course;
+  professor: string | User;
+  points: number;
+  maxPoints: number;
+  title: string;
+  description?: string;
+  date: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Exam {
+  _id: string;
+  tenant: string;
+  course: string | Course;
+  professor: string | User;
+  title: string;
+  description?: string;
+  date: string;
+  location?: string;
+  maxPoints: number;
+  passingPoints: number;
+  type: 'preliminary' | 'finishing';
+  isActive: boolean;
+  subscriptionDeadline: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExamSubscription {
+  _id: string;
+  tenant: string;
+  exam: string | Exam;
+  student: string | User;
+  status: 'subscribed' | 'graded' | 'passed' | 'failed';
+  points?: number;
+  grade?: number;
+  gradedBy?: string | User;
+  gradedAt?: string;
+  comment?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthResponse {

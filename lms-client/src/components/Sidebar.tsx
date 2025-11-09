@@ -10,6 +10,9 @@ import {
   ClipboardCheck,
   Wallet,
   Building2,
+  ClipboardList,
+  Target,
+  Activity,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link } from './ui/Link';
@@ -90,6 +93,12 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
       icon: Wallet,
       roles: ['admin'],
     },
+    {
+      label: 'Activity Logs',
+      href: '/app/admin/activity-logs',
+      icon: Activity,
+      roles: ['admin'],
+    },
   ];
 
   const professorNavItems: NavItem[] = [
@@ -112,6 +121,18 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
       roles: ['professor'],
     },
     {
+      label: 'My Exams',
+      href: '/app/professor/exams',
+      icon: ClipboardList,
+      roles: ['professor'],
+    },
+    {
+      label: 'Points',
+      href: '/app/professor/points',
+      icon: Target,
+      roles: ['professor'],
+    },
+    {
       label: 'My Grades',
       href: '/app/professor/grades',
       icon: Award,
@@ -130,6 +151,30 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
       label: 'My Courses',
       href: '/app/student/courses',
       icon: BookOpen,
+      roles: ['student'],
+    },
+    {
+      label: 'My Lessons',
+      href: '/app/student/lessons',
+      icon: FileText,
+      roles: ['student'],
+    },
+    {
+      label: 'My Exams',
+      href: '/app/student/exams',
+      icon: ClipboardList,
+      roles: ['student'],
+    },
+    {
+      label: 'My Points',
+      href: '/app/student/points',
+      icon: Target,
+      roles: ['student'],
+    },
+    {
+      label: 'My Grades',
+      href: '/app/student/grades',
+      icon: Award,
       roles: ['student'],
     },
     {

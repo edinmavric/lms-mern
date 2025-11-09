@@ -137,19 +137,12 @@ export function StudentCourses() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Search Courses</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Input
-            placeholder="Search by course name..."
-            icon={<Search className="h-4 w-4" />}
-            value={searchName}
-            onChange={e => setSearchName(e.target.value)}
-          />
-        </CardContent>
-      </Card>
+      <Input
+        icon={<Search className="h-4 w-4" />}
+        placeholder="Search by course name..."
+        value={searchName}
+        onChange={e => setSearchName(e.target.value)}
+      />
 
       <div>
         <h2 className="text-xl font-semibold mb-4">Enrolled Courses</h2>

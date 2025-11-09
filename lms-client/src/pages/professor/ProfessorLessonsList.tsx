@@ -150,7 +150,6 @@ export function ProfessorLessonsList() {
         course: data.course,
         title: data.title,
         content: data.content,
-        materials: data.materials,
         date: data.date,
         startTime: data.startTime,
         endTime: data.endTime,
@@ -171,7 +170,6 @@ export function ProfessorLessonsList() {
       const updateData = {
         title: data.title,
         content: data.content,
-        materials: data.materials,
         date: data.date,
         startTime: data.startTime,
         endTime: data.endTime,
@@ -205,7 +203,6 @@ export function ProfessorLessonsList() {
   const createForm = useLessonForm();
   const editForm = useLessonForm(editDialog.lesson || undefined);
 
-  // Handle calendar event click - navigate to lesson detail
   const handleEventClick = (event: EventType) => {
     navigate(`/app/professor/lessons/${event.id}`);
   };
@@ -227,7 +224,6 @@ export function ProfessorLessonsList() {
     createForm.setValue('startTime', startTime);
     createForm.setValue('endTime', endTime);
 
-    // If only one course, pre-select it
     if (myCourses.length === 1) {
       createForm.setValue('course', myCourses[0]._id);
     } else if (filterCourse && filterCourse !== '__all__') {
@@ -303,12 +299,11 @@ export function ProfessorLessonsList() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  icon={<Search className="h-4 w-4" />}
                   placeholder="Search by lesson title..."
                   value={searchTitle}
                   onChange={e => setSearchTitle(e.target.value)}
-                  className="pl-10"
                 />
               </div>
               <Select
@@ -331,7 +326,6 @@ export function ProfessorLessonsList() {
               </Select>
             </div>
 
-            {/* Calendar Component */}
             <Card className="w-full">
               <Calendar
                 defaultDate={new Date()}

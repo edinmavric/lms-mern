@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { activityLogPlugin } = require('../middleware/activityLog');
 
 const gradeSchema = new mongoose.Schema(
   {
@@ -75,5 +76,7 @@ gradeSchema.pre('validate', async function (next) {
   }
   next();
 });
+
+gradeSchema.plugin(activityLogPlugin, { entityType: 'Grade' });
 
 module.exports = mongoose.model('Grade', gradeSchema);

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { lessonsApi } from '../../lib/api/lessons';
 import { coursesApi } from '../../lib/api/courses';
+import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { getErrorMessage } from '../../lib/utils';
 import type { Lesson } from '../../types';
 import { LessonForm, useLessonForm, type LessonFormData } from './LessonForm';
@@ -66,6 +67,11 @@ export function LessonsList() {
     queryFn: () => lessonsApi.list({}),
   });
 
+  const { data: allMaterials = [] } = useQuery({
+    queryKey: ['lessonMaterials', 'all'],
+    queryFn: () => lessonMaterialsApi.list({}),
+  });
+
   const filteredLessons = searchTitle
     ? lessons.filter(lesson =>
         lesson.title.toLowerCase().includes(searchTitle.toLowerCase())
@@ -78,7 +84,6 @@ export function LessonsList() {
         course: data.course,
         title: data.title,
         content: data.content,
-        materials: data.materials,
         date: data.date,
         startTime: data.startTime,
         endTime: data.endTime,
@@ -99,7 +104,6 @@ export function LessonsList() {
       const updateData = {
         title: data.title,
         content: data.content,
-        materials: data.materials,
         date: data.date,
         startTime: data.startTime,
         endTime: data.endTime,
@@ -208,15 +212,9 @@ export function LessonsList() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Lessons with Materials
+                  Total Materials
                 </p>
-                <p className="text-2xl font-bold">
-                  {
-                    allLessons.filter(
-                      l => Array.isArray(l.materials) && l.materials.length > 0
-                    ).length
-                  }
-                </p>
+                <p className="text-2xl font-bold">{allMaterials.length}</p>
               </div>
               <div className="rounded-full bg-warning/10 p-3">
                 <BookOpen className="h-6 w-6 text-warning" />
@@ -331,11 +329,20 @@ export function LessonsList() {
                             : lesson.course.name || 'Unknown'}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {Array.isArray(lesson.materials)
-                            ? lesson.materials.length
-                            : 0}{' '}
-                          {Array.isArray(lesson.materials) &&
-                          lesson.materials.length === 1
+                          {
+                            allMaterials.filter(
+                              m =>
+                                (typeof m.lesson === 'string'
+                                  ? m.lesson
+                                  : m.lesson._id) === lesson._id
+                            ).length
+                          }{' '}
+                          {allMaterials.filter(
+                            m =>
+                              (typeof m.lesson === 'string'
+                                ? m.lesson
+                                : m.lesson._id) === lesson._id
+                          ).length === 1
                             ? 'material'
                             : 'materials'}
                         </td>
@@ -412,9 +419,14 @@ export function LessonsList() {
                       <div className="space-y-1 text-sm">
                         <div className="text-muted-foreground">
                           <span className="font-medium">Materials:</span>{' '}
-                          {Array.isArray(lesson.materials)
-                            ? lesson.materials.length
-                            : 0}
+                          {
+                            allMaterials.filter(
+                              m =>
+                                (typeof m.lesson === 'string'
+                                  ? m.lesson
+                                  : m.lesson._id) === lesson._id
+                            ).length
+                          }
                         </div>
                         <div className="text-xs text-muted-foreground">
                           Created:{' '}
@@ -626,7 +638,11 @@ function EditLessonDialog({
             : (lesson.course as any)?._id || '',
         title: lesson.title || '',
         content: lesson.content || '',
-        materials: lesson.materials || [],
+        date: lesson.date
+          ? new Date(lesson.date).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+        startTime: lesson.startTime || '09:00',
+        endTime: lesson.endTime || '11:00',
       });
     }
   }, [open, lesson, form]);

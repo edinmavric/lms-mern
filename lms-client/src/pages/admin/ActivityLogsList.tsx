@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   Activity,
@@ -102,6 +103,7 @@ function formatAction(action: string): string {
 }
 
 export function ActivityLogsList() {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
   const [filterAction, setFilterAction] = useState<string>('__clear__');
@@ -323,7 +325,10 @@ export function ActivityLogsList() {
                       return (
                         <tr
                           key={log._id}
-                          className="border-b border-border hover:bg-muted/50 transition-colors"
+                          className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() =>
+                            navigate(`/app/admin/activity-logs/${log._id}`)
+                          }
                         >
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
@@ -396,7 +401,13 @@ export function ActivityLogsList() {
                       ? log.user
                       : { firstName: '', lastName: '', email: '' };
                   return (
-                    <Card key={log._id} className="border-border">
+                    <Card
+                      key={log._id}
+                      className="border-border cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() =>
+                        navigate(`/app/admin/activity-logs/${log._id}`)
+                      }
+                    >
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-2">

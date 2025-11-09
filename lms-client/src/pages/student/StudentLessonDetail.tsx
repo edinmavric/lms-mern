@@ -122,7 +122,6 @@ export function StudentLessonDetail() {
     );
   }
 
-  // Verify that student is enrolled in the course
   const courseId =
     typeof lesson.course === 'string' ? lesson.course : lesson.course._id;
   const enrollment = enrollments.find(

@@ -115,7 +115,6 @@ export function StudentExamDetail() {
     );
   }
 
-  // Verify that student is enrolled in the course
   const courseId =
     typeof exam.course === 'string' ? exam.course : exam.course._id;
   const enrollment = enrollments.find(

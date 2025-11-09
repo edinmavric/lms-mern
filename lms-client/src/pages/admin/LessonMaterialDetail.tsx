@@ -14,6 +14,7 @@ import {
   Presentation,
   Folder,
   Calendar,
+  Edit,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -187,13 +188,22 @@ export function LessonMaterialDetail() {
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => navigate(`/app/admin/lessons/${lessonId}`)}
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          View Lesson
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/app/admin/lesson-materials/${id}/edit`)}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Material
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/app/admin/lessons/${lessonId}`)}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            View Lesson
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

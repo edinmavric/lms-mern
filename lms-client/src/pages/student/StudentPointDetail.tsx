@@ -57,7 +57,6 @@ export function StudentPointDetail() {
     );
   }
 
-  // Verify that this point belongs to the current student
   const studentId =
     typeof point.student === 'string' ? point.student : point.student._id;
   if (studentId !== user?._id) {

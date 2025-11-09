@@ -141,7 +141,6 @@ export function ProfessorExamSubscriptionDetail() {
     );
   }
 
-  // Verify that this subscription belongs to professor's exam
   const belongsToProfessor = myExams.some(exam => exam._id === examId);
 
   if (!belongsToProfessor) {

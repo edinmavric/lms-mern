@@ -37,8 +37,11 @@ import { BankAccountEdit } from '../pages/admin/BankAccountEdit';
 import { BankAccountDetail } from '../pages/admin/BankAccountDetail';
 import { DepartmentsList } from '../pages/admin/DepartmentsList';
 import { ActivityLogsList } from '../pages/admin/ActivityLogsList';
+import { ActivityLogDetail } from '../pages/admin/ActivityLogDetail';
 import { DepartmentEdit } from '../pages/admin/DepartmentEdit';
 import { DepartmentDetail } from '../pages/admin/DepartmentDetail';
+import { LessonMaterialEdit } from '../pages/admin/LessonMaterialEdit';
+import { EnrollmentPaymentApproval } from '../pages/admin/EnrollmentPaymentApproval';
 import { ExamsList } from '../pages/admin/ExamsList';
 import { ExamDetail } from '../pages/admin/ExamDetail';
 import { ExamEdit } from '../pages/admin/ExamEdit';
@@ -77,8 +80,12 @@ import { ProfessorAttendanceDetail } from '../pages/professor/ProfessorAttendanc
 import { ProfessorAttendanceEdit } from '../pages/professor/ProfessorAttendanceEdit';
 import { ProfessorLessonMaterialsList } from '../pages/professor/ProfessorLessonMaterialsList';
 import { ProfessorLessonMaterialDetail } from '../pages/professor/ProfessorLessonMaterialDetail';
+import { ProfessorLessonMaterialEdit } from '../pages/professor/ProfessorLessonMaterialEdit';
 import { ProfessorExamSubscriptionsList } from '../pages/professor/ProfessorExamSubscriptionsList';
 import { ProfessorExamSubscriptionDetail } from '../pages/professor/ProfessorExamSubscriptionDetail';
+import { ProfessorLessonEdit } from '../pages/professor/ProfessorLessonEdit';
+import { ProfessorExamEdit } from '../pages/professor/ProfessorExamEdit';
+import { ProfessorGradeEdit } from '../pages/professor/ProfessorGradeEdit';
 
 const router = createBrowserRouter([
   {
@@ -297,6 +304,22 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: 'activity-logs/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ActivityLogDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'enrollment-payment-approval',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <EnrollmentPaymentApproval />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'exams',
             element: (
               <ProtectedRoute allowedRoles={['admin']}>
@@ -373,6 +396,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['admin']}>
                 <LessonMaterialDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lesson-materials/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <LessonMaterialEdit />
               </ProtectedRoute>
             ),
           },
@@ -515,6 +546,14 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: 'lessons/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorLessonEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'grades',
             element: (
               <ProtectedRoute allowedRoles={['professor']}>
@@ -531,6 +570,14 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: 'grades/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorGradeEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'exams',
             element: (
               <ProtectedRoute allowedRoles={['professor']}>
@@ -543,6 +590,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['professor']}>
                 <ProfessorExamDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exams/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorExamEdit />
               </ProtectedRoute>
             ),
           },
@@ -607,6 +662,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['professor']}>
                 <ProfessorLessonMaterialDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lesson-materials/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorLessonMaterialEdit />
               </ProtectedRoute>
             ),
           },

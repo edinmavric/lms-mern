@@ -15,6 +15,7 @@ import {
   CalendarCheck,
   FolderOpen,
   UserCheck,
+  DollarSign,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link } from './ui/Link';
@@ -151,6 +152,12 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
           label: 'Bank Accounts',
           href: '/app/admin/bank-accounts',
           icon: Banknote,
+          roles: ['admin'],
+        },
+        {
+          label: 'Payment Approval',
+          href: '/app/admin/enrollment-payment-approval',
+          icon: DollarSign,
           roles: ['admin'],
         },
       ],

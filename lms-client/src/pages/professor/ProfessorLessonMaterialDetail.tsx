@@ -13,6 +13,7 @@ import {
   Presentation,
   Folder,
   Calendar,
+  Edit,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -126,7 +127,6 @@ export function ProfessorLessonMaterialDetail() {
     );
   }
 
-  // Verify that this material belongs to professor's course
   const materialCourseId =
     typeof material.course === 'string' ? material.course : material.course._id;
   const belongsToProfessor = myCourses.some(
@@ -195,13 +195,24 @@ export function ProfessorLessonMaterialDetail() {
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => navigate(`/app/professor/lessons/${lessonId}`)}
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          View Lesson
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate(`/app/professor/lesson-materials/${id}/edit`)
+            }
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Material
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/app/professor/lessons/${lessonId}`)}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            View Lesson
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

@@ -39,6 +39,16 @@ import { DepartmentsList } from '../pages/admin/DepartmentsList';
 import { ActivityLogsList } from '../pages/admin/ActivityLogsList';
 import { DepartmentEdit } from '../pages/admin/DepartmentEdit';
 import { DepartmentDetail } from '../pages/admin/DepartmentDetail';
+import { ExamsList } from '../pages/admin/ExamsList';
+import { ExamDetail } from '../pages/admin/ExamDetail';
+import { ExamEdit } from '../pages/admin/ExamEdit';
+import { PointsList } from '../pages/admin/PointsList';
+import { PointDetail } from '../pages/admin/PointDetail';
+import { PointEdit } from '../pages/admin/PointEdit';
+import { ExamSubscriptionsList } from '../pages/admin/ExamSubscriptionsList';
+import { ExamSubscriptionDetail } from '../pages/admin/ExamSubscriptionDetail';
+import { LessonMaterialsList } from '../pages/admin/LessonMaterialsList';
+import { LessonMaterialDetail } from '../pages/admin/LessonMaterialDetail';
 import { StudentCourses } from '../pages/student/StudentCourses';
 import { StudentCourseDetail } from '../pages/student/StudentCourseDetail';
 import { StudentEnrollmentsList } from '../pages/student/StudentEnrollmentsList';
@@ -47,6 +57,10 @@ import { StudentGradesList } from '../pages/student/StudentGradesList';
 import { StudentExamsList } from '../pages/student/StudentExamsList';
 import { StudentPointsList } from '../pages/student/StudentPointsList';
 import { StudentEnrollmentDetail } from '../pages/student/StudentEnrollmentDetail';
+import { StudentLessonDetail } from '../pages/student/StudentLessonDetail';
+import { StudentGradeDetail } from '../pages/student/StudentGradeDetail';
+import { StudentExamDetail } from '../pages/student/StudentExamDetail';
+import { StudentPointDetail } from '../pages/student/StudentPointDetail';
 import { ProfessorCoursesList } from '../pages/professor/ProfessorCoursesList';
 import { ProfessorCourseDetail } from '../pages/professor/ProfessorCourseDetail';
 import { ProfessorLessonsList } from '../pages/professor/ProfessorLessonsList';
@@ -56,6 +70,15 @@ import { ProfessorGradeDetail } from '../pages/professor/ProfessorGradeDetail';
 import { ProfessorExamsList } from '../pages/professor/ProfessorExamsList';
 import { ProfessorExamDetail } from '../pages/professor/ProfessorExamDetail';
 import { ProfessorPointsList } from '../pages/professor/ProfessorPointsList';
+import { ProfessorPointDetail } from '../pages/professor/ProfessorPointDetail';
+import { ProfessorPointEdit } from '../pages/professor/ProfessorPointEdit';
+import { ProfessorAttendancesList } from '../pages/professor/ProfessorAttendancesList';
+import { ProfessorAttendanceDetail } from '../pages/professor/ProfessorAttendanceDetail';
+import { ProfessorAttendanceEdit } from '../pages/professor/ProfessorAttendanceEdit';
+import { ProfessorLessonMaterialsList } from '../pages/professor/ProfessorLessonMaterialsList';
+import { ProfessorLessonMaterialDetail } from '../pages/professor/ProfessorLessonMaterialDetail';
+import { ProfessorExamSubscriptionsList } from '../pages/professor/ProfessorExamSubscriptionsList';
+import { ProfessorExamSubscriptionDetail } from '../pages/professor/ProfessorExamSubscriptionDetail';
 
 const router = createBrowserRouter([
   {
@@ -273,6 +296,86 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
+          {
+            path: 'exams',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ExamsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exams/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ExamDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exams/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ExamEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'points',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PointsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'points/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PointDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'points/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PointEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exam-subscriptions',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ExamSubscriptionsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exam-subscriptions/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ExamSubscriptionDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lesson-materials',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <LessonMaterialsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lesson-materials/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <LessonMaterialDetail />
+              </ProtectedRoute>
+            ),
+          },
         ],
       },
       {
@@ -319,10 +422,26 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: 'lessons/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLessonDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'grades',
             element: (
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentGradesList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'grades/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentGradeDetail />
               </ProtectedRoute>
             ),
           },
@@ -335,10 +454,26 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: 'exams/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentExamDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'points',
             element: (
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentPointsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'points/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentPointDetail />
               </ProtectedRoute>
             ),
           },
@@ -416,6 +551,78 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['professor']}>
                 <ProfessorPointsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'points/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorPointDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'points/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorPointEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'attendances',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorAttendancesList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'attendances/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorAttendanceDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'attendances/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorAttendanceEdit />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lesson-materials',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorLessonMaterialsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'lesson-materials/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorLessonMaterialDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exam-subscriptions',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorExamSubscriptionsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'exam-subscriptions/:id',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorExamSubscriptionDetail />
               </ProtectedRoute>
             ),
           },

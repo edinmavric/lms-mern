@@ -211,7 +211,7 @@ export function StudentLessonsList() {
                     <div
                       key={lesson._id}
                       className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/app/student/courses/${courseId}`)}
+                      onClick={() => navigate(`/app/student/lessons/${lesson._id}`)}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -281,7 +281,7 @@ export function StudentLessonsList() {
                     <div
                       key={lesson._id}
                       className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer opacity-75"
-                      onClick={() => navigate(`/app/student/courses/${courseId}`)}
+                      onClick={() => navigate(`/app/student/lessons/${lesson._id}`)}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">

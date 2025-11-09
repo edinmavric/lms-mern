@@ -7,6 +7,7 @@ const {
   assertSameTenantForDoc,
   isValidObjectId,
 } = require('../utils/validators');
+const { deleteFile } = require('../utils/s3');
 
 const getAllLessonMaterials = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({ isDeleted: false });
@@ -49,7 +50,25 @@ const getLessonMaterialById = asyncHandler(async (req, res) => {
 });
 
 const createLessonMaterial = asyncHandler(async (req, res) => {
-  requireFields(req.body, ['lesson', 'name', 'type', 'url']);
+  requireFields(req.body, ['lesson', 'name', 'type']);
+
+  const isFileType = [
+    'pdf',
+    'document',
+    'image',
+    'presentation',
+    'other',
+  ].includes(req.body.type);
+  if (!isFileType && !req.body.url) {
+    return res.status(400).json({
+      message: 'URL is required for link and video types',
+    });
+  }
+  if (isFileType && !req.body.url && !req.body.storageKey) {
+    return res.status(400).json({
+      message: 'Either URL or storageKey is required for file types',
+    });
+  }
 
   const lesson = await Lesson.findOne({
     _id: req.body.lesson,
@@ -189,6 +208,17 @@ const deleteLessonMaterial = asyncHandler(async (req, res) => {
     return res.status(403).json({
       message: 'You can only delete materials for lessons you teach',
     });
+  }
+
+  if (material.storageKey && process.env.AWS_BUCKET_NAME) {
+    try {
+      await deleteFile({
+        bucket: process.env.AWS_BUCKET_NAME,
+        key: material.storageKey,
+      });
+    } catch (error) {
+      console.error('Error deleting file from S3:', error);
+    }
   }
 
   material.isDeleted = true;

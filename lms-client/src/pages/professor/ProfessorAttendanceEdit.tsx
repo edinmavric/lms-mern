@@ -7,12 +7,14 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { attendanceApi } from '../../lib/api/attendance';
 import { usersApi } from '../../lib/api/users';
 import { lessonsApi } from '../../lib/api/lessons';
+import { coursesApi } from '../../lib/api/courses';
+import { useAuthStore } from '../../store/authStore';
 import { getErrorMessage } from '../../lib/utils';
 import {
   AttendanceForm,
   useAttendanceForm,
   type AttendanceFormData,
-} from './AttendanceForm';
+} from '../admin/AttendanceForm';
 import {
   Card,
   CardContent,
@@ -23,10 +25,11 @@ import {
   Alert,
 } from '../../components/ui';
 
-export function AttendanceEdit() {
+export function ProfessorAttendanceEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
 
   const { data: attendance, isLoading } = useQuery({
@@ -35,14 +38,28 @@ export function AttendanceEdit() {
     enabled: !!id,
   });
 
+  const { data: myCourses = [] } = useQuery({
+    queryKey: ['courses', 'professor', user?._id],
+    queryFn: () => coursesApi.list({ professor: user?._id }),
+  });
+
   const { data: students = [] } = useQuery({
     queryKey: ['users', 'students'],
     queryFn: () => usersApi.list({ role: 'student', status: 'active' }),
   });
 
-  const { data: lessons = [] } = useQuery({
-    queryKey: ['lessons', 'all'],
+  const { data: myLessons = [] } = useQuery({
+    queryKey: ['lessons', 'professor', user?._id],
     queryFn: () => lessonsApi.list({}),
+    select: data => {
+      const courseIds = myCourses.map(c => c._id);
+      return data.filter(lesson => {
+        const courseId =
+          typeof lesson.course === 'string' ? lesson.course : lesson.course._id;
+        return courseIds.includes(courseId);
+      });
+    },
+    enabled: myCourses.length > 0,
   });
 
   const form = useAttendanceForm(attendance);
@@ -78,7 +95,7 @@ export function AttendanceEdit() {
       queryClient.invalidateQueries({ queryKey: ['attendances'] });
       queryClient.invalidateQueries({ queryKey: ['attendance', id] });
       toast.success('Attendance updated successfully');
-      navigate(`/app/admin/attendances/${id}`);
+      navigate(`/app/professor/attendances/${id}`);
     },
     onError: error => {
       const errorMessage = getErrorMessage(
@@ -115,7 +132,7 @@ export function AttendanceEdit() {
             </p>
           </div>
         </Alert>
-        <Button onClick={() => navigate('/app/admin/attendances')}>
+        <Button onClick={() => navigate('/app/professor/attendances')}>
           Back to Attendance
         </Button>
       </div>
@@ -128,7 +145,7 @@ export function AttendanceEdit() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(`/app/admin/attendances/${id}`)}
+          onClick={() => navigate(`/app/professor/attendances/${id}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -144,7 +161,7 @@ export function AttendanceEdit() {
         <CardHeader>
           <CardTitle>Attendance Details</CardTitle>
           <CardDescription>
-            Update the attendance status and date. Student and course cannot be
+            Update the attendance status and date. Student and lesson cannot be
             changed after creation.
           </CardDescription>
         </CardHeader>
@@ -158,17 +175,17 @@ export function AttendanceEdit() {
               isSubmitting={updateMutation.isPending}
               error={error}
               students={students}
-              lessons={lessons}
+              lessons={myLessons}
               register={form.register}
               control={form.control}
               errors={form.formState.errors}
               allowEditStudentLesson={false}
             />
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-4 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate(`/app/admin/attendances/${id}`)}
+                onClick={() => navigate(`/app/professor/attendances/${id}`)}
                 disabled={updateMutation.isPending}
               >
                 Cancel

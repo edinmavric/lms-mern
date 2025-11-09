@@ -21,6 +21,7 @@ const pointRoutes = require('./routes/pointRoutes');
 const examRoutes = require('./routes/examRoutes');
 const examSubscriptionRoutes = require('./routes/examSubscriptionRoutes');
 const activityLogRoutes = require('./routes/activityLogRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 const docsRoutes = require('./routes/docsRoutes');
 
 const app = express();
@@ -86,6 +87,7 @@ app.use('/api/points', pointRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/exam-subscriptions', examSubscriptionRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 app.use(error);
 

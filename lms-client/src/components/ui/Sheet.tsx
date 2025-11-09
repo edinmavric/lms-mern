@@ -10,8 +10,8 @@ export interface SheetProps {
 }
 
 const sideClasses = {
-  left: 'inset-y-0 left-0 h-full w-full sm:max-w-sm',
-  right: 'inset-y-0 right-0 h-full w-full sm:max-w-sm',
+  left: 'inset-y-0 left-0 h-full w-full sm:max-w-md',
+  right: 'inset-y-0 right-0 h-full w-full sm:max-w-md',
   top: 'inset-x-0 top-0 w-full sm:max-h-screen',
   bottom: 'inset-x-0 bottom-0 w-full sm:max-h-screen',
 };
@@ -43,12 +43,7 @@ const slideClasses = {
   },
 };
 
-export function Sheet({
-  open,
-  onClose,
-  children,
-  side = 'left',
-}: SheetProps) {
+export function Sheet({ open, onClose, children, side = 'left' }: SheetProps) {
   const slide = slideClasses[side];
 
   return (
@@ -96,14 +91,8 @@ export interface SheetContentProps {
   showCloseButton?: boolean;
 }
 
-export function SheetContent({
-  children,
-  className,
-}: SheetContentProps) {
+export function SheetContent({ children, className }: SheetContentProps) {
   return (
-    <div className={cn('flex flex-col h-full', className)}>
-      {children}
-    </div>
+    <div className={cn('flex flex-col h-full', className)}>{children}</div>
   );
 }
-

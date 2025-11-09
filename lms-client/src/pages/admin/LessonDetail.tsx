@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 
 import { lessonsApi } from '../../lib/api/lessons';
 import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
+import { uploadsApi } from '../../lib/api/uploads';
 import type { LessonMaterial } from '../../types';
 import {
   Card,
@@ -54,7 +55,9 @@ interface MaterialFormData {
     | 'document'
     | 'image'
     | 'other';
-  url: string;
+  url?: string;
+  storageKey?: string;
+  file?: File;
 }
 
 function MaterialForm({
@@ -71,19 +74,75 @@ function MaterialForm({
     description: material?.description || '',
     type: material?.type || 'link',
     url: material?.url || '',
+    storageKey: material?.storageKey || '',
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isFileType = [
+    'pdf',
+    'document',
+    'image',
+    'presentation',
+    'other',
+  ].includes(formData.type);
+  const isLinkOrVideo = ['link', 'video'].includes(formData.type);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setFormData({ ...formData, file, url: undefined, storageKey: undefined });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
       toast.error('Material name is required');
       return;
     }
-    if (!formData.url.trim()) {
-      toast.error('Material URL is required');
-      return;
+
+    if (isLinkOrVideo) {
+      if (!formData.url?.trim()) {
+        toast.error('URL is required for link and video types');
+        return;
+      }
+      const { file, ...submitData } = formData;
+      onSubmit(submitData);
+    } else if (isFileType) {
+      if (selectedFile) {
+        setUploading(true);
+        try {
+          const { fileUrl, storageKey } = await uploadsApi.uploadFile(
+            selectedFile
+          );
+          const { file, ...submitData } = formData;
+          onSubmit({
+            ...submitData,
+            url: fileUrl,
+            storageKey,
+          });
+          setUploading(false);
+        } catch (error: any) {
+          toast.error(
+            error?.response?.data?.message || 'Failed to upload file'
+          );
+          setUploading(false);
+          return;
+        }
+      } else if (material && material.url) {
+        const { file, ...submitData } = formData;
+        onSubmit({
+          ...submitData,
+          url: material.url,
+          storageKey: material.storageKey,
+        });
+      } else {
+        toast.error('Please select a file to upload');
+        return;
+      }
     }
-    onSubmit(formData);
   };
 
   return (
@@ -111,12 +170,17 @@ function MaterialForm({
       <FormField label="Type" required>
         <Select
           value={formData.type}
-          onValueChange={value =>
+          onValueChange={value => {
+            const newType = value as MaterialFormData['type'];
             setFormData({
               ...formData,
-              type: value as MaterialFormData['type'],
-            })
-          }
+              type: newType,
+              url: undefined,
+              storageKey: undefined,
+              file: undefined,
+            });
+            setSelectedFile(null);
+          }}
         >
           <SelectTrigger>
             <SelectValue />
@@ -133,21 +197,77 @@ function MaterialForm({
         </Select>
       </FormField>
 
-      <FormField label="URL" required>
-        <Input
-          type="url"
-          value={formData.url}
-          onChange={e => setFormData({ ...formData, url: e.target.value })}
-          placeholder="https://example.com/material.pdf"
-          required
-        />
-      </FormField>
+      {isLinkOrVideo ? (
+        <FormField label="URL" required>
+          <Input
+            type="url"
+            value={formData.url || ''}
+            onChange={e => setFormData({ ...formData, url: e.target.value })}
+            placeholder="https://example.com/material.pdf"
+            required
+          />
+        </FormField>
+      ) : isFileType ? (
+        <FormField label="File" required>
+          <div className="space-y-2">
+            <Input
+              type="file"
+              onChange={handleFileChange}
+              accept={
+                formData.type === 'pdf'
+                  ? '.pdf'
+                  : formData.type === 'image'
+                  ? 'image/*'
+                  : formData.type === 'document'
+                  ? '.doc,.docx,.txt'
+                  : formData.type === 'presentation'
+                  ? '.ppt,.pptx'
+                  : '*'
+              }
+              className="cursor-pointer"
+            />
+            {selectedFile && (
+              <p className="text-sm text-muted-foreground">
+                Selected: {selectedFile.name} (
+                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+              </p>
+            )}
+            {material && material.url && !selectedFile && (
+              <p className="text-sm text-muted-foreground">
+                Current file:{' '}
+                <a
+                  href={material.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  {material.name}
+                </a>
+              </p>
+            )}
+          </div>
+        </FormField>
+      ) : null}
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={uploading}
+        >
           Cancel
         </Button>
-        <Button type="submit">Save Material</Button>
+        <Button type="submit" disabled={uploading}>
+          {uploading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Uploading...
+            </>
+          ) : (
+            'Save Material'
+          )}
+        </Button>
       </DialogFooter>
     </form>
   );
@@ -354,9 +474,7 @@ export function LessonDetail() {
               <p className="text-sm font-medium text-muted-foreground">
                 Course
               </p>
-              <p className="text-base font-semibold mt-1">
-                {getCourseName()}
-              </p>
+              <p className="text-base font-semibold mt-1">{getCourseName()}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Date</p>
@@ -437,10 +555,7 @@ export function LessonDetail() {
               <FileText className="h-5 w-5" />
               Lesson Materials
             </CardTitle>
-            <Button
-              size="sm"
-              onClick={() => setCreateMaterialDialogOpen(true)}
-            >
+            <Button size="sm" onClick={() => setCreateMaterialDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Material
             </Button>
@@ -481,15 +596,17 @@ export function LessonDetail() {
                           {material.description}
                         </p>
                       )}
-                      <a
-                        href={material.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 break-all"
-                      >
-                        <ExternalLink className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{material.url}</span>
-                      </a>
+                      {material.url && (
+                        <a
+                          href={material.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 break-all"
+                        >
+                          <ExternalLink className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{material.url}</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4 shrink-0">

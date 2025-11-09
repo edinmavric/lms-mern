@@ -14,7 +14,7 @@ export interface CreateLessonMaterialData {
     | 'document'
     | 'image'
     | 'other';
-  url: string;
+  url?: string;
   storageKey?: string;
 }
 

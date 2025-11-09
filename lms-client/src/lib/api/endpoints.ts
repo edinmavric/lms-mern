@@ -126,4 +126,8 @@ export const API_ENDPOINTS = {
     entity: (entityType: string, entityId: string) =>
       `${API_BASE}/activity-logs/entity/${entityType}/${entityId}`,
   },
+
+  uploads: {
+    signedUrl: `${API_BASE}/uploads/signed-url`,
+  },
 } as const;

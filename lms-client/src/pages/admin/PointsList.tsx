@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,15 +11,17 @@ import {
   Loader2,
   BookOpen,
   User,
+  Target,
+  TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 import { pointsApi } from '../../lib/api/points';
 import { coursesApi } from '../../lib/api/courses';
+import { usersApi } from '../../lib/api/users';
 import { enrollmentsApi } from '../../lib/api/enrollments';
 import { getErrorMessage } from '../../lib/utils';
-import { useAuthStore } from '../../store/authStore';
 import type { Point, User as UserType } from '../../types';
 import {
   Button,
@@ -125,44 +127,13 @@ function PointForm({
     });
   }, [formData.course, students, enrollments]);
 
-  useEffect(() => {
-    if (!formData.course) return;
-
-    const currentFiltered = students.filter(student => {
-      return enrollments.some(enrollment => {
-        const enrollmentCourseId =
-          typeof enrollment.course === 'string'
-            ? enrollment.course
-            : enrollment.course._id;
-        const enrollmentStudentId =
-          typeof enrollment.student === 'string'
-            ? enrollment.student
-            : enrollment.student._id;
-        return (
-          enrollmentCourseId === formData.course &&
-          enrollmentStudentId === student._id
-        );
-      });
-    });
-
-    const validStudents =
-      currentFiltered.length > 0 ? currentFiltered : students;
-    if (
-      formData.student &&
-      !validStudents.some(s => s._id === formData.student)
-    ) {
-      setFormData(prev => ({ ...prev, student: validStudents[0]?._id || '' }));
-    } else if (!formData.student && validStudents.length > 0) {
-      setFormData(prev => ({ ...prev, student: validStudents[0]._id }));
-    }
-  }, [formData.course, students, enrollments]);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <FormField label="Course" required>
         <Select
           value={formData.course}
           onValueChange={value => setFormData({ ...formData, course: value })}
+          disabled={!!point}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select a course" />
@@ -175,13 +146,18 @@ function PointForm({
             ))}
           </SelectContent>
         </Select>
+        {point && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Course cannot be changed after creation
+          </p>
+        )}
       </FormField>
 
       <FormField label="Student" required>
         <Select
           value={formData.student}
           onValueChange={value => setFormData({ ...formData, student: value })}
-          disabled={filteredStudents.length === 0}
+          disabled={filteredStudents.length === 0 || !!point}
         >
           <SelectTrigger>
             <SelectValue
@@ -206,9 +182,14 @@ function PointForm({
             )}
           </SelectContent>
         </Select>
-        {filteredStudents.length === 0 && formData.course && (
+        {filteredStudents.length === 0 && formData.course && !point && (
           <p className="text-xs text-muted-foreground mt-1">
             Select a course with enrolled students first
+          </p>
+        )}
+        {point && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Student cannot be changed after creation
           </p>
         )}
       </FormField>
@@ -224,7 +205,7 @@ function PointForm({
 
       <FormField label="Description">
         <textarea
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border rounded-md bg-background"
+          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border rounded-md bg-background resize-none"
           value={formData.description}
           onChange={e =>
             setFormData({ ...formData, description: e.target.value })
@@ -291,12 +272,13 @@ function PointForm({
   );
 }
 
-export function ProfessorPointsList() {
+export function PointsList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [searchTitle, setSearchTitle] = useState('');
   const [filterCourse, setFilterCourse] = useState<string>('__all__');
+  const [filterStudent, setFilterStudent] = useState<string>('__all__');
+  const [filterProfessor, setFilterProfessor] = useState<string>('__all__');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
@@ -307,14 +289,19 @@ export function ProfessorPointsList() {
     point: Point | null;
   }>({ open: false, point: null });
 
-  const { data: myCourses = [] } = useQuery({
-    queryKey: ['courses', 'professor', user?._id],
-    queryFn: () => coursesApi.list({ professor: user?._id }),
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses', 'all'],
+    queryFn: () => coursesApi.list({}),
   });
 
-  const { data: allPoints = [], isLoading } = useQuery({
-    queryKey: ['points', 'professor', user?._id],
-    queryFn: () => pointsApi.list({ professor: user?._id }),
+  const { data: students = [] } = useQuery({
+    queryKey: ['users', 'students'],
+    queryFn: () => usersApi.list({ role: 'student', status: 'active' }),
+  });
+
+  const { data: professors = [] } = useQuery({
+    queryKey: ['users', 'professors'],
+    queryFn: () => usersApi.list({ role: 'professor', status: 'active' }),
   });
 
   const { data: enrollments = [] } = useQuery({
@@ -322,41 +309,45 @@ export function ProfessorPointsList() {
     queryFn: () => enrollmentsApi.list({}),
   });
 
-  const enrolledStudents = useMemo(() => {
-    const studentMap = new Map<string, UserType>();
-
-    enrollments
-      .filter(e => {
-        const courseId = typeof e.course === 'string' ? e.course : e.course._id;
-        return myCourses.some(c => c._id === courseId);
-      })
-      .forEach(e => {
-        if (
-          typeof e.student === 'object' &&
-          e.student &&
-          !studentMap.has(e.student._id)
-        ) {
-          studentMap.set(e.student._id, e.student);
-        }
-      });
-
-    return Array.from(studentMap.values());
-  }, [enrollments, myCourses]);
-
-  const myPoints = allPoints.filter(point => {
-    if (filterCourse && filterCourse !== '__all__') {
-      const pointCourseId =
-        typeof point.course === 'string' ? point.course : point.course._id;
-      return pointCourseId === filterCourse;
-    }
-    return true;
+  const { data: points = [], isLoading } = useQuery({
+    queryKey: [
+      'points',
+      'all',
+      {
+        course: filterCourse !== '__all__' ? filterCourse : undefined,
+        student: filterStudent !== '__all__' ? filterStudent : undefined,
+        professor: filterProfessor !== '__all__' ? filterProfessor : undefined,
+      },
+    ],
+    queryFn: () =>
+      pointsApi.list({
+        course: filterCourse !== '__all__' ? filterCourse : undefined,
+        student: filterStudent !== '__all__' ? filterStudent : undefined,
+        professor: filterProfessor !== '__all__' ? filterProfessor : undefined,
+      }),
   });
 
   const filteredPoints = searchTitle
-    ? myPoints.filter(point =>
+    ? points.filter(point =>
         point.title.toLowerCase().includes(searchTitle.toLowerCase())
       )
-    : myPoints;
+    : points;
+
+  const enrolledStudents = useMemo(() => {
+    const studentMap = new Map<string, UserType>();
+
+    enrollments.forEach(e => {
+      if (
+        typeof e.student === 'object' &&
+        e.student &&
+        !studentMap.has(e.student._id)
+      ) {
+        studentMap.set(e.student._id, e.student);
+      }
+    });
+
+    return Array.from(studentMap.values());
+  }, [enrollments]);
 
   const createMutation = useMutation({
     mutationFn: (data: PointFormData) => {
@@ -414,7 +405,7 @@ export function ProfessorPointsList() {
 
   const getCourseName = (point: Point) => {
     if (typeof point.course === 'string') {
-      const course = myCourses.find(c => c._id === point.course);
+      const course = courses.find(c => c._id === point.course);
       return course?.name || 'Unknown Course';
     }
     return point.course.name;
@@ -422,13 +413,28 @@ export function ProfessorPointsList() {
 
   const getStudentName = (point: Point) => {
     if (typeof point.student === 'string') {
-      const student = enrolledStudents.find(s => s._id === point.student);
+      const student = students.find(s => s._id === point.student);
       return student
         ? `${student.firstName} ${student.lastName}`
         : 'Unknown Student';
     }
     return `${point.student.firstName} ${point.student.lastName}`;
   };
+
+  const getProfessorName = (point: Point) => {
+    if (typeof point.professor === 'string') {
+      const professor = professors.find(p => p._id === point.professor);
+      return professor
+        ? `${professor.firstName} ${professor.lastName}`
+        : 'Unknown Professor';
+    }
+    return `${point.professor.firstName} ${point.professor.lastName}`;
+  };
+
+  const totalPoints = points.reduce((sum, p) => sum + p.points, 0);
+  const totalMaxPoints = points.reduce((sum, p) => sum + p.maxPoints, 0);
+  const averagePercentage =
+    totalMaxPoints > 0 ? (totalPoints / totalMaxPoints) * 100 : 0;
 
   if (isLoading) {
     return (
@@ -439,18 +445,75 @@ export function ProfessorPointsList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Curriculum Points</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Points Management</h1>
           <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Assign and manage points for student assessments
+            Manage curriculum points across all courses and students
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button
+          onClick={() => setCreateDialogOpen(true)}
+          className="w-full sm:w-auto"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Assign Points
         </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Points
+                </p>
+                <p className="text-2xl font-bold">{points.length}</p>
+              </div>
+              <div className="rounded-full bg-primary/10 p-3">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Average Score
+                </p>
+                <p className="text-2xl font-bold">
+                  {averagePercentage.toFixed(1)}%
+                </p>
+              </div>
+              <div className="rounded-full bg-success/10 p-3">
+                <TrendingUp className="h-5 w-5 text-success" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Points
+                </p>
+                <p className="text-2xl font-bold">
+                  {totalPoints} / {totalMaxPoints}
+                </p>
+              </div>
+              <div className="rounded-full bg-warning/10 p-3">
+                <Award className="h-5 w-5 text-warning" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -462,21 +525,45 @@ export function ProfessorPointsList() {
             onChange={e => setSearchTitle(e.target.value)}
           />
         </div>
-        <div className="w-full sm:w-[200px]">
-          <Select value={filterCourse} onValueChange={setFilterCourse}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by course" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All Courses</SelectItem>
-              {myCourses.map(course => (
-                <SelectItem key={course._id} value={course._id}>
-                  {course.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={filterCourse} onValueChange={setFilterCourse}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filter by course" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All Courses</SelectItem>
+            {courses.map(course => (
+              <SelectItem key={course._id} value={course._id}>
+                {course.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterStudent} onValueChange={setFilterStudent}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filter by student" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All Students</SelectItem>
+            {students.map(student => (
+              <SelectItem key={student._id} value={student._id}>
+                {student.firstName} {student.lastName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterProfessor} onValueChange={setFilterProfessor}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filter by professor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All Professors</SelectItem>
+            {professors.map(professor => (
+              <SelectItem key={professor._id} value={professor._id}>
+                {professor.firstName} {professor.lastName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {filteredPoints.length === 0 ? (
@@ -484,12 +571,18 @@ export function ProfessorPointsList() {
           <CardContent className="py-12 text-center">
             <Award className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-lg font-medium text-muted-foreground">
-              {searchTitle || filterCourse !== '__all__'
+              {searchTitle ||
+              filterCourse !== '__all__' ||
+              filterStudent !== '__all__' ||
+              filterProfessor !== '__all__'
                 ? 'No points found'
                 : 'No points assigned yet'}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              {searchTitle || filterCourse !== '__all__'
+              {searchTitle ||
+              filterCourse !== '__all__' ||
+              filterStudent !== '__all__' ||
+              filterProfessor !== '__all__'
                 ? 'Try adjusting your search criteria'
                 : 'Assign points to students to get started'}
             </p>
@@ -500,6 +593,7 @@ export function ProfessorPointsList() {
           {filteredPoints.map(point => {
             const courseName = getCourseName(point);
             const studentName = getStudentName(point);
+            const professorName = getProfessorName(point);
             const pointDate = new Date(point.date);
             const percentage = (point.points / point.maxPoints) * 100;
 
@@ -507,7 +601,7 @@ export function ProfessorPointsList() {
               <Card
                 key={point._id}
                 className="hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => navigate(`/app/professor/points/${point._id}`)}
+                onClick={() => navigate(`/app/admin/points/${point._id}`)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
@@ -530,7 +624,7 @@ export function ProfessorPointsList() {
                           {point.points}/{point.maxPoints}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2 flex-wrap">
                         <div className="flex items-center gap-1">
                           <BookOpen className="h-4 w-4" />
                           <span>{courseName}</span>
@@ -538,6 +632,9 @@ export function ProfessorPointsList() {
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4" />
                           <span>{studentName}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs">By: {professorName}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
@@ -554,15 +651,6 @@ export function ProfessorPointsList() {
                       className="flex gap-2 ml-4"
                       onClick={e => e.stopPropagation()}
                     >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/app/professor/points/${point._id}`)
-                        }
-                      >
-                        View Details
-                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -597,7 +685,7 @@ export function ProfessorPointsList() {
       >
         <DialogContent>
           <PointForm
-            courses={myCourses}
+            courses={courses}
             students={enrolledStudents}
             enrollments={enrollments}
             onSubmit={data => createMutation.mutate(data)}
@@ -616,7 +704,7 @@ export function ProfessorPointsList() {
         <DialogContent>
           <PointForm
             point={editDialog.point}
-            courses={myCourses}
+            courses={courses}
             students={enrolledStudents}
             enrollments={enrollments}
             onSubmit={data =>
@@ -632,7 +720,11 @@ export function ProfessorPointsList() {
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, point: null })}
         title="Delete Points"
-        description={`Are you sure you want to delete "${deleteDialog.point?.title}"? This action cannot be undone.`}
+        description={
+          deleteDialog.point
+            ? `Are you sure you want to delete "${deleteDialog.point.title}"? This action cannot be undone.`
+            : ''
+        }
       >
         <DialogContent>
           <DialogFooter>
@@ -649,8 +741,9 @@ export function ProfessorPointsList() {
                   deleteMutation.mutate(deleteDialog.point._id);
                 }
               }}
+              disabled={deleteMutation.isPending}
             >
-              Delete
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

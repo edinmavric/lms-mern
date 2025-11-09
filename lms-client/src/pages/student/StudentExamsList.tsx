@@ -305,27 +305,36 @@ export function StudentExamsList() {
                           </div>
                         )}
                       </div>
-                      {!isGraded &&
-                        !isPreliminary &&
-                        subscription &&
-                        canSubscribe(exam) && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              if (subscription) {
-                                unsubscribeMutation.mutate(subscription._id);
-                              }
-                            }}
-                          >
-                            Unsubscribe
-                          </Button>
-                        )}
-                      {isPreliminary && (
-                        <Badge variant="outline" className="text-xs">
-                          Auto-subscribed
-                        </Badge>
-                      )}
+                      <div
+                        className="flex gap-2"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            navigate(`/app/student/exams/${exam._id}`)
+                          }
+                        >
+                          View Details
+                        </Button>
+                        {!isGraded &&
+                          !isPreliminary &&
+                          subscription &&
+                          canSubscribe(exam) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (subscription) {
+                                  unsubscribeMutation.mutate(subscription._id);
+                                }
+                              }}
+                            >
+                              Unsubscribe
+                            </Button>
+                          )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -354,7 +363,8 @@ export function StudentExamsList() {
                 return (
                   <div
                     key={exam._id}
-                    className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                    className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/app/student/exams/${exam._id}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -406,20 +416,29 @@ export function StudentExamsList() {
                           </div>
                         </div>
                       </div>
-                      {canSub && !isPreliminary && (
+                      <div
+                        className="flex gap-2"
+                        onClick={e => e.stopPropagation()}
+                      >
                         <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => subscribeMutation.mutate(exam._id)}
-                          disabled={subscribeMutation.isPending}
+                          onClick={() =>
+                            navigate(`/app/student/exams/${exam._id}`)
+                          }
                         >
-                          Subscribe
+                          View Details
                         </Button>
-                      )}
-                      {isPreliminary && (
-                        <Badge variant="outline" className="text-xs">
-                          Auto-subscribed
-                        </Badge>
-                      )}
+                        {canSub && !isPreliminary && (
+                          <Button
+                            size="sm"
+                            onClick={() => subscribeMutation.mutate(exam._id)}
+                            disabled={subscribeMutation.isPending}
+                          >
+                            Subscribe
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -450,7 +469,8 @@ export function StudentExamsList() {
                 return (
                   <div
                     key={exam._id}
-                    className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors opacity-75"
+                    className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer opacity-75"
+                    onClick={() => navigate(`/app/student/exams/${exam._id}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -507,6 +527,20 @@ export function StudentExamsList() {
                             )}
                           </div>
                         )}
+                      </div>
+                      <div
+                        className="flex gap-2"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            navigate(`/app/student/exams/${exam._id}`)
+                          }
+                        >
+                          View Details
+                        </Button>
                       </div>
                     </div>
                   </div>

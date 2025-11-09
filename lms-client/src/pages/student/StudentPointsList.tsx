@@ -237,7 +237,8 @@ export function StudentPointsList() {
                 return (
                   <div
                     key={point._id}
-                    className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                    className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/app/student/points/${point._id}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

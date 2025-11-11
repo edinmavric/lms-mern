@@ -90,6 +90,9 @@ import { NotificationsList } from '../pages/NotificationsList';
 import { ProfessorConsultationsList } from '../pages/professor/ProfessorConsultationsList';
 import { StudentConsultationsList } from '../pages/student/StudentConsultationsList';
 import { AdminConsultationsList } from '../pages/admin/AdminConsultationsList';
+import { ProfessorVideoCallsPage } from '../pages/professor/ProfessorVideoCallsPage';
+import { StudentVideoCallsPage } from '../pages/student/StudentVideoCallsPage';
+import { VideoCallRoom } from '../pages/video/VideoCallRoom';
 
 const router = createBrowserRouter([
   {
@@ -109,6 +112,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <NotificationsList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'video-calls/:id',
+        element: (
+          <ProtectedRoute allowedRoles={['admin', 'professor', 'student']}>
+            <VideoCallRoom />
           </ProtectedRoute>
         ),
       },
@@ -449,6 +460,14 @@ const router = createBrowserRouter([
         path: 'student',
         children: [
           {
+            path: 'video-calls',
+            element: (
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentVideoCallsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'courses',
             element: (
               <ProtectedRoute allowedRoles={['student']}>
@@ -549,6 +568,14 @@ const router = createBrowserRouter([
       {
         path: 'professor',
         children: [
+          {
+            path: 'video-calls',
+            element: (
+              <ProtectedRoute allowedRoles={['professor']}>
+                <ProfessorVideoCallsPage />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: 'courses',
             element: (

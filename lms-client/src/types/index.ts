@@ -179,7 +179,12 @@ export interface ActivityLog {
     | 'notification.updated'
     | 'notification.deleted'
     | 'notification.published'
-    | 'notification.read';
+    | 'notification.read'
+    | 'videoCall.created'
+    | 'videoCall.updated'
+    | 'videoCall.ended'
+    | 'videoCall.cancelled'
+    | 'videoCall.participants_updated';
   entityType:
     | 'User'
     | 'Course'
@@ -196,7 +201,8 @@ export interface ActivityLog {
     | 'Point'
     | 'Tenant'
     | 'Consultation'
-    | 'Notification';
+    | 'Notification'
+    | 'VideoCall';
   entityId: string;
   changes?: Record<string, { old: any; new: any }>;
   metadata?: Record<string, any>;
@@ -437,4 +443,55 @@ export interface CreateNotificationData {
   isPublished?: boolean;
   expiresAt?: string;
   isPinned?: boolean;
+}
+
+export interface VideoCallParticipant {
+  user: string | User;
+  role: 'host' | 'cohost' | 'participant';
+  joinedAt?: string;
+  leftAt?: string;
+}
+
+export interface VideoCall {
+  _id: string;
+  tenant: string;
+  lesson: string | Lesson;
+  course: string | Course;
+  callType: string;
+  callId: string;
+  callCid: string;
+  title: string;
+  description?: string;
+  status: 'active' | 'ended' | 'cancelled';
+  lessonStartAt: string;
+  lessonEndAt: string;
+  startedAt: string;
+  endedAt?: string;
+  participants: VideoCallParticipant[];
+  createdBy: string | User;
+  updatedBy?: string | User;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVideoCallDto {
+  lessonId: string;
+  title?: string;
+  description?: string;
+  callType?: string;
+}
+
+export interface VideoCallTokenResponse {
+  token: string;
+  apiKey: string;
+  call: {
+    id: string;
+    callId: string;
+    callType: string;
+    callCid: string;
+    title: string;
+    status: 'active' | 'ended' | 'cancelled';
+  };
+  role: 'host' | 'cohost' | 'participant';
+  expiresAt: string;
 }

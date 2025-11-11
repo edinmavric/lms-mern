@@ -12,6 +12,7 @@ This is a **monorepo** containing two main applications:
 ### Multi-Tenancy
 
 The system supports multiple tenants (organizations/schools) with complete data isolation. Each tenant can:
+
 - Configure their own grade scales (1-5, 1-10, 6-10)
 - Set attendance rules and requirements
 - Manage their own users, courses, and enrollments
@@ -178,16 +179,19 @@ src/
 ### Backend Setup
 
 1. **Navigate to server directory:**
+
    ```bash
    cd lms-server
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Create `.env` file:**
+
    ```bash
    cp .env.example .env  # If exists, or create manually
    ```
@@ -195,11 +199,13 @@ src/
 4. **Configure environment variables** (see [Environment Variables](#environment-variables))
 
 5. **Start MongoDB** (if running locally):
+
    ```bash
    mongod
    ```
 
 6. **Run the server:**
+
    ```bash
    # Development (with auto-reload)
    npm run dev
@@ -213,20 +219,24 @@ src/
 ### Frontend Setup
 
 1. **Navigate to client directory:**
+
    ```bash
    cd lms-client
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Configure API endpoint** (if different from default):
+
    - Update API base URL in your API client configuration
    - Default: `http://localhost:8000/api`
 
 4. **Run the development server:**
+
    ```bash
    npm run dev
    ```
@@ -253,6 +263,11 @@ MONGO_URI=mongodb://127.0.0.1:27017/lms
 # JWT Secrets (CHANGE IN PRODUCTION!)
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
 JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-in-production
+
+# Stream Video (GetStream.io)
+STREAM_API_KEY=your-stream-video-api-key
+STREAM_API_SECRET=your-stream-video-api-secret
+STREAM_APP_ID=your-stream-app-id
 
 # CORS
 CORS_ORIGIN=*
@@ -287,6 +302,7 @@ Interactive API documentation is available at:
 **http://localhost:8000/api-docs**
 
 Features:
+
 - Test endpoints directly from the browser
 - View request/response schemas
 - Authentication support (JWT tokens)
@@ -295,6 +311,7 @@ Features:
 ### API Endpoints Overview
 
 #### Authentication (Public)
+
 - `POST /api/auth/login` - User login
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/tenant-signup` - Create tenant + admin
@@ -304,6 +321,7 @@ Features:
 - `GET /api/auth/search-tenants` - Search tenants
 
 #### Users (Authenticated)
+
 - `GET /api/users` - List users (filtered by tenant)
 - `POST /api/users` - Create user (admin only)
 - `GET /api/users/:id` - Get user details
@@ -312,6 +330,7 @@ Features:
 - `PATCH /api/users/:id/approve` - Approve pending user
 
 #### Tenants (Admin only)
+
 - `GET /api/tenants` - List tenants (paginated)
 - `POST /api/tenants` - Create tenant
 - `GET /api/tenants/:id` - Get tenant details
@@ -319,6 +338,7 @@ Features:
 - `DELETE /api/tenants/:id` - Soft delete tenant
 
 #### Departments (Admin only)
+
 - `GET /api/departments` - List departments
 - `POST /api/departments` - Create department
 - `GET /api/departments/:id` - Get department details
@@ -326,6 +346,7 @@ Features:
 - `DELETE /api/departments/:id` - Soft delete department
 
 #### Courses
+
 - `GET /api/courses` - List courses
 - `POST /api/courses` - Create course
 - `GET /api/courses/:id` - Get course details
@@ -333,6 +354,7 @@ Features:
 - `DELETE /api/courses/:id` - Soft delete course
 
 #### Enrollments
+
 - `GET /api/enrollments` - List enrollments
 - `POST /api/enrollments` - Create enrollment
 - `GET /api/enrollments/:id` - Get enrollment details
@@ -341,6 +363,7 @@ Features:
 - `POST /api/enrollments/:id/payments` - Add payment
 
 #### Exams (Admin, Professor)
+
 - `GET /api/exams` - List exams
 - `POST /api/exams` - Create exam
 - `GET /api/exams/:id` - Get exam details
@@ -348,6 +371,7 @@ Features:
 - `DELETE /api/exams/:id` - Delete exam
 
 #### Exam Subscriptions
+
 - `GET /api/exam-subscriptions` - List exam subscriptions
 - `GET /api/exam-subscriptions/:id` - Get subscription details
 - `POST /api/exam-subscriptions/exam/:examId/subscribe` - Subscribe to exam
@@ -355,6 +379,7 @@ Features:
 - `POST /api/exam-subscriptions/:id/grade` - Grade exam (Admin, Professor)
 
 #### Lessons
+
 - `GET /api/lessons` - List lessons
 - `POST /api/lessons` - Create lesson
 - `GET /api/lessons/:id` - Get lesson details
@@ -362,6 +387,7 @@ Features:
 - `DELETE /api/lessons/:id` - Delete lesson
 
 #### Lesson Materials (Admin, Professor)
+
 - `GET /api/lesson-materials` - List lesson materials
 - `POST /api/lesson-materials` - Create lesson material
 - `GET /api/lesson-materials/:id` - Get lesson material details
@@ -369,6 +395,7 @@ Features:
 - `DELETE /api/lesson-materials/:id` - Delete lesson material
 
 #### Grades
+
 - `GET /api/grades` - List grades
 - `POST /api/grades` - Create grade
 - `GET /api/grades/:id` - Get grade details
@@ -376,6 +403,7 @@ Features:
 - `DELETE /api/grades/:id` - Delete grade
 
 #### Attendance (Admin, Professor)
+
 - `GET /api/attendance` - List attendance records
 - `POST /api/attendance` - Record attendance
 - `GET /api/attendance/:id` - Get attendance details
@@ -383,6 +411,7 @@ Features:
 - `DELETE /api/attendance/:id` - Delete attendance
 
 #### Points (Admin, Professor)
+
 - `GET /api/points` - List point assignments
 - `POST /api/points` - Create point assignment
 - `GET /api/points/:id` - Get point details
@@ -390,6 +419,7 @@ Features:
 - `DELETE /api/points/:id` - Delete point assignment
 
 #### Bank Accounts (Admin only)
+
 - `GET /api/bank-accounts` - List bank accounts
 - `POST /api/bank-accounts` - Create bank account
 - `GET /api/bank-accounts/:id` - Get bank account details
@@ -397,14 +427,17 @@ Features:
 - `DELETE /api/bank-accounts/:id` - Soft delete bank account
 
 #### Activity Logs (Admin only)
+
 - `GET /api/activity-logs` - List activity logs (paginated, filtered)
 - `GET /api/activity-logs/stats` - Get activity log statistics
 - `GET /api/activity-logs/:id` - Get activity log details
 
 #### File Uploads
+
 - `GET /api/uploads/signed-url` - Get signed URL for file upload
 
 #### Health Check
+
 - `GET /health` - API and database status
 
 ## Security Features
@@ -444,11 +477,13 @@ npm test
 ```
 
 Watch mode:
+
 ```bash
 npm run test:watch
 ```
 
 Test coverage includes:
+
 - Authentication flows (login, register, password reset)
 - User CRUD operations
 - Department management
@@ -465,6 +500,7 @@ Test coverage includes:
 - Role-based access control
 
 Tests use:
+
 - **Jest** - Test framework
 - **Supertest** - HTTP assertions
 - **MongoMemoryServer** - In-memory MongoDB for testing
@@ -474,12 +510,14 @@ Tests use:
 ### Running Both Applications
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd lms-server
 npm run dev
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd lms-client
 npm run dev
@@ -488,6 +526,7 @@ npm run dev
 ### Code Structure Guidelines
 
 #### Backend
+
 - **Controllers** - Handle request/response logic
 - **Models** - Define Mongoose schemas with validation
 - **Routes** - Define API endpoints and middleware chain
@@ -495,10 +534,11 @@ npm run dev
 - **Utils** - Pure utility functions (no Express dependencies)
 
 #### Frontend
+
 - **Pages**: Organized by role (admin, professor, student) and feature
 - **Components**: Reusable UI components in `components/ui/`
 - **API Layer**: Centralized API client functions in `lib/api/`
-- **State Management**: 
+- **State Management**:
   - React Query for server state (caching, mutations, invalidation)
   - Zustand for client state (auth, theme, etc.)
 - **Forms**: React Hook Form + Zod validation
@@ -510,11 +550,13 @@ npm run dev
 ## Key Features
 
 ### Multi-Tenancy
+
 - Complete data isolation per tenant
 - Tenant-specific configurations (grade scales, attendance rules)
 - Automatic tenant scoping on all requests
 
 ### User Management
+
 - Three roles: Admin, Professor, Student
 - User approval workflow
 - Password reset via email
@@ -522,11 +564,13 @@ npm run dev
 - Department assignment
 
 ### Department Management
+
 - Create and manage academic departments
 - Organize courses by department
 - Department-based filtering and reporting
 
 ### Course Management
+
 - Create courses with professors
 - Schedule management
 - Pricing support
@@ -534,30 +578,35 @@ npm run dev
 - Department assignment
 
 ### Lesson Management
+
 - Create and schedule lessons
 - Link lessons to courses
 - Lesson date and time tracking
 - Professor assignment
 
 ### Lesson Materials
+
 - Upload and manage lesson materials
 - Support for multiple file types (PDF, video, presentation, images, documents, links)
 - File upload with signed URLs
 - Material organization by lesson and course
 
 ### Exam Management
+
 - Create exams with questions and answers
 - Set exam dates and durations
 - Configure passing grades
 - Link exams to courses
 
 ### Exam Subscriptions
+
 - Students subscribe to exams
 - Track subscription status
 - Exam grading workflow
 - Grade assignment after exam completion
 
 ### Grade System
+
 - Tenant-configurable grade scales
 - Grade history tracking
 - Multiple attempt support
@@ -565,18 +614,21 @@ npm run dev
 - Link grades to exams or assignments
 
 ### Point System
+
 - Assign points to students for activities
 - Track points by course
 - Point-based grading alternative
 - Professor and admin point management
 
 ### Attendance Tracking
+
 - Multiple status types (present, absent, late, excused)
 - Duplicate prevention
 - Course and lesson-linked attendance
 - Date-based tracking
 
 ### Payment Management
+
 - Track payments per enrollment
 - Payment status tracking (pending, paid)
 - Multiple payment support
@@ -584,6 +636,7 @@ npm run dev
 - Automatic payment status updates
 
 ### Activity Logging
+
 - Comprehensive audit trail
 - Track all system actions (create, update, delete)
 - User activity monitoring
@@ -594,16 +647,20 @@ npm run dev
 ## Frontend Pages
 
 ### Admin Dashboard
+
 Complete administrative interface with full CRUD operations for all entities:
 
 **User Management:**
+
 - Users List, Create, Detail, Edit
 
 **Organization:**
+
 - Tenants List, Detail, Edit
 - Departments List, Create, Detail, Edit
 
 **Academics:**
+
 - Courses List, Create, Detail, Edit
 - Lessons List, Create, Detail, Edit
 - Lesson Materials List, Detail, Edit
@@ -613,35 +670,43 @@ Complete administrative interface with full CRUD operations for all entities:
 - Points List, Create, Detail, Edit
 
 **Attendance & Tracking:**
+
 - Attendance List, Create, Detail, Edit
 - Activity Logs List, Detail
 
 **Finance:**
+
 - Enrollments List, Create, Detail, Edit
 - Enrollment Payment Approval
 - Bank Accounts List, Create, Detail, Edit
 
 ### Professor Dashboard
+
 Role-specific interface for professors to manage their courses and students:
 
 **My Courses:**
+
 - Courses List, Detail
 - Lessons List, Detail, Edit
 - Lesson Materials List, Detail, Edit
 
 **Exams & Grading:**
+
 - Exams List, Detail, Edit
 - Exam Subscriptions List, Detail
 - Grades List, Detail, Edit
 
 **Student Management:**
+
 - Points List, Detail, Edit
 - Attendance List, Create, Detail, Edit
 
 ### Student Dashboard
+
 Student-facing interface for viewing courses, materials, and progress:
 
 **My Learning:**
+
 - Courses List, Detail
 - Lessons List, Detail
 - Lesson Materials (via lesson detail)
@@ -649,10 +714,12 @@ Student-facing interface for viewing courses, materials, and progress:
 - Enrollments List, Detail
 
 **Progress:**
+
 - Grades List, Detail
 - Points List, Detail
 
 ### Public Pages
+
 - Landing Page
 - Login
 - Signup (Individual & Tenant)
@@ -680,6 +747,7 @@ Student-facing interface for viewing courses, materials, and progress:
 ### Frontend Deployment
 
 1. Build the application:
+
    ```bash
    cd lms-client
    npm run build

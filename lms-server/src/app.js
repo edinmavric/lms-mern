@@ -25,6 +25,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const docsRoutes = require('./routes/docsRoutes');
 const consultationRoutes = require('./routes/consultationRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const videoCallRoutes = require('./routes/videoCallRoutes');
 
 const app = express();
 
@@ -92,6 +93,7 @@ app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/consultations', consultationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/video-calls', videoCallRoutes);
 
 app.use(error);
 

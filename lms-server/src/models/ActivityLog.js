@@ -84,6 +84,12 @@ const activityLogSchema = new mongoose.Schema(
         'notification.deleted',
         'notification.published',
         'notification.read',
+
+        'videoCall.created',
+        'videoCall.updated',
+        'videoCall.ended',
+        'videoCall.cancelled',
+        'videoCall.participants_updated',
       ],
     },
     entityType: {
@@ -106,6 +112,7 @@ const activityLogSchema = new mongoose.Schema(
         'Tenant',
         'Consultation',
         'Notification',
+        'VideoCall',
       ],
     },
     entityId: {

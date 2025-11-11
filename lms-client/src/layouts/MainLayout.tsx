@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { LogOut, Menu, Bell } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { StreamVideo } from '@stream-io/video-react-sdk';
 import { notificationsApi } from '../lib/api/notifications';
-import { ThemeToggle } from '../components/ThemeToggle';
 import { useAuthStore } from '../store/authStore';
 import { Sidebar } from '../components/Sidebar';
 import { Button, Dialog, DialogContent, DialogFooter } from '../components/ui';
 import { cn } from '../lib/utils';
+import { VideoCallDock } from '../components/video/VideoCallDock';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { useVideoCallStore } from '../store/videoCallStore';
 
 export function MainLayout() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -16,6 +19,10 @@ export function MainLayout() {
   const navigate = useNavigate();
   const { clearAuth, user } = useAuthStore();
   const queryClient = useQueryClient();
+  const { client, clearCall } = useVideoCallStore(state => ({
+    client: state.client,
+    clearCall: state.clearCall,
+  }));
 
   const { data: recentNotifications = [] } = useQuery({
     queryKey: ['notifications', 'my', { limit: 3 }],
@@ -51,7 +58,8 @@ export function MainLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await clearCall();
     clearAuth();
     try {
       queryClient.clear();
@@ -64,7 +72,7 @@ export function MainLayout() {
     setSidebarOpen(prev => !prev);
   };
 
-  return (
+  const content = (
     <div className="min-h-screen bg-background flex">
       {!isMobile && (
         <Sidebar
@@ -218,6 +226,13 @@ export function MainLayout() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <VideoCallDock />
     </div>
   );
+
+  if (client) {
+    return <StreamVideo client={client}>{content}</StreamVideo>;
+  }
+
+  return content;
 }

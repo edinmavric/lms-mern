@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -15,11 +16,12 @@ import {
   Folder,
   ExternalLink,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 import { lessonsApi } from '../../lib/api/lessons';
 import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { enrollmentsApi } from '../../lib/api/enrollments';
+import { videoCallsApi } from '../../lib/api/videoCalls';
 import { useAuthStore } from '../../store/authStore';
 import {
   Card,
@@ -96,6 +98,25 @@ export function StudentLessonDetail() {
     enabled: !!id,
   });
 
+  const { data: activeVideoCall, isLoading: activeVideoCallLoading } = useQuery(
+    {
+      queryKey: ['video-calls', 'lesson', id],
+      queryFn: async () => {
+        if (!id) return null;
+        try {
+          return await videoCallsApi.getActiveForLesson(id);
+        } catch (err) {
+          if (isAxiosError(err) && err.response?.status === 404) {
+            return null;
+          }
+          throw err;
+        }
+      },
+      enabled: !!id,
+      staleTime: 15_000,
+    }
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -170,8 +191,30 @@ export function StudentLessonDetail() {
   };
 
   const lessonDate = new Date(lesson.date);
+  const [startHour = 0, startMinute = 0] = lesson.startTime
+    .split(':')
+    .map(Number);
+  const [endHour = 0, endMinute = 0] = lesson.endTime.split(':').map(Number);
+
+  const lessonStart = new Date(lessonDate);
+  lessonStart.setHours(startHour, startMinute, 0, 0);
+
+  const lessonEnd = new Date(lessonDate);
+  lessonEnd.setHours(endHour, endMinute, 0, 0);
+
   const now = new Date();
-  const isUpcoming = lessonDate >= now;
+  const isLessonUpcoming = now < lessonStart;
+  const isLessonActive = now >= lessonStart && now <= lessonEnd;
+  const badgeVariant = isLessonActive
+    ? 'default'
+    : isLessonUpcoming
+    ? 'secondary'
+    : 'outline';
+  const badgeLabel = isLessonActive
+    ? 'Live'
+    : isLessonUpcoming
+    ? 'Upcoming'
+    : 'Past';
 
   return (
     <div className="space-y-6">
@@ -193,9 +236,7 @@ export function StudentLessonDetail() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Badge variant={isUpcoming ? 'default' : 'outline'}>
-            {isUpcoming ? 'Upcoming' : 'Past'}
-          </Badge>
+          <Badge variant={badgeVariant}>{badgeLabel}</Badge>
           <Button
             variant="outline"
             onClick={() => navigate(`/app/student/courses/${courseId}`)}
@@ -243,9 +284,56 @@ export function StudentLessonDetail() {
               <div className="flex items-center gap-2 mt-1">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <p className="text-base">
-                  {lesson.startTime} - {lesson.endTime}
+                  {format(lessonStart, 'p')} – {format(lessonEnd, 'p')}
                 </p>
               </div>
+            </div>
+
+            <div className="rounded-md border border-primary/40 bg-primary/10 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <Video className="h-4 w-4" />
+                  Live Video Session
+                </div>
+                {activeVideoCall && <Badge variant="default">Live</Badge>}
+              </div>
+
+              {activeVideoCallLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking live session status...
+                </div>
+              ) : activeVideoCall ? (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Your professor has started a live session for this lesson.
+                  </p>
+                  <Button
+                    onClick={() =>
+                      navigate(`/app/video-calls/${activeVideoCall._id}`, {
+                        state: { from: `/app/student/lessons/${lesson._id}` },
+                      })
+                    }
+                  >
+                    <Video className="mr-2 h-4 w-4" />
+                    Join Live Call
+                  </Button>
+                </div>
+              ) : isLessonActive ? (
+                <p className="text-sm text-muted-foreground">
+                  The lesson is in progress. The live call will appear as soon
+                  as your professor starts it.
+                </p>
+              ) : isLessonUpcoming ? (
+                <p className="text-sm text-muted-foreground">
+                  The live call will become available when the lesson begins{' '}
+                  {formatDistanceToNow(lessonStart, { addSuffix: true })}.
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  This lesson has ended. No live sessions are currently active.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

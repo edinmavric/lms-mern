@@ -18,6 +18,7 @@ import {
   UserCheck,
   DollarSign,
   Bell,
+  Video,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link } from './ui/Link';
@@ -235,6 +236,12 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
           roles: ['professor'],
         },
         {
+          label: 'Video Calls',
+          href: '/app/professor/video-calls',
+          icon: Video,
+          roles: ['professor'],
+        },
+        {
           label: 'Consultations',
           href: '/app/professor/consultations',
           icon: Calendar,
@@ -315,6 +322,12 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
           label: 'My Points',
           href: '/app/student/points',
           icon: Target,
+          roles: ['student'],
+        },
+        {
+          label: 'Live Sessions',
+          href: '/app/student/video-calls',
+          icon: Video,
           roles: ['student'],
         },
         {

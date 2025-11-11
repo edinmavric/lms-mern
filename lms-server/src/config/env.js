@@ -16,6 +16,9 @@ const env = {
   mailFromEmail: process.env.MAIL_FROM_EMAIL || 'edinmavric10@gmail.com',
   mailFromName: process.env.MAIL_FROM_NAME || 'Edin Mavrić',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  streamApiKey: process.env.STREAM_API_KEY || '',
+  streamApiSecret: process.env.STREAM_API_SECRET || '',
+  streamAppId: process.env.STREAM_APP_ID || '',
 };
 
 module.exports = env;

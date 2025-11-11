@@ -152,4 +152,16 @@ export const API_ENDPOINTS = {
     delete: (id: string) => `${API_BASE}/notifications/${id}`,
     markRead: (id: string) => `${API_BASE}/notifications/${id}/read`,
   },
+
+  videoCalls: {
+    list: `${API_BASE}/video-calls`,
+    create: `${API_BASE}/video-calls`,
+    detail: (id: string) => `${API_BASE}/video-calls/${id}`,
+    activeForLesson: (lessonId: string) =>
+      `${API_BASE}/video-calls/lesson/${lessonId}/active`,
+    end: (id: string) => `${API_BASE}/video-calls/${id}/end`,
+    token: (id: string) => `${API_BASE}/video-calls/${id}/token`,
+    updateParticipants: (id: string) =>
+      `${API_BASE}/video-calls/${id}/participants`,
+  },
 } as const;

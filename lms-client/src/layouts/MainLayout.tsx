@@ -19,10 +19,8 @@ export function MainLayout() {
   const navigate = useNavigate();
   const { clearAuth, user } = useAuthStore();
   const queryClient = useQueryClient();
-  const { client, clearCall } = useVideoCallStore(state => ({
-    client: state.client,
-    clearCall: state.clearCall,
-  }));
+  const client = useVideoCallStore(state => state.client);
+  const clearCall = useVideoCallStore(state => state.clearCall);
 
   const { data: recentNotifications = [] } = useQuery({
     queryKey: ['notifications', 'my', { limit: 3 }],

@@ -51,10 +51,8 @@ export function ProfessorVideoCallsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const { callInfo, activeCall } = useVideoCallStore(state => ({
-    callInfo: state.callInfo,
-    activeCall: state.activeCall,
-  }));
+  const callInfo = useVideoCallStore(state => state.callInfo);
+  const activeCall = useVideoCallStore(state => state.activeCall);
 
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [selectedLessonId, setSelectedLessonId] = useState<string>('');

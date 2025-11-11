@@ -20,21 +20,12 @@ import {
 export function VideoCallDock() {
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    activeCall,
-    callInfo,
-    isDockVisible,
-    isCallPageActive,
-    clearCall,
-    role,
-  } = useVideoCallStore(state => ({
-    activeCall: state.activeCall,
-    callInfo: state.callInfo,
-    isDockVisible: state.isDockVisible,
-    isCallPageActive: state.isCallPageActive,
-    clearCall: state.clearCall,
-    role: state.role,
-  }));
+  const activeCall = useVideoCallStore(state => state.activeCall);
+  const callInfo = useVideoCallStore(state => state.callInfo);
+  const isDockVisible = useVideoCallStore(state => state.isDockVisible);
+  const isCallPageActive = useVideoCallStore(state => state.isCallPageActive);
+  const clearCall = useVideoCallStore(state => state.clearCall);
+  const role = useVideoCallStore(state => state.role);
 
   const handleReturnToCall = useCallback(() => {
     if (!callInfo) return;

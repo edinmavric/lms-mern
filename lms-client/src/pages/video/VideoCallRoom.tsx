@@ -31,27 +31,17 @@ export function VideoCallRoom() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const {
-    client,
-    activeCall,
-    callInfo,
-    role,
-    setClient,
-    setActiveCall,
-    clearCall,
-    setDockVisible,
-    setIsCallPageActive,
-  } = useVideoCallStore(state => ({
-    client: state.client,
-    activeCall: state.activeCall,
-    callInfo: state.callInfo,
-    role: state.role,
-    setClient: state.setClient,
-    setActiveCall: state.setActiveCall,
-    clearCall: state.clearCall,
-    setDockVisible: state.setDockVisible,
-    setIsCallPageActive: state.setIsCallPageActive,
-  }));
+  const client = useVideoCallStore(state => state.client);
+  const activeCall = useVideoCallStore(state => state.activeCall);
+  const callInfo = useVideoCallStore(state => state.callInfo);
+  const role = useVideoCallStore(state => state.role);
+  const setClient = useVideoCallStore(state => state.setClient);
+  const setActiveCall = useVideoCallStore(state => state.setActiveCall);
+  const clearCall = useVideoCallStore(state => state.clearCall);
+  const setDockVisible = useVideoCallStore(state => state.setDockVisible);
+  const setIsCallPageActive = useVideoCallStore(
+    state => state.setIsCallPageActive
+  );
   const joiningRef = useRef(false);
   const fromPath = (location.state as { from?: string })?.from;
   const fallbackPath =

@@ -70,3 +70,6 @@ export type { FormDialogProps } from './FormDialog';
 
 export { Sheet, SheetContent } from './Sheet';
 export type { SheetProps, SheetContentProps } from './Sheet';
+
+export { MultiSelect } from './MultiSelect';
+export type { MultiSelectProps, MultiSelectOption } from './MultiSelect';

@@ -130,4 +130,26 @@ export const API_ENDPOINTS = {
   uploads: {
     signedUrl: `${API_BASE}/uploads/signed-url`,
   },
+
+  consultations: {
+    list: `${API_BASE}/consultations`,
+    create: `${API_BASE}/consultations`,
+    detail: (id: string) => `${API_BASE}/consultations/${id}`,
+    update: (id: string) => `${API_BASE}/consultations/${id}`,
+    delete: (id: string) => `${API_BASE}/consultations/${id}`,
+    register: (id: string) => `${API_BASE}/consultations/${id}/register`,
+    unregister: (id: string) => `${API_BASE}/consultations/${id}/unregister`,
+  },
+
+  notifications: {
+    my: `${API_BASE}/notifications/my`,
+    unreadCount: `${API_BASE}/notifications/unread-count`,
+    markAllRead: `${API_BASE}/notifications/mark-all-read`,
+    list: `${API_BASE}/notifications`,
+    detail: (id: string) => `${API_BASE}/notifications/${id}`,
+    create: `${API_BASE}/notifications`,
+    update: (id: string) => `${API_BASE}/notifications/${id}`,
+    delete: (id: string) => `${API_BASE}/notifications/${id}`,
+    markRead: (id: string) => `${API_BASE}/notifications/${id}/read`,
+  },
 } as const;

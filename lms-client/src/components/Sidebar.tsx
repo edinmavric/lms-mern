@@ -12,10 +12,12 @@ import {
   Target,
   Activity,
   Banknote,
+  Calendar,
   CalendarCheck,
   FolderOpen,
   UserCheck,
   DollarSign,
+  Bell,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link } from './ui/Link';
@@ -97,6 +99,12 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
           roles: ['admin'],
         },
         {
+          label: 'Consultations',
+          href: '/app/admin/consultations',
+          icon: Calendar,
+          roles: ['admin'],
+        },
+        {
           label: 'Lesson Materials',
           href: '/app/admin/lesson-materials',
           icon: FolderOpen,
@@ -162,6 +170,17 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
         },
       ],
     },
+    {
+      label: 'Communication',
+      items: [
+        {
+          label: 'Notifications',
+          href: '/app/notifications',
+          icon: Bell,
+          roles: ['admin'],
+        },
+      ],
+    },
   ];
 
   const professorMenuGroups: MenuGroup[] = [
@@ -215,6 +234,12 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
           icon: Target,
           roles: ['professor'],
         },
+        {
+          label: 'Consultations',
+          href: '/app/professor/consultations',
+          icon: Calendar,
+          roles: ['professor'],
+        },
       ],
     },
     {
@@ -230,6 +255,17 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
           label: 'Exam Subscriptions',
           href: '/app/professor/exam-subscriptions',
           icon: UserCheck,
+          roles: ['professor'],
+        },
+      ],
+    },
+    {
+      label: 'Communication',
+      items: [
+        {
+          label: 'Notifications',
+          href: '/app/notifications',
+          icon: Bell,
           roles: ['professor'],
         },
       ],
@@ -281,6 +317,12 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
           icon: Target,
           roles: ['student'],
         },
+        {
+          label: 'Consultations',
+          href: '/app/student/consultations',
+          icon: Calendar,
+          roles: ['student'],
+        },
       ],
     },
     {
@@ -290,6 +332,17 @@ export function Sidebar({ open, onClose, mobile = false }: SidebarProps) {
           label: 'My Enrollments',
           href: '/app/student/enrollments',
           icon: GraduationCap,
+          roles: ['student'],
+        },
+      ],
+    },
+    {
+      label: 'Communication',
+      items: [
+        {
+          label: 'Notifications',
+          href: '/app/notifications',
+          icon: Bell,
           roles: ['student'],
         },
       ],

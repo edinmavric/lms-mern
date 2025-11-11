@@ -29,6 +29,7 @@ export function TenantSelector({
   helperText,
   disabled,
 }: TenantSelectorProps) {
+  const STORAGE_KEY = 'preferredTenant';
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
@@ -41,6 +42,20 @@ export function TenantSelector({
       window.clearTimeout(handler);
     };
   }, [query]);
+
+  useEffect(() => {
+    if (!value) {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as TenantSummary;
+          if (parsed?.id && parsed?.name) {
+            onChange(parsed);
+          }
+        }
+      } catch {}
+    }
+  }, []);
 
   const isSearchEnabled = debouncedQuery.trim().length >= 2;
 
@@ -58,6 +73,13 @@ export function TenantSelector({
   const handleSelect = (tenant: TenantSummary | null) => {
     onChange(tenant);
     setQuery('');
+    try {
+      if (tenant) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tenant));
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {}
   };
 
   return (

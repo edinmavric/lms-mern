@@ -23,6 +23,8 @@ const examSubscriptionRoutes = require('./routes/examSubscriptionRoutes');
 const activityLogRoutes = require('./routes/activityLogRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const docsRoutes = require('./routes/docsRoutes');
+const consultationRoutes = require('./routes/consultationRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -88,6 +90,8 @@ app.use('/api/exams', examRoutes);
 app.use('/api/exam-subscriptions', examSubscriptionRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/consultations', consultationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(error);
 

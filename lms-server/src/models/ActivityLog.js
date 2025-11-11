@@ -71,6 +71,19 @@ const activityLogSchema = new mongoose.Schema(
         'enrollment.created',
         'enrollment.updated',
         'enrollment.deleted',
+
+        'consultation.created',
+        'consultation.updated',
+        'consultation.deleted',
+        'consultation.registered',
+        'consultation.unregistered',
+        'consultation.cancelled',
+
+        'notification.created',
+        'notification.updated',
+        'notification.deleted',
+        'notification.published',
+        'notification.read',
       ],
     },
     entityType: {
@@ -91,6 +104,8 @@ const activityLogSchema = new mongoose.Schema(
         'LessonMaterial',
         'Point',
         'Tenant',
+        'Consultation',
+        'Notification',
       ],
     },
     entityId: {

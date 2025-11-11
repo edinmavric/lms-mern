@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Bell } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { notificationsApi } from '../lib/api/notifications';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useAuthStore } from '../store/authStore';
 import { Sidebar } from '../components/Sidebar';
@@ -13,6 +15,13 @@ export function MainLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const { clearAuth, user } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  const { data: recentNotifications = [] } = useQuery({
+    queryKey: ['notifications', 'my', { limit: 3 }],
+    queryFn: () => notificationsApi.my({ page: 1, limit: 3 }),
+    staleTime: 60_000,
+  });
 
   useEffect(() => {
     const checkMobile = () => {
@@ -44,7 +53,11 @@ export function MainLayout() {
 
   const handleLogout = () => {
     clearAuth();
-    navigate('/login', { replace: true });
+    try {
+      queryClient.clear();
+    } finally {
+      navigate('/login', { replace: true });
+    }
   };
 
   const toggleSidebar = () => {
@@ -93,6 +106,55 @@ export function MainLayout() {
                 </h1>
               </div>
               <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                <div className="relative group">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate('/app/notifications')}
+                    className="relative shrink-0"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="h-5 w-5" />
+                  </Button>
+                  <div className="absolute right-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto w-72">
+                    <div className="rounded-md bg-popover border border-border text-popover-foreground shadow-md">
+                      <div className="px-3 py-2 border-b border-border font-semibold text-sm">
+                        Notifications
+                      </div>
+                      <div className="max-h-64 overflow-auto">
+                        {recentNotifications.length === 0 ? (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            No recent notifications
+                          </div>
+                        ) : (
+                          recentNotifications.map(n => (
+                            <button
+                              key={n._id}
+                              className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors"
+                              onClick={() => navigate(`/app/notifications`)}
+                            >
+                              <div className="text-sm font-medium truncate">
+                                {n.title}
+                              </div>
+                              <div className="text-xs text-muted-foreground line-clamp-2">
+                                {n.content}
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      <div className="px-3 py-2 border-t border-border">
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => navigate('/app/notifications')}
+                        >
+                          View all
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {user && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span className="hidden sm:inline truncate max-w-[120px] md:max-w-none">

@@ -86,6 +86,10 @@ import { ProfessorExamSubscriptionDetail } from '../pages/professor/ProfessorExa
 import { ProfessorLessonEdit } from '../pages/professor/ProfessorLessonEdit';
 import { ProfessorExamEdit } from '../pages/professor/ProfessorExamEdit';
 import { ProfessorGradeEdit } from '../pages/professor/ProfessorGradeEdit';
+import { NotificationsList } from '../pages/NotificationsList';
+import { ProfessorConsultationsList } from '../pages/professor/ProfessorConsultationsList';
+import { StudentConsultationsList } from '../pages/student/StudentConsultationsList';
+import { AdminConsultationsList } from '../pages/admin/AdminConsultationsList';
 
 const router = createBrowserRouter([
   {
@@ -99,6 +103,38 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: 'notifications',
+        element: (
+          <ProtectedRoute>
+            <NotificationsList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'professor/consultations',
+        element: (
+          <ProtectedRoute allowedRoles={['professor']}>
+            <ProfessorConsultationsList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'student/consultations',
+        element: (
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentConsultationsList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/consultations',
+        element: (
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminConsultationsList />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'admin',

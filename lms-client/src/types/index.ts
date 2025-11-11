@@ -168,7 +168,18 @@ export interface ActivityLog {
     | 'point.deleted'
     | 'enrollment.created'
     | 'enrollment.updated'
-    | 'enrollment.deleted';
+    | 'enrollment.deleted'
+    | 'consultation.created'
+    | 'consultation.updated'
+    | 'consultation.deleted'
+    | 'consultation.registered'
+    | 'consultation.unregistered'
+    | 'consultation.cancelled'
+    | 'notification.created'
+    | 'notification.updated'
+    | 'notification.deleted'
+    | 'notification.published'
+    | 'notification.read';
   entityType:
     | 'User'
     | 'Course'
@@ -183,7 +194,9 @@ export interface ActivityLog {
     | 'BankAccount'
     | 'LessonMaterial'
     | 'Point'
-    | 'Tenant';
+    | 'Tenant'
+    | 'Consultation'
+    | 'Notification';
   entityId: string;
   changes?: Record<string, { old: any; new: any }>;
   metadata?: Record<string, any>;
@@ -343,4 +356,85 @@ export interface ApiError {
     field: string;
     message: string;
   }>;
+}
+
+export interface Consultation {
+  _id: string;
+  tenant: string;
+  professor: string | User;
+  courses: Array<string | Course>;
+  title: string;
+  description?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  roomNumber: string;
+  maxStudents?: number | null;
+  registeredStudents: Array<{
+    student: string | User;
+    registeredAt: string;
+  }>;
+  status: 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
+  availableSpots?: number | null;
+  isFull: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateConsultationData {
+  courses?: string[];
+  title: string;
+  description?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  roomNumber: string;
+  maxStudents?: number;
+  notes?: string;
+}
+
+export interface NotificationAttachment {
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+}
+
+export interface Notification {
+  _id: string;
+  tenant: string;
+  title: string;
+  content: string;
+  type: 'general' | 'urgent' | 'maintenance' | 'event' | 'academic';
+  priority: 'low' | 'medium' | 'high';
+  targetAudience: 'all' | 'students' | 'professors' | 'specific';
+  targetUsers?: Array<string | User>;
+  targetCourses?: Array<string | Course>;
+  targetDepartments?: Array<string | Department>;
+  isPublished: boolean;
+  publishedAt?: string;
+  expiresAt?: string;
+  isPinned: boolean;
+  attachments?: NotificationAttachment[];
+  readBy: Array<{ user: string | User; readAt: string }>;
+  readCount: number;
+  createdBy: string | User;
+  updatedBy?: string | User;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNotificationData {
+  title: string;
+  content: string;
+  type?: 'general' | 'urgent' | 'maintenance' | 'event' | 'academic';
+  priority?: 'low' | 'medium' | 'high';
+  targetAudience?: 'all' | 'students' | 'professors' | 'specific';
+  targetUsers?: string[];
+  targetCourses?: string[];
+  targetDepartments?: string[];
+  isPublished?: boolean;
+  expiresAt?: string;
+  isPinned?: boolean;
 }

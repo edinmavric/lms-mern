@@ -33,9 +33,18 @@ export const uploadsApi = {
       file.type
     );
 
-    await axios.put(uploadUrl, file, {
-      headers: { 'Content-Type': file.type },
-    });
+    try {
+      await axios.put(uploadUrl, file, {
+        headers: { 'Content-Type': file.type },
+      });
+    } catch (error: any) {
+      if (error.response) {
+        console.error('S3 error:', error.response.status, error.response.data);
+      } else {
+        console.error('Network error:', error.message);
+      }
+      throw error;
+    }
 
     return {
       fileUrl,

@@ -19,6 +19,7 @@ import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { coursesApi } from '../../lib/api/courses';
 import { lessonsApi } from '../../lib/api/lessons';
 import { useAuthStore } from '../../store/authStore';
+import { getMaterialUrl } from '../../lib/utils';
 import type { LessonMaterial } from '../../types';
 import {
   Card,
@@ -374,20 +375,23 @@ export function ProfessorLessonMaterialsList() {
                       <span className="truncate">{lessonName}</span>
                     </div>
                   </div>
-                  {material.url && (
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <a
-                        href={material.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
-                        className="flex items-center gap-2 text-sm text-primary hover:underline"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>Open Material</span>
-                      </a>
-                    </div>
-                  )}
+                  {(() => {
+                    const materialUrl = getMaterialUrl(material);
+                    return materialUrl ? (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <a
+                          href={materialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="flex items-center gap-2 text-sm text-primary hover:underline"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          <span>Open Material</span>
+                        </a>
+                      </div>
+                    ) : null;
+                  })()}
                   <div
                     className="mt-2 flex gap-2"
                     onClick={e => e.stopPropagation()}

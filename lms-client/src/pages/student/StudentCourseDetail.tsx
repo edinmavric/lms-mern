@@ -25,6 +25,7 @@ import { attendanceApi } from '../../lib/api/attendance';
 import { enrollmentsApi } from '../../lib/api/enrollments';
 import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { useAuthStore } from '../../store/authStore';
+import { getMaterialUrl } from '../../lib/utils';
 import type { Course } from '../../types';
 import {
   Card,
@@ -546,15 +547,24 @@ export function StudentCourseDetail() {
                           {material.description}
                         </p>
                       )}
-                      <a
-                        href={material.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 break-all"
-                      >
-                        <ExternalLink className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{material.url}</span>
-                      </a>
+                      {(() => {
+                        const materialUrl = getMaterialUrl(material);
+                        return materialUrl ? (
+                          <a
+                            href={materialUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 break-all"
+                          >
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                            <span className="truncate">
+                              {material.storageKey
+                                ? material.name
+                                : materialUrl}
+                            </span>
+                          </a>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                 );

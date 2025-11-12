@@ -44,3 +44,16 @@ export function getErrorMessage(error: unknown, fallback = 'Something went wrong
 
   return fallback;
 }
+
+export function getMaterialUrl(material: {
+  url?: string;
+  storageKey?: string;
+}): string | undefined {
+  if (material.storageKey) {
+    const bucketName =
+      import.meta.env.VITE_S3_BUCKET_NAME || 'faks-lms-2025';
+    const region = import.meta.env.VITE_S3_REGION || 'eu-north-1';
+    return `https://${bucketName}.s3.${region}.amazonaws.com/${material.storageKey}`;
+  }
+  return material.url;
+}

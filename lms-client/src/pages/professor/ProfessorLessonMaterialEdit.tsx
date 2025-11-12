@@ -109,12 +109,10 @@ export function ProfessorLessonMaterialEdit() {
       if (isFileType && selectedFile) {
         setUploading(true);
         try {
-          const { fileUrl, storageKey } = await uploadsApi.uploadFile(
-            selectedFile
-          );
+          const { storageKey } = await uploadsApi.uploadFile(selectedFile);
           finalData = {
             ...finalData,
-            url: fileUrl,
+            url: formData.name.trim(),
             storageKey,
           };
         } catch (error: any) {
@@ -159,7 +157,7 @@ export function ProfessorLessonMaterialEdit() {
       return;
     }
 
-    if (isFileType && !selectedFile && !material?.url) {
+    if (isFileType && !selectedFile && !material?.storageKey) {
       setError('Please select a file to upload or keep the existing file');
       return;
     }
@@ -333,17 +331,9 @@ export function ProfessorLessonMaterialEdit() {
                       {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                     </p>
                   )}
-                  {material && material.url && !selectedFile && (
+                  {material && material.storageKey && !selectedFile && (
                     <p className="text-sm text-muted-foreground">
-                      Current file:{' '}
-                      <a
-                        href={material.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {material.name}
-                      </a>
+                      Current file: {material.name}
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">

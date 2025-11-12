@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { lessonsApi } from '../../lib/api/lessons';
 import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { uploadsApi } from '../../lib/api/uploads';
+import { getMaterialUrl } from '../../lib/utils';
 import type { LessonMaterial } from '../../types';
 import {
   Card,
@@ -37,11 +38,6 @@ import {
   DialogFooter,
   FormField,
   Input,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
 } from '../../components/ui';
 
 interface MaterialFormData {
@@ -72,27 +68,41 @@ function MaterialForm({
   const [formData, setFormData] = useState<MaterialFormData>({
     name: material?.name || '',
     description: material?.description || '',
-    type: material?.type || 'link',
+    type: material?.type || 'other',
     url: material?.url || '',
     storageKey: material?.storageKey || '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [useFileUpload, setUseFileUpload] = useState(
+    material ? !!(material.storageKey || !material.url) : true
+  );
 
-  const isFileType = [
-    'pdf',
-    'document',
-    'image',
-    'presentation',
-    'other',
-  ].includes(formData.type);
-  const isLinkOrVideo = ['link', 'video'].includes(formData.type);
+  const detectFileType = (fileName: string): MaterialFormData['type'] => {
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+
+    if (extension === 'pdf') return 'pdf';
+    if (['doc', 'docx', 'txt', 'rtf'].includes(extension)) return 'document';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(extension))
+      return 'image';
+    if (['ppt', 'pptx'].includes(extension)) return 'presentation';
+    if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'].includes(extension))
+      return 'video';
+    return 'other';
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setFormData({ ...formData, file, url: undefined, storageKey: undefined });
+      const detectedType = detectFileType(file.name);
+      setFormData({
+        ...formData,
+        type: detectedType,
+        file,
+        url: undefined,
+        storageKey: undefined,
+      });
     }
   };
 
@@ -103,24 +113,15 @@ function MaterialForm({
       return;
     }
 
-    if (isLinkOrVideo) {
-      if (!formData.url?.trim()) {
-        toast.error('URL is required for link and video types');
-        return;
-      }
-      const { file, ...submitData } = formData;
-      onSubmit(submitData);
-    } else if (isFileType) {
+    if (useFileUpload) {
       if (selectedFile) {
         setUploading(true);
         try {
-          const { fileUrl, storageKey } = await uploadsApi.uploadFile(
-            selectedFile
-          );
+          const { storageKey } = await uploadsApi.uploadFile(selectedFile);
           const { file, ...submitData } = formData;
           onSubmit({
             ...submitData,
-            url: fileUrl,
+            url: formData.name.trim(),
             storageKey,
           });
           setUploading(false);
@@ -131,17 +132,34 @@ function MaterialForm({
           setUploading(false);
           return;
         }
-      } else if (material && material.url) {
+      } else if (material && material.storageKey) {
         const { file, ...submitData } = formData;
         onSubmit({
           ...submitData,
-          url: material.url,
+          url: formData.name.trim(),
           storageKey: material.storageKey,
         });
       } else {
         toast.error('Please select a file to upload');
         return;
       }
+    } else {
+      if (!formData.url?.trim()) {
+        toast.error('Please enter a file URL');
+        return;
+      }
+      const urlType = formData.url
+        .match(/\.([a-z0-9]+)(?:\?|$)/i)?.[1]
+        ?.toLowerCase();
+      const detectedType = urlType ? detectFileType(`file.${urlType}`) : 'link';
+
+      const { file, ...submitData } = formData;
+      onSubmit({
+        ...submitData,
+        type: detectedType,
+        url: formData.url.trim(),
+        storageKey: undefined,
+      });
     }
   };
 
@@ -167,87 +185,85 @@ function MaterialForm({
         />
       </FormField>
 
-      <FormField label="Type" required>
-        <Select
-          value={formData.type}
-          onValueChange={value => {
-            const newType = value as MaterialFormData['type'];
-            setFormData({
-              ...formData,
-              type: newType,
-              url: undefined,
-              storageKey: undefined,
-              file: undefined,
-            });
-            setSelectedFile(null);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pdf">PDF</SelectItem>
-            <SelectItem value="video">Video</SelectItem>
-            <SelectItem value="presentation">Presentation</SelectItem>
-            <SelectItem value="link">Link</SelectItem>
-            <SelectItem value="document">Document</SelectItem>
-            <SelectItem value="image">Image</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </FormField>
-
-      {isLinkOrVideo ? (
-        <FormField label="URL" required>
-          <Input
-            type="url"
-            value={formData.url || ''}
-            onChange={e => setFormData({ ...formData, url: e.target.value })}
-            placeholder="https://example.com/material.pdf"
-            required
-          />
-        </FormField>
-      ) : isFileType ? (
-        <FormField label="File" required>
-          <div className="space-y-2">
-            <Input
-              type="file"
-              onChange={handleFileChange}
-              accept={
-                formData.type === 'pdf'
-                  ? '.pdf'
-                  : formData.type === 'image'
-                  ? 'image/*'
-                  : formData.type === 'document'
-                  ? '.doc,.docx,.txt'
-                  : formData.type === 'presentation'
-                  ? '.ppt,.pptx'
-                  : '*'
-              }
-              className="cursor-pointer"
+      <FormField label="File" required>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="use-file-upload"
+              checked={useFileUpload}
+              onChange={e => {
+                setUseFileUpload(e.target.checked);
+                if (!e.target.checked) {
+                  setSelectedFile(null);
+                  setFormData({ ...formData, file: undefined });
+                }
+              }}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             />
-            {selectedFile && (
-              <p className="text-sm text-muted-foreground">
-                Selected: {selectedFile.name} (
-                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-            )}
-            {material && material.url && !selectedFile && (
-              <p className="text-sm text-muted-foreground">
-                Current file:{' '}
-                <a
-                  href={material.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {material.name}
-                </a>
-              </p>
-            )}
+            <label
+              htmlFor="use-file-upload"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Upload file
+            </label>
           </div>
-        </FormField>
-      ) : null}
+          {useFileUpload ? (
+            <div className="space-y-2">
+              <Input
+                type="file"
+                onChange={handleFileChange}
+                accept="*"
+                className="cursor-pointer"
+              />
+              {selectedFile && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {selectedFile.name} (
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Type:{' '}
+                    {formData.type.charAt(0).toUpperCase() +
+                      formData.type.slice(1)}{' '}
+                    (auto-detected)
+                  </p>
+                </div>
+              )}
+              {material && material.storageKey && !selectedFile && (
+                <p className="text-sm text-muted-foreground">
+                  Current file: {material.name}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Input
+                type="text"
+                value={formData.url || ''}
+                onChange={e =>
+                  setFormData({ ...formData, url: e.target.value })
+                }
+                placeholder="Enter file URL (e.g., https://example.com/file.pdf)"
+                required
+              />
+              {material && material.url && !material.storageKey && (
+                <p className="text-sm text-muted-foreground">
+                  Current URL:{' '}
+                  <a
+                    href={material.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline break-all"
+                  >
+                    {material.url}
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </FormField>
 
       <DialogFooter>
         <Button
@@ -596,17 +612,24 @@ export function LessonDetail() {
                           {material.description}
                         </p>
                       )}
-                      {material.url && (
-                        <a
-                          href={material.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 break-all"
-                        >
-                          <ExternalLink className="h-3 w-3 shrink-0" />
-                          <span className="truncate">{material.url}</span>
-                        </a>
-                      )}
+                      {(() => {
+                        const materialUrl = getMaterialUrl(material);
+                        return materialUrl ? (
+                          <a
+                            href={materialUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 break-all"
+                          >
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                            <span className="truncate">
+                              {material.storageKey
+                                ? material.name
+                                : materialUrl}
+                            </span>
+                          </a>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4 shrink-0">

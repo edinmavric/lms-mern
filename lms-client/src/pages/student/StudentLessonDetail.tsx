@@ -23,6 +23,7 @@ import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { enrollmentsApi } from '../../lib/api/enrollments';
 import { videoCallsApi } from '../../lib/api/videoCalls';
 import { useAuthStore } from '../../store/authStore';
+import { getMaterialUrl } from '../../lib/utils';
 import {
   Card,
   CardContent,
@@ -401,17 +402,20 @@ export function StudentLessonDetail() {
                         {material.description}
                       </p>
                     )}
-                    {material.url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => window.open(material.url, '_blank')}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Open Material
-                      </Button>
-                    )}
+                    {(() => {
+                      const materialUrl = getMaterialUrl(material);
+                      return materialUrl ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => window.open(materialUrl, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Open Material
+                        </Button>
+                      ) : null;
+                    })()}
                   </div>
                 );
               })}

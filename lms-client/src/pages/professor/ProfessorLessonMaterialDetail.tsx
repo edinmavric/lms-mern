@@ -21,6 +21,7 @@ import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { coursesApi } from '../../lib/api/courses';
 import { lessonsApi } from '../../lib/api/lessons';
 import { useAuthStore } from '../../store/authStore';
+import { getMaterialUrl } from '../../lib/utils';
 import {
   Card,
   CardContent,
@@ -244,22 +245,29 @@ export function ProfessorLessonMaterialDetail() {
                 </Badge>
               </div>
             </div>
-            {material.url && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">URL</p>
-                <div className="mt-1">
-                  <a
-                    href={material.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span className="truncate">{material.url}</span>
-                  </a>
+            {(() => {
+              const materialUrl = getMaterialUrl(material);
+              return materialUrl ? (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    URL
+                  </p>
+                  <div className="mt-1">
+                    <a
+                      href={materialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="truncate">
+                        {material.storageKey ? material.name : materialUrl}
+                      </span>
+                    </a>
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : null;
+            })()}
             {material.storageKey && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
@@ -321,33 +329,38 @@ export function ProfessorLessonMaterialDetail() {
         </Card>
       </div>
 
-      {material.url && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ExternalLink className="h-5 w-5" />
-              Access Material
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-muted-foreground mb-1">
-                  Material URL
-                </p>
-                <p className="text-sm truncate">{material.url}</p>
+      {(() => {
+        const materialUrl = getMaterialUrl(material);
+        return materialUrl ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ExternalLink className="h-5 w-5" />
+                Access Material
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Material URL
+                  </p>
+                  <p className="text-sm truncate">
+                    {material.storageKey ? material.name : materialUrl}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => window.open(materialUrl, '_blank')}
+                  className="ml-4 shrink-0"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open Material
+                </Button>
               </div>
-              <Button
-                onClick={() => window.open(material.url, '_blank')}
-                className="ml-4 shrink-0"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Open Material
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        ) : null;
+      })()}
 
       <Card>
         <CardHeader>

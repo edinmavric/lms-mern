@@ -180,11 +180,11 @@ export interface ActivityLog {
     | 'notification.deleted'
     | 'notification.published'
     | 'notification.read'
-    | 'videoCall.created'
-    | 'videoCall.updated'
-    | 'videoCall.ended'
-    | 'videoCall.cancelled'
-    | 'videoCall.participants_updated';
+    | 'videocall.created'
+    | 'videocall.updated'
+    | 'videocall.ended'
+    | 'videocall.cancelled'
+    | 'videocall.participants_updated';
   entityType:
     | 'User'
     | 'Course'

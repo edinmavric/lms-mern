@@ -13,7 +13,7 @@ function ensureStreamCredentials() {
 
 function generateVideoUserToken(
   userId,
-  { callCid, role, validityInSeconds = DEFAULT_VALIDITY_SECONDS } = {}
+  { callCid, validityInSeconds = DEFAULT_VALIDITY_SECONDS } = {}
 ) {
   ensureStreamCredentials();
 
@@ -26,10 +26,6 @@ function generateVideoUserToken(
 
   if (callCid) {
     payload.call_cids = Array.isArray(callCid) ? callCid : [callCid];
-  }
-
-  if (role) {
-    payload.role = role;
   }
 
   return jwt.sign(payload, env.streamApiSecret, { algorithm: 'HS256' });

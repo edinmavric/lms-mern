@@ -100,7 +100,6 @@ export function AdminConsultationsList() {
   });
 
   useEffect(() => {
-    // When professor changes, limit selected courses to that professor
     const current = (form.getValues('courses') as string[]) || [];
     if (!selectedProfessorId) return;
     const allowed = new Set(filteredCourses.map(c => c._id));
@@ -108,7 +107,6 @@ export function AdminConsultationsList() {
     if (next.length !== current.length) {
       form.setValue('courses', next);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProfessorId, filteredCourses.length]);
 
   return (

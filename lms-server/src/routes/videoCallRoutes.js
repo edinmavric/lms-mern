@@ -27,14 +27,14 @@ router.get(
 router.post(
   '/',
   requireRole('admin', 'professor'),
-  activityLogger('videoCall.created', 'VideoCall'),
+  activityLogger('videocall.created', 'VideoCall'),
   createVideoCall
 );
 
 router.post(
   '/:id/end',
   requireRole('admin', 'professor'),
-  activityLogger('videoCall.ended', 'VideoCall'),
+  activityLogger('videocall.ended', 'VideoCall'),
   endVideoCall
 );
 
@@ -47,7 +47,7 @@ router.post(
 router.put(
   '/:id/participants',
   requireRole('admin', 'professor'),
-  activityLogger('videoCall.participants_updated', 'VideoCall'),
+  activityLogger('videocall.participants_updated', 'VideoCall'),
   updateParticipants
 );
 

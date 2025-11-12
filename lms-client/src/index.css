@@ -105,14 +105,98 @@
   }
 
   .str-video__call-controls {
-    background: hsl(var(--card));
-    border-top: 1px solid hsl(var(--border));
-    padding: 1rem;
+    background: hsl(var(--card)) !important;
+    border-top: 1px solid hsl(var(--border)) !important;
+    padding: 1rem !important;
+    z-index: 50 !important;
+    position: relative !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    flex-wrap: wrap !important;
+    min-height: 80px !important;
+  }
+
+  .str-video__call-controls button {
+    background: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 9999px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    box-shadow: 0 2px 4px hsl(var(--foreground) / 0.1) !important;
+  }
+
+  .str-video__call-controls button:hover {
+    background: hsl(var(--primary) / 0.85) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px hsl(var(--primary) / 0.3) !important;
+  }
+
+  .str-video__call-controls button:active {
+    transform: scale(0.95) !important;
+  }
+
+  .str-video__call-controls button[aria-pressed='true'] {
+    background: hsl(var(--destructive)) !important;
+    color: hsl(var(--destructive-foreground)) !important;
+    border-color: hsl(var(--destructive) / 0.2) !important;
+  }
+
+  .str-video__call-controls button[aria-pressed='true']:hover {
+    background: hsl(var(--destructive) / 0.85) !important;
+  }
+
+  .str-video__call-controls button[data-testid="leave-call-button"] {
+    background: hsl(var(--destructive)) !important;
+    color: hsl(var(--destructive-foreground)) !important;
+  }
+
+  .str-video__call-controls button svg {
+    color: inherit !important;
+    width: 20px !important;
+    height: 20px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .str-video__call-controls-container {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   .str-video__participant-view {
     border-radius: var(--radius);
     overflow: hidden;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  .str-video__speaker-layout {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .str-video__video-placeholder,
+  .str-video__participant-video {
+    position: relative !important;
+    z-index: 1 !important;
   }
 
   [data-sonner-toast] {

@@ -72,10 +72,21 @@ export const useVideoCallStore = create<VideoCallState>((set, get) => ({
     const { activeCall } = get();
     try {
       if (activeCall) {
-        await activeCall.leave();
+        if (activeCall.state?.session) {
+          try {
+            await activeCall.leave();
+          } catch (leaveError: any) {
+            if (
+              !leaveError?.message?.includes('not found') &&
+              !leaveError?.message?.includes('already left')
+            ) {
+              console.warn('Failed to leave call gracefully', leaveError);
+            }
+          }
+        }
       }
     } catch (error) {
-      console.warn('Failed to leave call gracefully', error);
+      console.warn('Error during call cleanup', error);
     }
 
     set({

@@ -292,13 +292,6 @@ const generateVideoCallToken = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Video call is not active' });
   }
 
-  const now = new Date();
-  if (now > videoCall.lessonEndAt) {
-    return res.status(400).json({
-      message: 'Video call has already ended based on the lesson schedule',
-    });
-  }
-
   let streamRole = 'participant';
   const userId = req.user.id;
 
@@ -338,7 +331,6 @@ const generateVideoCallToken = asyncHandler(async (req, res) => {
   const validityInSeconds = 60 * 60;
   const token = generateVideoUserToken(userId, {
     callCid: videoCall.callCid,
-    role: streamRole,
     validityInSeconds,
   });
 

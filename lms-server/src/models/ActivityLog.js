@@ -85,11 +85,11 @@ const activityLogSchema = new mongoose.Schema(
         'notification.published',
         'notification.read',
 
-        'videoCall.created',
-        'videoCall.updated',
-        'videoCall.ended',
-        'videoCall.cancelled',
-        'videoCall.participants_updated',
+        'videocall.created',
+        'videocall.updated',
+        'videocall.ended',
+        'videocall.cancelled',
+        'videocall.participants_updated',
       ],
     },
     entityType: {

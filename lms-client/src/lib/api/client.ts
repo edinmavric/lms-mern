@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import type { AxiosInstance } from 'axios';
+import { useAuthStore } from '../../store/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -70,10 +71,10 @@ class ApiClient {
 
             const { token, refreshToken: newRefreshToken } = response.data;
 
-            localStorage.setItem('accessToken', token);
-            if (newRefreshToken) {
-              localStorage.setItem('refreshToken', newRefreshToken);
-            }
+            useAuthStore.getState().updateTokens({
+              accessToken: token,
+              refreshToken: newRefreshToken || refreshToken,
+            });
 
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return this.client(originalRequest);

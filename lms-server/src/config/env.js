@@ -1,15 +1,42 @@
 require('dotenv').config();
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+const isProduction = nodeEnv === 'production';
+
+const jwtSecret = process.env.JWT_SECRET;
+const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
+
+if (isProduction) {
+  if (!jwtSecret || jwtSecret.length < 32) {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: JWT_SECRET must be set and at least 32 characters in production. ' +
+      'Generate a secure secret using: openssl rand -hex 32'
+    );
+  }
+  if (!jwtRefreshSecret || jwtRefreshSecret.length < 32) {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: JWT_REFRESH_SECRET must be set and at least 32 characters in production. ' +
+      'Generate a secure secret using: openssl rand -hex 32'
+    );
+  }
+}
+
+if (!isProduction) {
+  if (!jwtSecret || jwtSecret === 'change-me' || jwtSecret.length < 32) {
+    console.warn(
+      '\x1b[33m⚠ WARNING: Using weak or default JWT_SECRET in development.\x1b[0m\n' +
+      '  For better security, generate a strong secret: openssl rand -hex 32'
+    );
+  }
+}
+
 const env = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
   port: Number(process.env.PORT) || 8000,
   mongoUri: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/lms',
-  jwtSecret: process.env.JWT_SECRET || 'change-me',
-  jwtRefreshSecret:
-    process.env.JWT_REFRESH_SECRET ||
-    process.env.JWT_SECRET ||
-    'change-me-refresh',
-  corsOrigin: process.env.CORS_ORIGIN || '*',
+  jwtSecret: jwtSecret || 'dev-secret-change-me-in-production',
+  jwtRefreshSecret: jwtRefreshSecret || jwtSecret || 'dev-refresh-secret-change-me-in-production',
+  corsOrigin: process.env.CORS_ORIGIN || (isProduction ? '' : 'http://localhost:5173'),
   allowTenantSignup: process.env.ALLOW_TENANT_SIGNUP !== 'false',
   mailjetPublicKey: process.env.MJ_APIKEY_PUBLIC || '',
   mailjetPrivateKey: process.env.MJ_APIKEY_PRIVATE || '',
@@ -20,5 +47,20 @@ const env = {
   streamApiSecret: process.env.STREAM_API_SECRET || '',
   streamAppId: process.env.STREAM_APP_ID || '',
 };
+
+if (isProduction) {
+  if (env.corsOrigin === '*') {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: CORS_ORIGIN cannot be "*" in production. ' +
+      'Set it to your frontend domain(s).'
+    );
+  }
+  if (!env.mongoUri || env.mongoUri.includes('127.0.0.1') || env.mongoUri.includes('localhost')) {
+    console.warn(
+      '\x1b[33m⚠ WARNING: MONGO_URI appears to be pointing to localhost in production.\x1b[0m\n' +
+      '  Ensure you are using a production database.'
+    );
+  }
+}
 
 module.exports = env;

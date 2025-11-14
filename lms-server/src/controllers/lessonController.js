@@ -5,12 +5,16 @@ const {
   requireFields,
   assertSameTenantForDoc,
   isValidObjectId,
+  createSafeSearchRegex,
 } = require('../utils/validators');
 
 const getAllLessons = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({ isDeleted: false });
   if (req.query.course) criteria.course = req.query.course;
-  if (req.query.title) criteria.title = new RegExp(req.query.title, 'i');
+  if (req.query.title) {
+    const searchRegex = createSafeSearchRegex(req.query.title);
+    if (searchRegex) criteria.title = searchRegex;
+  }
 
   if (req.query.date) {
     const queryDate = new Date(req.query.date);
@@ -130,9 +134,6 @@ const updateLesson = asyncHandler(async (req, res) => {
     });
   }
 
-  delete req.body.tenant;
-  req.body.updatedBy = req.user.id;
-
   if (req.body.startTime || req.body.endTime) {
     const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
     const startTime = req.body.startTime || lesson.startTime;
@@ -156,7 +157,16 @@ const updateLesson = asyncHandler(async (req, res) => {
     }
   }
 
-  Object.assign(lesson, req.body);
+  const allowedFields = ['title', 'description', 'date', 'startTime', 'endTime', 'location', 'type'];
+  const updateData = {};
+  for (const key of Object.keys(req.body)) {
+    if (allowedFields.includes(key)) {
+      updateData[key] = req.body[key];
+    }
+  }
+  updateData.updatedBy = req.user.id;
+
+  Object.assign(lesson, updateData);
   await lesson.save();
 
   await lesson.populate('course', 'name');

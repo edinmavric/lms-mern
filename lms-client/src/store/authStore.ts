@@ -14,6 +14,7 @@ interface AuthState {
     accessToken: string;
     refreshToken: string;
   }) => void;
+  updateTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
   clearAuth: () => void;
   updateUser: (user: Partial<User>) => void;
 }
@@ -40,6 +41,16 @@ export const useAuthStore = create<AuthState>()(
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
           isAuthenticated: true,
+        });
+      },
+
+      updateTokens: tokens => {
+        localStorage.setItem('accessToken', tokens.accessToken);
+        localStorage.setItem('refreshToken', tokens.refreshToken);
+
+        set({
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
         });
       },
 

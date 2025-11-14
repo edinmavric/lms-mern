@@ -82,6 +82,12 @@ const createGrade = asyncHandler(async (req, res) => {
     });
   }
 
+  if (req.user.role === 'professor' && course.professor.toString() !== req.user.id) {
+    return res.status(403).json({
+      message: 'You can only create grades for courses you teach',
+    });
+  }
+
   const grade = await Grade.create(gradeData);
   await grade.populate('student', 'firstName lastName email');
   await grade.populate('course', 'name');
@@ -114,23 +120,29 @@ const updateGrade = asyncHandler(async (req, res) => {
     });
   }
 
-  if (req.body.value !== undefined && req.body.value !== grade.value) {
+  const allowedFields = ['value', 'date', 'comment', 'attempt'];
+  const updateData = {};
+  for (const key of Object.keys(req.body)) {
+    if (allowedFields.includes(key)) {
+      updateData[key] = req.body[key];
+    }
+  }
+
+  if (updateData.value !== undefined && updateData.value !== grade.value) {
     if (!grade.history) {
       grade.history = [];
     }
     grade.history.push({
       oldValue: grade.value,
-      newValue: req.body.value,
+      newValue: updateData.value,
       changedBy: req.user.id,
       changedAt: new Date(),
     });
   }
 
-  delete req.body.tenant;
-  delete req.body.professor;
-  req.body.updatedBy = req.user.id;
+  updateData.updatedBy = req.user.id;
 
-  Object.assign(grade, req.body);
+  Object.assign(grade, updateData);
   await grade.save();
 
   await grade.populate('student', 'firstName lastName email');

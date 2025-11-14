@@ -5,6 +5,7 @@ const {
   assertSameTenantForDoc,
   isValidObjectId,
   sanitizeUserOutput,
+  createSafeSearchRegex,
 } = require('../utils/validators');
 const env = require('../config/env');
 const { sendApprovalEmail } = require('../utils/email');
@@ -13,7 +14,10 @@ const getAllUsers = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({});
   if (req.query.role) criteria.role = req.query.role;
   if (req.query.status) criteria.status = req.query.status;
-  if (req.query.email) criteria.email = new RegExp(req.query.email, 'i');
+  if (req.query.email) {
+    const searchRegex = createSafeSearchRegex(req.query.email);
+    if (searchRegex) criteria.email = searchRegex;
+  }
 
   const users = await User.find(criteria)
     .select('-passwordHash')

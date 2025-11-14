@@ -10,6 +10,7 @@ const {
   sanitizeEmail,
   sanitizeString,
   sanitizeDomain,
+  createSafeSearchRegex,
 } = require('../utils/validators');
 const {
   generateToken,
@@ -445,9 +446,8 @@ const forgotPassword = asyncHandler(async (req, res) => {
     );
     if (env.nodeEnv === 'development') {
       console.log(
-        `[DEV] Password reset token for ${sanitizedEmail}: ${resetToken}`
+        `[DEV] Password reset link would be sent to ${sanitizedEmail}. Check email provider logs.`
       );
-      console.log(`[DEV] Reset link (frontend): ${resetLink}`);
     }
   } else {
     try {
@@ -459,19 +459,12 @@ const forgotPassword = asyncHandler(async (req, res) => {
       console.log(`[EMAIL] Password reset email sent to ${sanitizedEmail}`);
     } catch (e) {
       console.error('[EMAIL] Failed to send password reset email:', e.message);
-      console.error('[EMAIL] Error details:', e);
       if (env.nodeEnv === 'development') {
         console.log(
-          `[DEV] Password reset token for ${sanitizedEmail}: ${resetToken}`
+          `[DEV] Email sending failed for ${sanitizedEmail}. Token generated but not sent.`
         );
-        console.log(`[DEV] Reset link (frontend): ${resetLink}`);
       }
     }
-  }
-
-  if (env.nodeEnv === 'development') {
-    console.log(`Password reset token for ${sanitizedEmail}: ${resetToken}`);
-    console.log(`Reset link (frontend): ${resetLink}`);
   }
 
   logAuthAttempt('password_reset', true, {
@@ -481,9 +474,16 @@ const forgotPassword = asyncHandler(async (req, res) => {
     ip: clientIp,
   });
 
+  logSecurityEvent('password_reset_requested', {
+    userId: user._id.toString(),
+    email: sanitizedEmail,
+    tenantId: tenant._id.toString(),
+    expiresAt: new Date(user.passwordResetExpires),
+    ip: clientIp,
+  });
+
   res.json({
     message: 'If email exists, password reset link has been sent',
-    ...(env.nodeEnv === 'development' && { resetToken }),
   });
 });
 
@@ -552,9 +552,9 @@ const searchTenants = asyncHandler(async (req, res) => {
     });
   }
 
-  const sanitizedQuery = sanitizeString(query, 100);
+  const searchRegex = createSafeSearchRegex(query, 100);
 
-  if (!sanitizedQuery || sanitizedQuery.length < 2) {
+  if (!searchRegex) {
     return res.status(400).json({
       message: 'Invalid search query',
     });
@@ -563,8 +563,8 @@ const searchTenants = asyncHandler(async (req, res) => {
   const tenants = await Tenant.find({
     isDeleted: false,
     $or: [
-      { name: new RegExp(sanitizedQuery, 'i') },
-      { domain: new RegExp(sanitizedQuery, 'i') },
+      { name: searchRegex },
+      { domain: searchRegex },
     ],
   })
     .select('name domain contactEmail')

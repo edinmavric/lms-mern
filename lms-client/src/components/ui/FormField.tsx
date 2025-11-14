@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useId } from 'react';
 import { Label, type LabelProps } from './Label';
 import { cn } from '../../lib/utils';
 
@@ -10,6 +11,7 @@ export interface FormFieldProps {
   helperText?: string;
   children: ReactNode;
   className?: string;
+  id?: string;
 }
 
 export function FormField({
@@ -20,18 +22,43 @@ export function FormField({
   helperText,
   children,
   className,
+  id: providedId,
 }: FormFieldProps) {
+  const generatedId = useId();
+  const fieldId = providedId || generatedId;
+  const errorId = `${fieldId}-error`;
+  const helperId = `${fieldId}-helper`;
+
+  const childrenWithProps = typeof children === 'object' && children !== null
+    ? {
+        ...children,
+        props: {
+          ...((children as any).props || {}),
+          id: fieldId,
+          'aria-invalid': error ? 'true' : 'false',
+          'aria-describedby': error ? errorId : (helperText ? helperId : undefined),
+          'aria-required': required ? 'true' : undefined,
+        },
+      }
+    : children;
+
   return (
     <div className={cn('space-y-2', className)}>
       {label && (
-        <Label htmlFor={labelProps?.htmlFor} required={required} {...labelProps}>
+        <Label htmlFor={fieldId} required={required} {...labelProps}>
           {label}
         </Label>
       )}
-      {children}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {childrenWithProps}
+      {error && (
+        <p id={errorId} className="text-sm text-destructive" role="alert" aria-live="polite">
+          {error}
+        </p>
+      )}
       {helperText && !error && (
-        <p className="text-sm text-muted-foreground">{helperText}</p>
+        <p id={helperId} className="text-sm text-muted-foreground">
+          {helperText}
+        </p>
       )}
     </div>
   );

@@ -4,11 +4,15 @@ const {
   requireFields,
   assertSameTenantForDoc,
   isValidObjectId,
+  createSafeSearchRegex,
 } = require('../utils/validators');
 
 const getAllDepartments = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({ isDeleted: false });
-  if (req.query.name) criteria.name = new RegExp(req.query.name, 'i');
+  if (req.query.name) {
+    const searchRegex = createSafeSearchRegex(req.query.name);
+    if (searchRegex) criteria.name = searchRegex;
+  }
 
   const departments = await Department.find(criteria)
     .populate('createdBy', 'firstName lastName email')
@@ -71,11 +75,17 @@ const updateDepartment = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Department not found' });
   }
 
-  delete req.body.tenant;
-  req.body.updatedBy = req.user.id;
-  req.body.updatedAt = new Date();
+  const allowedFields = ['name', 'description', 'head'];
+  const updateData = {};
+  for (const key of Object.keys(req.body)) {
+    if (allowedFields.includes(key)) {
+      updateData[key] = req.body[key];
+    }
+  }
+  updateData.updatedBy = req.user.id;
+  updateData.updatedAt = new Date();
 
-  Object.assign(department, req.body);
+  Object.assign(department, updateData);
   await department.save();
 
   await department.populate('createdBy', 'firstName lastName email');

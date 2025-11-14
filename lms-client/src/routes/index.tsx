@@ -1,98 +1,113 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { PublicRoute } from '../components/PublicRoute';
 import { MainLayout } from '../layouts/MainLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { PublicLayout } from '../layouts/PublicLayout';
+import { Loader2 } from 'lucide-react';
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
+
+const Lazy = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
+
 import { Home } from '../pages/Home';
 import { Landing } from '../pages/Landing';
-import { SignupIndividual } from '../pages/SignupIndividual';
-import { SignupTenant } from '../pages/SignupTenant';
 import { Login } from '../pages/Login';
-import { ForgotPassword } from '../pages/ForgotPassword';
-import { ResetPassword } from '../pages/ResetPassword';
 import { NotFound } from '../pages/NotFound';
 import { Unauthorized } from '../pages/Unauthorized';
 import { PendingApproval } from '../pages/PendingApproval';
-import { UsersList } from '../pages/admin/UsersList';
-import { UserEdit } from '../pages/admin/UserEdit';
-import { UserDetail } from '../pages/admin/UserDetail';
-import { CoursesList } from '../pages/admin/CoursesList';
-import { CourseEdit } from '../pages/admin/CourseEdit';
-import { CourseDetail } from '../pages/admin/CourseDetail';
-import { LessonsList } from '../pages/admin/LessonsList';
-import { LessonEdit } from '../pages/admin/LessonEdit';
-import { LessonDetail } from '../pages/admin/LessonDetail';
-import { EnrollmentsList } from '../pages/admin/EnrollmentsList';
-import { EnrollmentEdit } from '../pages/admin/EnrollmentEdit';
-import { EnrollmentDetail } from '../pages/admin/EnrollmentDetail';
-import { GradesList } from '../pages/admin/GradesList';
-import { GradeEdit } from '../pages/admin/GradeEdit';
-import { GradeDetail } from '../pages/admin/GradeDetail';
-import { AttendancesList } from '../pages/admin/AttendancesList';
-import { AttendanceEdit } from '../pages/admin/AttendanceEdit';
-import { AttendanceDetail } from '../pages/admin/AttendanceDetail';
-import { BankAccountsList } from '../pages/admin/BankAccountsList';
-import { BankAccountEdit } from '../pages/admin/BankAccountEdit';
-import { BankAccountDetail } from '../pages/admin/BankAccountDetail';
-import { DepartmentsList } from '../pages/admin/DepartmentsList';
-import { ActivityLogsList } from '../pages/admin/ActivityLogsList';
-import { ActivityLogDetail } from '../pages/admin/ActivityLogDetail';
-import { DepartmentEdit } from '../pages/admin/DepartmentEdit';
-import { DepartmentDetail } from '../pages/admin/DepartmentDetail';
-import { LessonMaterialEdit } from '../pages/admin/LessonMaterialEdit';
-import { EnrollmentPaymentApproval } from '../pages/admin/EnrollmentPaymentApproval';
-import { ExamsList } from '../pages/admin/ExamsList';
-import { ExamDetail } from '../pages/admin/ExamDetail';
-import { ExamEdit } from '../pages/admin/ExamEdit';
-import { PointsList } from '../pages/admin/PointsList';
-import { PointDetail } from '../pages/admin/PointDetail';
-import { PointEdit } from '../pages/admin/PointEdit';
-import { ExamSubscriptionsList } from '../pages/admin/ExamSubscriptionsList';
-import { ExamSubscriptionDetail } from '../pages/admin/ExamSubscriptionDetail';
-import { LessonMaterialsList } from '../pages/admin/LessonMaterialsList';
-import { LessonMaterialDetail } from '../pages/admin/LessonMaterialDetail';
-import { StudentCourses } from '../pages/student/StudentCourses';
-import { StudentCourseDetail } from '../pages/student/StudentCourseDetail';
-import { StudentEnrollmentsList } from '../pages/student/StudentEnrollmentsList';
-import { StudentLessonsList } from '../pages/student/StudentLessonsList';
-import { StudentGradesList } from '../pages/student/StudentGradesList';
-import { StudentExamsList } from '../pages/student/StudentExamsList';
-import { StudentPointsList } from '../pages/student/StudentPointsList';
-import { StudentEnrollmentDetail } from '../pages/student/StudentEnrollmentDetail';
-import { StudentLessonDetail } from '../pages/student/StudentLessonDetail';
-import { StudentGradeDetail } from '../pages/student/StudentGradeDetail';
-import { StudentExamDetail } from '../pages/student/StudentExamDetail';
-import { StudentPointDetail } from '../pages/student/StudentPointDetail';
-import { ProfessorCoursesList } from '../pages/professor/ProfessorCoursesList';
-import { ProfessorCourseDetail } from '../pages/professor/ProfessorCourseDetail';
-import { ProfessorLessonsList } from '../pages/professor/ProfessorLessonsList';
-import { ProfessorLessonDetail } from '../pages/professor/ProfessorLessonDetail';
-import { ProfessorGradesList } from '../pages/professor/ProfessorGradesList';
-import { ProfessorGradeDetail } from '../pages/professor/ProfessorGradeDetail';
-import { ProfessorExamsList } from '../pages/professor/ProfessorExamsList';
-import { ProfessorExamDetail } from '../pages/professor/ProfessorExamDetail';
-import { ProfessorPointsList } from '../pages/professor/ProfessorPointsList';
-import { ProfessorPointDetail } from '../pages/professor/ProfessorPointDetail';
-import { ProfessorPointEdit } from '../pages/professor/ProfessorPointEdit';
-import { ProfessorAttendancesList } from '../pages/professor/ProfessorAttendancesList';
-import { ProfessorAttendanceDetail } from '../pages/professor/ProfessorAttendanceDetail';
-import { ProfessorAttendanceEdit } from '../pages/professor/ProfessorAttendanceEdit';
-import { ProfessorLessonMaterialsList } from '../pages/professor/ProfessorLessonMaterialsList';
-import { ProfessorLessonMaterialDetail } from '../pages/professor/ProfessorLessonMaterialDetail';
-import { ProfessorLessonMaterialEdit } from '../pages/professor/ProfessorLessonMaterialEdit';
-import { ProfessorExamSubscriptionsList } from '../pages/professor/ProfessorExamSubscriptionsList';
-import { ProfessorExamSubscriptionDetail } from '../pages/professor/ProfessorExamSubscriptionDetail';
-import { ProfessorLessonEdit } from '../pages/professor/ProfessorLessonEdit';
-import { ProfessorExamEdit } from '../pages/professor/ProfessorExamEdit';
-import { ProfessorGradeEdit } from '../pages/professor/ProfessorGradeEdit';
-import { NotificationsList } from '../pages/NotificationsList';
-import { ProfessorConsultationsList } from '../pages/professor/ProfessorConsultationsList';
-import { StudentConsultationsList } from '../pages/student/StudentConsultationsList';
-import { AdminConsultationsList } from '../pages/admin/AdminConsultationsList';
-import { ProfessorVideoCallsPage } from '../pages/professor/ProfessorVideoCallsPage';
-import { StudentVideoCallsPage } from '../pages/student/StudentVideoCallsPage';
-import { VideoCallRoom } from '../pages/video/VideoCallRoom';
+
+const SignupIndividual = lazy(() => import('../pages/SignupIndividual').then(m => ({ default: m.SignupIndividual })));
+const SignupTenant = lazy(() => import('../pages/SignupTenant').then(m => ({ default: m.SignupTenant })));
+const ForgotPassword = lazy(() => import('../pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('../pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
+const UsersList = lazy(() => import('../pages/admin/UsersList').then(m => ({ default: m.UsersList })));
+const UserEdit = lazy(() => import('../pages/admin/UserEdit').then(m => ({ default: m.UserEdit })));
+const UserDetail = lazy(() => import('../pages/admin/UserDetail').then(m => ({ default: m.UserDetail })));
+const CoursesList = lazy(() => import('../pages/admin/CoursesList').then(m => ({ default: m.CoursesList })));
+const CourseEdit = lazy(() => import('../pages/admin/CourseEdit').then(m => ({ default: m.CourseEdit })));
+const CourseDetail = lazy(() => import('../pages/admin/CourseDetail').then(m => ({ default: m.CourseDetail })));
+const LessonsList = lazy(() => import('../pages/admin/LessonsList').then(m => ({ default: m.LessonsList })));
+const LessonEdit = lazy(() => import('../pages/admin/LessonEdit').then(m => ({ default: m.LessonEdit })));
+const LessonDetail = lazy(() => import('../pages/admin/LessonDetail').then(m => ({ default: m.LessonDetail })));
+const EnrollmentsList = lazy(() => import('../pages/admin/EnrollmentsList').then(m => ({ default: m.EnrollmentsList })));
+const EnrollmentEdit = lazy(() => import('../pages/admin/EnrollmentEdit').then(m => ({ default: m.EnrollmentEdit })));
+const EnrollmentDetail = lazy(() => import('../pages/admin/EnrollmentDetail').then(m => ({ default: m.EnrollmentDetail })));
+const GradesList = lazy(() => import('../pages/admin/GradesList').then(m => ({ default: m.GradesList })));
+const GradeEdit = lazy(() => import('../pages/admin/GradeEdit').then(m => ({ default: m.GradeEdit })));
+const GradeDetail = lazy(() => import('../pages/admin/GradeDetail').then(m => ({ default: m.GradeDetail })));
+const AttendancesList = lazy(() => import('../pages/admin/AttendancesList').then(m => ({ default: m.AttendancesList })));
+const AttendanceEdit = lazy(() => import('../pages/admin/AttendanceEdit').then(m => ({ default: m.AttendanceEdit })));
+const AttendanceDetail = lazy(() => import('../pages/admin/AttendanceDetail').then(m => ({ default: m.AttendanceDetail })));
+const BankAccountsList = lazy(() => import('../pages/admin/BankAccountsList').then(m => ({ default: m.BankAccountsList })));
+const BankAccountEdit = lazy(() => import('../pages/admin/BankAccountEdit').then(m => ({ default: m.BankAccountEdit })));
+const BankAccountDetail = lazy(() => import('../pages/admin/BankAccountDetail').then(m => ({ default: m.BankAccountDetail })));
+const DepartmentsList = lazy(() => import('../pages/admin/DepartmentsList').then(m => ({ default: m.DepartmentsList })));
+const ActivityLogsList = lazy(() => import('../pages/admin/ActivityLogsList').then(m => ({ default: m.ActivityLogsList })));
+const ActivityLogDetail = lazy(() => import('../pages/admin/ActivityLogDetail').then(m => ({ default: m.ActivityLogDetail })));
+const DepartmentEdit = lazy(() => import('../pages/admin/DepartmentEdit').then(m => ({ default: m.DepartmentEdit })));
+const DepartmentDetail = lazy(() => import('../pages/admin/DepartmentDetail').then(m => ({ default: m.DepartmentDetail })));
+const LessonMaterialEdit = lazy(() => import('../pages/admin/LessonMaterialEdit').then(m => ({ default: m.LessonMaterialEdit })));
+const EnrollmentPaymentApproval = lazy(() => import('../pages/admin/EnrollmentPaymentApproval').then(m => ({ default: m.EnrollmentPaymentApproval })));
+const ExamsList = lazy(() => import('../pages/admin/ExamsList').then(m => ({ default: m.ExamsList })));
+const ExamDetail = lazy(() => import('../pages/admin/ExamDetail').then(m => ({ default: m.ExamDetail })));
+const ExamEdit = lazy(() => import('../pages/admin/ExamEdit').then(m => ({ default: m.ExamEdit })));
+const PointsList = lazy(() => import('../pages/admin/PointsList').then(m => ({ default: m.PointsList })));
+const PointDetail = lazy(() => import('../pages/admin/PointDetail').then(m => ({ default: m.PointDetail })));
+const PointEdit = lazy(() => import('../pages/admin/PointEdit').then(m => ({ default: m.PointEdit })));
+const ExamSubscriptionsList = lazy(() => import('../pages/admin/ExamSubscriptionsList').then(m => ({ default: m.ExamSubscriptionsList })));
+const ExamSubscriptionDetail = lazy(() => import('../pages/admin/ExamSubscriptionDetail').then(m => ({ default: m.ExamSubscriptionDetail })));
+const LessonMaterialsList = lazy(() => import('../pages/admin/LessonMaterialsList').then(m => ({ default: m.LessonMaterialsList })));
+const LessonMaterialDetail = lazy(() => import('../pages/admin/LessonMaterialDetail').then(m => ({ default: m.LessonMaterialDetail })));
+const AdminConsultationsList = lazy(() => import('../pages/admin/AdminConsultationsList').then(m => ({ default: m.AdminConsultationsList })));
+const StudentCourses = lazy(() => import('../pages/student/StudentCourses').then(m => ({ default: m.StudentCourses })));
+const StudentCourseDetail = lazy(() => import('../pages/student/StudentCourseDetail').then(m => ({ default: m.StudentCourseDetail })));
+const StudentEnrollmentsList = lazy(() => import('../pages/student/StudentEnrollmentsList').then(m => ({ default: m.StudentEnrollmentsList })));
+const StudentLessonsList = lazy(() => import('../pages/student/StudentLessonsList').then(m => ({ default: m.StudentLessonsList })));
+const StudentGradesList = lazy(() => import('../pages/student/StudentGradesList').then(m => ({ default: m.StudentGradesList })));
+const StudentExamsList = lazy(() => import('../pages/student/StudentExamsList').then(m => ({ default: m.StudentExamsList })));
+const StudentPointsList = lazy(() => import('../pages/student/StudentPointsList').then(m => ({ default: m.StudentPointsList })));
+const StudentEnrollmentDetail = lazy(() => import('../pages/student/StudentEnrollmentDetail').then(m => ({ default: m.StudentEnrollmentDetail })));
+const StudentLessonDetail = lazy(() => import('../pages/student/StudentLessonDetail').then(m => ({ default: m.StudentLessonDetail })));
+const StudentGradeDetail = lazy(() => import('../pages/student/StudentGradeDetail').then(m => ({ default: m.StudentGradeDetail })));
+const StudentExamDetail = lazy(() => import('../pages/student/StudentExamDetail').then(m => ({ default: m.StudentExamDetail })));
+const StudentPointDetail = lazy(() => import('../pages/student/StudentPointDetail').then(m => ({ default: m.StudentPointDetail })));
+const StudentConsultationsList = lazy(() => import('../pages/student/StudentConsultationsList').then(m => ({ default: m.StudentConsultationsList })));
+const StudentVideoCallsPage = lazy(() => import('../pages/student/StudentVideoCallsPage').then(m => ({ default: m.StudentVideoCallsPage })));
+const ProfessorCoursesList = lazy(() => import('../pages/professor/ProfessorCoursesList').then(m => ({ default: m.ProfessorCoursesList })));
+const ProfessorCourseDetail = lazy(() => import('../pages/professor/ProfessorCourseDetail').then(m => ({ default: m.ProfessorCourseDetail })));
+const ProfessorLessonsList = lazy(() => import('../pages/professor/ProfessorLessonsList').then(m => ({ default: m.ProfessorLessonsList })));
+const ProfessorLessonDetail = lazy(() => import('../pages/professor/ProfessorLessonDetail').then(m => ({ default: m.ProfessorLessonDetail })));
+const ProfessorGradesList = lazy(() => import('../pages/professor/ProfessorGradesList').then(m => ({ default: m.ProfessorGradesList })));
+const ProfessorGradeDetail = lazy(() => import('../pages/professor/ProfessorGradeDetail').then(m => ({ default: m.ProfessorGradeDetail })));
+const ProfessorExamsList = lazy(() => import('../pages/professor/ProfessorExamsList').then(m => ({ default: m.ProfessorExamsList })));
+const ProfessorExamDetail = lazy(() => import('../pages/professor/ProfessorExamDetail').then(m => ({ default: m.ProfessorExamDetail })));
+const ProfessorPointsList = lazy(() => import('../pages/professor/ProfessorPointsList').then(m => ({ default: m.ProfessorPointsList })));
+const ProfessorPointDetail = lazy(() => import('../pages/professor/ProfessorPointDetail').then(m => ({ default: m.ProfessorPointDetail })));
+const ProfessorPointEdit = lazy(() => import('../pages/professor/ProfessorPointEdit').then(m => ({ default: m.ProfessorPointEdit })));
+const ProfessorAttendancesList = lazy(() => import('../pages/professor/ProfessorAttendancesList').then(m => ({ default: m.ProfessorAttendancesList })));
+const ProfessorAttendanceDetail = lazy(() => import('../pages/professor/ProfessorAttendanceDetail').then(m => ({ default: m.ProfessorAttendanceDetail })));
+const ProfessorAttendanceEdit = lazy(() => import('../pages/professor/ProfessorAttendanceEdit').then(m => ({ default: m.ProfessorAttendanceEdit })));
+const ProfessorLessonMaterialsList = lazy(() => import('../pages/professor/ProfessorLessonMaterialsList').then(m => ({ default: m.ProfessorLessonMaterialsList })));
+const ProfessorLessonMaterialDetail = lazy(() => import('../pages/professor/ProfessorLessonMaterialDetail').then(m => ({ default: m.ProfessorLessonMaterialDetail })));
+const ProfessorLessonMaterialEdit = lazy(() => import('../pages/professor/ProfessorLessonMaterialEdit').then(m => ({ default: m.ProfessorLessonMaterialEdit })));
+const ProfessorExamSubscriptionsList = lazy(() => import('../pages/professor/ProfessorExamSubscriptionsList').then(m => ({ default: m.ProfessorExamSubscriptionsList })));
+const ProfessorExamSubscriptionDetail = lazy(() => import('../pages/professor/ProfessorExamSubscriptionDetail').then(m => ({ default: m.ProfessorExamSubscriptionDetail })));
+const ProfessorLessonEdit = lazy(() => import('../pages/professor/ProfessorLessonEdit').then(m => ({ default: m.ProfessorLessonEdit })));
+const ProfessorExamEdit = lazy(() => import('../pages/professor/ProfessorExamEdit').then(m => ({ default: m.ProfessorExamEdit })));
+const ProfessorGradeEdit = lazy(() => import('../pages/professor/ProfessorGradeEdit').then(m => ({ default: m.ProfessorGradeEdit })));
+const ProfessorConsultationsList = lazy(() => import('../pages/professor/ProfessorConsultationsList').then(m => ({ default: m.ProfessorConsultationsList })));
+const ProfessorVideoCallsPage = lazy(() => import('../pages/professor/ProfessorVideoCallsPage').then(m => ({ default: m.ProfessorVideoCallsPage })));
+
+const NotificationsList = lazy(() => import('../pages/NotificationsList').then(m => ({ default: m.NotificationsList })));
+const VideoCallRoom = lazy(() => import('../pages/video/VideoCallRoom').then(m => ({ default: m.VideoCallRoom })));
 
 const router = createBrowserRouter([
   {
@@ -111,7 +126,9 @@ const router = createBrowserRouter([
         path: 'notifications',
         element: (
           <ProtectedRoute>
-            <NotificationsList />
+            <Lazy>
+              <NotificationsList />
+            </Lazy>
           </ProtectedRoute>
         ),
       },
@@ -119,7 +136,9 @@ const router = createBrowserRouter([
         path: 'video-calls/:id',
         element: (
           <ProtectedRoute allowedRoles={['admin', 'professor', 'student']}>
-            <VideoCallRoom />
+            <Lazy>
+              <VideoCallRoom />
+            </Lazy>
           </ProtectedRoute>
         ),
       },

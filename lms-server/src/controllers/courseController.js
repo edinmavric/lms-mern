@@ -7,6 +7,7 @@ const {
   requireFields,
   assertSameTenantForDoc,
   isValidObjectId,
+  createSafeSearchRegex,
 } = require('../utils/validators');
 
 const syncCourseStudents = async (courseId, tenantId) => {
@@ -32,7 +33,10 @@ const getAllCourses = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({ isDeleted: false });
   if (req.query.professor) criteria.professor = req.query.professor;
   if (req.query.department) criteria.department = req.query.department;
-  if (req.query.name) criteria.name = new RegExp(req.query.name, 'i');
+  if (req.query.name) {
+    const searchRegex = createSafeSearchRegex(req.query.name);
+    if (searchRegex) criteria.name = searchRegex;
+  }
 
   let courses = await Course.find(criteria)
     .populate('professor', 'firstName lastName email')
@@ -167,10 +171,16 @@ const updateCourse = asyncHandler(async (req, res) => {
     }
   }
 
-  delete req.body.tenant;
-  req.body.updatedBy = req.user.id;
+  const allowedFields = ['name', 'description', 'professor', 'department', 'credits', 'semester'];
+  const updateData = {};
+  for (const key of Object.keys(req.body)) {
+    if (allowedFields.includes(key)) {
+      updateData[key] = req.body[key];
+    }
+  }
+  updateData.updatedBy = req.user.id;
 
-  Object.assign(course, req.body);
+  Object.assign(course, updateData);
   await course.save();
 
   await course.populate('professor', 'firstName lastName email');

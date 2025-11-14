@@ -1,13 +1,16 @@
 const Tenant = require('../models/Tenant');
 const { asyncHandler } = require('../utils/async');
-const { requireFields, isValidObjectId } = require('../utils/validators');
+const { requireFields, isValidObjectId, createSafeSearchRegex } = require('../utils/validators');
 
 const getAllTenants = asyncHandler(async (req, res) => {
   const criteria = {
     isDeleted: req.query.includeDeleted === 'true' ? undefined : false,
   };
 
-  if (req.query.name) criteria.name = new RegExp(req.query.name, 'i');
+  if (req.query.name) {
+    const searchRegex = createSafeSearchRegex(req.query.name);
+    if (searchRegex) criteria.name = searchRegex;
+  }
   if (req.query.domain) criteria.domain = req.query.domain;
 
   if (req.query.createdAfter || req.query.createdBefore) {
@@ -118,11 +121,18 @@ const updateTenant = asyncHandler(async (req, res) => {
 
   if (req.body.settings) {
     tenant.settings = { ...tenant.settings, ...req.body.settings };
-    delete req.body.settings;
   }
 
-  req.body.updatedBy = req.user.id;
-  Object.assign(tenant, req.body);
+  const allowedFields = ['name', 'domain', 'logo', 'primaryColor', 'secondaryColor'];
+  const updateData = {};
+  for (const key of Object.keys(req.body)) {
+    if (allowedFields.includes(key)) {
+      updateData[key] = req.body[key];
+    }
+  }
+  updateData.updatedBy = req.user.id;
+
+  Object.assign(tenant, updateData);
   await tenant.save();
 
   res.json(tenant);

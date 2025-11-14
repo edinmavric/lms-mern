@@ -364,6 +364,25 @@ const updateParticipants = asyncHandler(async (req, res) => {
 
   await assertSameTenantForDoc(VideoCall, id, req.tenantId);
 
+  const videoCall = await VideoCall.findOne(
+    req.applyTenantFilter({ _id: id, isDeleted: false })
+  ).populate('course', 'professor');
+
+  if (!videoCall) {
+    return res.status(404).json({ message: 'Video call not found' });
+  }
+
+  const isCreator = videoCall.createdBy.toString() === req.user.id;
+  const isProfessor = req.user.role === 'professor' &&
+    videoCall.course.professor.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isCreator && !isProfessor && !isAdmin) {
+    return res.status(403).json({
+      message: 'You are not authorized to update participants for this video call',
+    });
+  }
+
   const sanitizedParticipants = participants
     .filter(
       participant =>
@@ -378,18 +397,13 @@ const updateParticipants = asyncHandler(async (req, res) => {
       leftAt: participant.leftAt,
     }));
 
-  const videoCall = await VideoCall.findOneAndUpdate(
-    req.applyTenantFilter({ _id: id, isDeleted: false }),
-    {
-      participants: sanitizedParticipants,
-      updatedBy: req.user.id,
-    },
-    { new: true }
-  );
+  videoCall.participants = sanitizedParticipants;
+  videoCall.updatedBy = req.user.id;
+  await videoCall.save();
 
-  if (!videoCall) {
-    return res.status(404).json({ message: 'Video call not found' });
-  }
+  await videoCall.populate('lesson', 'title date startTime endTime');
+  await videoCall.populate('course', 'name');
+  await videoCall.populate('createdBy', 'firstName lastName email role');
 
   res.json(videoCall);
 });

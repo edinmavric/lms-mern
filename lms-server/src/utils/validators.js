@@ -155,6 +155,18 @@ function sanitizeDomain(domain) {
   return sanitized;
 }
 
+function createSafeSearchRegex(userInput, maxLength = 100) {
+  if (!userInput || typeof userInput !== 'string') {
+    return null;
+  }
+  const trimmed = userInput.trim().substring(0, maxLength);
+  if (!trimmed) {
+    return null;
+  }
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(escaped, 'i');
+}
+
 module.exports = {
   isValidObjectId,
   requireFields,
@@ -168,4 +180,5 @@ module.exports = {
   validateEmail,
   sanitizeString,
   sanitizeDomain,
+  createSafeSearchRegex,
 };

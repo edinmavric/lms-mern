@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { useId } from 'react';
+import type { ReactNode, ReactElement } from 'react';
+import { useId, cloneElement, isValidElement } from 'react';
 import { Label, type LabelProps } from './Label';
 import { cn } from '../../lib/utils';
 
@@ -29,17 +29,13 @@ export function FormField({
   const errorId = `${fieldId}-error`;
   const helperId = `${fieldId}-helper`;
 
-  const childrenWithProps = typeof children === 'object' && children !== null
-    ? {
-        ...children,
-        props: {
-          ...((children as any).props || {}),
-          id: fieldId,
-          'aria-invalid': error ? 'true' : 'false',
-          'aria-describedby': error ? errorId : (helperText ? helperId : undefined),
-          'aria-required': required ? 'true' : undefined,
-        },
-      }
+  const childrenWithProps = isValidElement(children)
+    ? cloneElement(children as ReactElement<any>, {
+        id: fieldId,
+        'aria-invalid': error ? 'true' : 'false',
+        'aria-describedby': error ? errorId : (helperText ? helperId : undefined),
+        'aria-required': required ? 'true' : undefined,
+      } as any)
     : children;
 
   return (

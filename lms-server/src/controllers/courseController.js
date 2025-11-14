@@ -1,6 +1,7 @@
 const Course = require('../models/Course');
 const User = require('../models/User');
 const Department = require('../models/Department');
+const Enrollment = require('../models/Enrollment');
 const { asyncHandler } = require('../utils/async');
 const {
   requireFields,
@@ -8,17 +9,59 @@ const {
   isValidObjectId,
 } = require('../utils/validators');
 
+const syncCourseStudents = async (courseId, tenantId) => {
+  try {
+    const enrollments = await Enrollment.find({
+      course: courseId,
+      tenant: tenantId,
+      isDeleted: false,
+      status: { $in: ['active', 'completed'] },
+    }).select('student');
+
+    const studentIds = enrollments.map(e => e.student);
+
+    await Course.findByIdAndUpdate(courseId, {
+      $set: { students: studentIds },
+    });
+  } catch (error) {
+    console.error(`Error syncing students for course ${courseId}:`, error);
+  }
+};
+
 const getAllCourses = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({ isDeleted: false });
   if (req.query.professor) criteria.professor = req.query.professor;
   if (req.query.department) criteria.department = req.query.department;
   if (req.query.name) criteria.name = new RegExp(req.query.name, 'i');
 
-  const courses = await Course.find(criteria)
+  let courses = await Course.find(criteria)
     .populate('professor', 'firstName lastName email')
     .populate('department', 'name description')
     .populate('students', 'firstName lastName email')
     .sort({ createdAt: -1 });
+
+  const coursesToSync = courses.filter(
+    c => !c.students || c.students.length === 0
+  );
+  if (coursesToSync.length > 0) {
+    await Promise.all(
+      coursesToSync.map(c => syncCourseStudents(c._id, req.tenantId))
+    );
+    const syncedCourseIds = coursesToSync.map(c => c._id);
+    const syncedCourses = await Course.find({
+      _id: { $in: syncedCourseIds },
+    }).populate('students', 'firstName lastName email');
+
+    const syncedMap = new Map(
+      syncedCourses.map(sc => [sc._id.toString(), sc.students])
+    );
+    courses.forEach(course => {
+      const syncedStudents = syncedMap.get(course._id.toString());
+      if (syncedStudents) {
+        course.students = syncedStudents;
+      }
+    });
+  }
 
   res.json(courses);
 });
@@ -43,6 +86,11 @@ const getCourseById = asyncHandler(async (req, res) => {
 
   if (!course) {
     return res.status(404).json({ message: 'Course not found' });
+  }
+
+  if (!course.students || course.students.length === 0) {
+    await syncCourseStudents(course._id, req.tenantId);
+    await course.populate('students', 'firstName lastName email');
   }
 
   res.json(course);
@@ -159,4 +207,5 @@ module.exports = {
   createCourse,
   updateCourse,
   deleteCourse,
+  syncCourseStudents,
 };

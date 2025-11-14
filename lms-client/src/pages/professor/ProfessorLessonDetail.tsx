@@ -16,6 +16,7 @@ import {
   Image,
   Presentation,
   ExternalLink,
+  Play,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,8 +24,10 @@ import { lessonsApi } from '../../lib/api/lessons';
 import { coursesApi } from '../../lib/api/courses';
 import { lessonMaterialsApi } from '../../lib/api/lessonMaterials';
 import { uploadsApi } from '../../lib/api/uploads';
+import { videoCallsApi } from '../../lib/api/videoCalls';
 import { useAuthStore } from '../../store/authStore';
-import type { LessonMaterial } from '../../types';
+import { getErrorMessage } from '../../lib/utils';
+import type { LessonMaterial, VideoCall } from '../../types';
 import {
   Card,
   CardContent,
@@ -327,6 +330,14 @@ export function ProfessorLessonDetail() {
     enabled: !!id,
   });
 
+  const { data: activeVideoCall } = useQuery({
+    queryKey: ['video-call', 'active', 'lesson', id],
+    queryFn: () => videoCallsApi.getActiveForLesson(id!),
+    enabled: !!id,
+    retry: false,
+    refetchInterval: 30000,
+  });
+
   const createMaterialMutation = useMutation({
     mutationFn: lessonMaterialsApi.create,
     onSuccess: () => {
@@ -373,6 +384,37 @@ export function ProfessorLessonDetail() {
       );
     },
   });
+
+  const createVideoCallMutation = useMutation({
+    mutationFn: videoCallsApi.create,
+    onSuccess: async (createdCall: VideoCall) => {
+      toast.success('Video call created. Redirecting to call room...');
+      await queryClient.invalidateQueries({ queryKey: ['video-calls'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['video-call', 'active', 'lesson', id],
+      });
+      navigate(`/app/video-calls/${createdCall._id}`, {
+        state: { from: `/app/professor/lessons/${id}` },
+      });
+    },
+    onError: (error: any) => {
+      toast.error(getErrorMessage(error, 'Failed to start video call'));
+    },
+  });
+
+  const handleStartVideoCall = () => {
+    if (!id) return;
+    if (activeVideoCall) {
+      navigate(`/app/video-calls/${activeVideoCall._id}`, {
+        state: { from: `/app/professor/lessons/${id}` },
+      });
+    } else {
+      createVideoCallMutation.mutate({
+        lessonId: id,
+        callType: 'default',
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -594,10 +636,25 @@ export function ProfessorLessonDetail() {
               <FileText className="h-5 w-5" />
               Lesson Materials
             </CardTitle>
-            <Button size="sm" onClick={() => setCreateMaterialDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Material
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={activeVideoCall ? 'default' : 'outline'}
+                onClick={handleStartVideoCall}
+                disabled={createVideoCallMutation.isPending}
+                loading={createVideoCallMutation.isPending}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                {activeVideoCall ? 'Join Video Call' : 'Start Video Call'}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setCreateMaterialDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Material
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

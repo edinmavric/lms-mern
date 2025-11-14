@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 
 import { coursesApi } from '../../lib/api/courses';
 import { usersApi } from '../../lib/api/users';
+import { departmentsApi } from '../../lib/api/departments';
 import { getErrorMessage } from '../../lib/utils';
 import { CourseForm, useCourseForm, type CourseFormData } from './CourseForm';
 import {
@@ -35,6 +36,11 @@ export function CourseEdit() {
     queryFn: () => usersApi.list({ role: 'professor', status: 'active' }),
   });
 
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments', 'all'],
+    queryFn: () => departmentsApi.list({}),
+  });
+
   const form = useCourseForm(course);
 
   useEffect(() => {
@@ -46,7 +52,12 @@ export function CourseEdit() {
           typeof course.professor === 'string'
             ? course.professor
             : course.professor?._id || '',
+        department:
+          typeof course.department === 'string'
+            ? course.department
+            : course.department?._id || undefined,
         price: course.price !== undefined ? course.price : '',
+        enrollmentPassword: course.enrollmentPassword || '',
         schedule: course.schedule || {
           days: [],
           startTime: '',
@@ -158,6 +169,7 @@ export function CourseEdit() {
               isSubmitting={updateMutation.isPending}
               error={error}
               professors={professors}
+              departments={departments}
               register={form.register}
               control={form.control}
               errors={form.formState.errors}

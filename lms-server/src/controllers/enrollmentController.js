@@ -7,6 +7,7 @@ const {
   assertSameTenantForDoc,
   isValidObjectId,
 } = require('../utils/validators');
+const { syncCourseStudents } = require('./courseController');
 
 const getAllEnrollments = asyncHandler(async (req, res) => {
   const criteria = req.applyTenantFilter({ isDeleted: false });
@@ -127,6 +128,12 @@ const createEnrollment = asyncHandler(async (req, res) => {
   await enrollment.populate('student', 'firstName lastName email');
   await enrollment.populate('course', 'name price');
 
+  const courseId =
+    typeof enrollment.course === 'string'
+      ? enrollment.course
+      : enrollment.course._id;
+  await syncCourseStudents(courseId, req.tenantId);
+
   res.status(201).json(enrollment);
 });
 
@@ -159,6 +166,12 @@ const updateEnrollment = asyncHandler(async (req, res) => {
 
   await enrollment.populate('student', 'firstName lastName email');
   await enrollment.populate('course', 'name price');
+
+  const courseId =
+    typeof enrollment.course === 'string'
+      ? enrollment.course
+      : enrollment.course._id;
+  await syncCourseStudents(courseId, req.tenantId);
 
   res.json(enrollment);
 });
@@ -266,9 +279,16 @@ const deleteEnrollment = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Enrollment not found' });
   }
 
+  const courseId =
+    typeof enrollment.course === 'string'
+      ? enrollment.course
+      : enrollment.course._id;
+
   enrollment.isDeleted = true;
   enrollment.updatedBy = req.user.id;
   await enrollment.save();
+
+  await syncCourseStudents(courseId, req.tenantId);
 
   res.json({
     message: 'Enrollment deleted successfully',

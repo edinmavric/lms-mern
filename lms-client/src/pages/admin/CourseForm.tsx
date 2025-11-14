@@ -209,6 +209,103 @@ export function CourseForm({
           icon={<Lock className="h-4 w-4" />}
         />
       </FormField>
+
+      <div className="space-y-4 pt-4 border-t border-border">
+        <h3 className="text-lg font-semibold">Schedule (Optional)</h3>
+        
+        <FormField
+          label="Days"
+          error={errors.schedule?.days?.message}
+          helperText="Select the days when this course meets"
+        >
+          <Controller
+            name="schedule.days"
+            control={control}
+            render={({ field }) => {
+              const selectedDays = field.value || [];
+              const daysOfWeek = [
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+                'Sunday',
+              ];
+
+              return (
+                <div className="flex flex-wrap gap-2">
+                  {daysOfWeek.map(day => (
+                    <label
+                      key={day}
+                      className="flex items-center space-x-2 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedDays.includes(day)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            field.onChange([...selectedDays, day]);
+                          } else {
+                            field.onChange(
+                              selectedDays.filter(d => d !== day)
+                            );
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm">{day.slice(0, 3)}</span>
+                    </label>
+                  ))}
+                </div>
+              );
+            }}
+          />
+        </FormField>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label="Start Time"
+            error={errors.schedule?.startTime?.message}
+            helperText="e.g., 09:00"
+          >
+            <Controller
+              name="schedule.startTime"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  type="time"
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  disabled={isSubmitting}
+                  error={errors.schedule?.startTime?.message}
+                />
+              )}
+            />
+          </FormField>
+
+          <FormField
+            label="End Time"
+            error={errors.schedule?.endTime?.message}
+            helperText="e.g., 11:00"
+          >
+            <Controller
+              name="schedule.endTime"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  type="time"
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  disabled={isSubmitting}
+                  error={errors.schedule?.endTime?.message}
+                />
+              )}
+            />
+          </FormField>
+        </div>
+      </div>
     </div>
   );
 }

@@ -45,13 +45,8 @@ export function ProfessorAttendanceDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Attendance record not found</p>
-            <p className="text-sm">
-              The attendance record you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The attendance record you're looking for doesn't exist or has been
+          deleted.
         </Alert>
         <Button onClick={() => navigate('/app/professor/attendances')}>
           Back to Attendance

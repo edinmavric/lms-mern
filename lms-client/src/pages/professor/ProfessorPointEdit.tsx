@@ -137,13 +137,8 @@ export function ProfessorPointEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Point not found</p>
-            <p className="text-sm">
-              The point assignment you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The point assignment you're looking for doesn't exist or has been
+          deleted.
         </Alert>
         <Button onClick={() => navigate('/app/professor/points')}>
           Back to Points
@@ -200,7 +195,7 @@ export function ProfessorPointEdit() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <p>{error}</p>
+                {error}
               </Alert>
             )}
 

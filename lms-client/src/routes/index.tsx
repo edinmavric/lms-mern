@@ -777,12 +777,13 @@ const router = createBrowserRouter([
   },
   {
     path: '/',
+    index: true,
+    element: <Landing />,
+  },
+  {
+    path: '/',
     element: <PublicLayout />,
     children: [
-      {
-        index: true,
-        element: <Landing />,
-      },
       {
         path: 'signup',
         element: (

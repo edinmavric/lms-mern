@@ -569,7 +569,9 @@ function CreateLessonDialog({
       try {
         await onSubmit(form.getValues());
         form.reset();
-      } catch (err) {}
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to create lesson'));
+      }
     }
   };
 
@@ -652,7 +654,9 @@ function EditLessonDialog({
     if (isValid) {
       try {
         await onSubmit(form.getValues());
-      } catch (err) {}
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to update lesson'));
+      }
     }
   };
 

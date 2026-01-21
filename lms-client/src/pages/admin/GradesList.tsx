@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { gradesApi } from '../../lib/api/grades';
 import { usersApi } from '../../lib/api/users';
 import { coursesApi } from '../../lib/api/courses';
+import { useTenantSettings } from '../../hooks/useTenantSettings';
 import { getErrorMessage } from '../../lib/utils';
 import type { Grade } from '../../types';
 import { GradeForm, useGradeForm, type GradeFormData } from './GradeForm';
@@ -32,6 +33,7 @@ import {
 export function GradesList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { gradeScale } = useTenantSettings();
   const [searchStudent, setSearchStudent] = useState('');
   const [filterCourse, setFilterCourse] = useState<string>('');
   const [filterProfessor, setFilterProfessor] = useState<string>('');
@@ -563,6 +565,8 @@ export function GradesList() {
         }
         students={students}
         courses={courses}
+        minGrade={gradeScale.min}
+        maxGrade={gradeScale.max}
       />
 
       {editDialog.grade && (
@@ -584,6 +588,8 @@ export function GradesList() {
           }
           students={students}
           courses={courses}
+          minGrade={gradeScale.min}
+          maxGrade={gradeScale.max}
         />
       )}
 
@@ -651,6 +657,8 @@ interface CreateGradeDialogProps {
     name: string;
     description?: string;
   }>;
+  minGrade: number;
+  maxGrade: number;
 }
 
 function CreateGradeDialog({
@@ -661,8 +669,10 @@ function CreateGradeDialog({
   error,
   students,
   courses,
+  minGrade,
+  maxGrade,
 }: CreateGradeDialogProps) {
-  const form = useGradeForm();
+  const form = useGradeForm(undefined, { minGrade, maxGrade });
 
   const handleSubmit = async () => {
     const isValid = await form.trigger();
@@ -670,7 +680,9 @@ function CreateGradeDialog({
       try {
         await onSubmit(form.getValues());
         form.reset();
-      } catch (err) {}
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to create grade'));
+      }
     }
   };
 
@@ -701,6 +713,8 @@ function CreateGradeDialog({
         errors={form.formState.errors}
         isSubmitting={isSubmitting}
         error={error}
+        minGrade={minGrade}
+        maxGrade={maxGrade}
       />
     </FormDialog>
   );
@@ -724,6 +738,8 @@ interface EditGradeDialogProps {
     name: string;
     description?: string;
   }>;
+  minGrade: number;
+  maxGrade: number;
 }
 
 function EditGradeDialog({
@@ -735,8 +751,10 @@ function EditGradeDialog({
   error,
   students,
   courses,
+  minGrade,
+  maxGrade,
 }: EditGradeDialogProps) {
-  const form = useGradeForm(grade);
+  const form = useGradeForm(grade, { minGrade, maxGrade });
 
   useEffect(() => {
     if (open && grade) {
@@ -761,7 +779,9 @@ function EditGradeDialog({
     if (isValid) {
       try {
         await onSubmit(form.getValues());
-      } catch (err) {}
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to update grade'));
+      }
     }
   };
 
@@ -792,6 +812,8 @@ function EditGradeDialog({
         isSubmitting={isSubmitting}
         error={error}
         allowEditStudentCourse={false}
+        minGrade={minGrade}
+        maxGrade={maxGrade}
       />
     </FormDialog>
   );

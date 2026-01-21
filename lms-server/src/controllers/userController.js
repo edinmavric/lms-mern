@@ -144,6 +144,7 @@ const approveUser = asyncHandler(async (req, res) => {
     const loginLink = `${env.frontendUrl}/login`;
     await sendApprovalEmail(user.email, null, loginLink);
   } catch (e) {
+    console.error('Failed to send approval email:', e.message);
   }
 
   res.json(sanitizeUserOutput(user));

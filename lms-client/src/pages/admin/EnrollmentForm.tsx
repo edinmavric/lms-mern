@@ -1,7 +1,6 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle } from 'lucide-react';
 
 import type { Enrollment } from '../../types';
 import {
@@ -54,11 +53,7 @@ export function EnrollmentForm({
     <div className="space-y-4">
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <div className="space-y-1">
-            <p className="font-medium">Error</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          {error}
         </Alert>
       )}
 

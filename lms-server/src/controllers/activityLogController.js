@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const ActivityLog = require('../models/ActivityLog');
 const { asyncHandler } = require('../utils/async');
 
@@ -77,10 +78,13 @@ const getActivityStats = asyncHandler(async (req, res) => {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - parseInt(days));
 
+  // Convert tenantId to ObjectId for aggregation pipeline
+  const tenantObjectId = new mongoose.Types.ObjectId(req.tenantId);
+
   const actionStats = await ActivityLog.aggregate([
     {
       $match: {
-        tenant: req.tenantId,
+        tenant: tenantObjectId,
         createdAt: { $gte: startDate },
       },
     },
@@ -98,7 +102,7 @@ const getActivityStats = asyncHandler(async (req, res) => {
   const severityStats = await ActivityLog.aggregate([
     {
       $match: {
-        tenant: req.tenantId,
+        tenant: tenantObjectId,
         createdAt: { $gte: startDate },
       },
     },
@@ -113,7 +117,7 @@ const getActivityStats = asyncHandler(async (req, res) => {
   const entityTypeStats = await ActivityLog.aggregate([
     {
       $match: {
-        tenant: req.tenantId,
+        tenant: tenantObjectId,
         createdAt: { $gte: startDate },
       },
     },

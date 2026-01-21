@@ -36,6 +36,7 @@ import {
   DialogFooter,
   FormField,
   Badge,
+  Alert,
 } from '../../components/ui';
 
 interface PointFormData {
@@ -55,6 +56,8 @@ function PointForm({
   enrollments,
   onSubmit,
   onCancel,
+  error,
+  isSubmitting,
 }: {
   point?: Point | null;
   courses: Array<{ _id: string; name: string }>;
@@ -65,6 +68,8 @@ function PointForm({
   }>;
   onSubmit: (data: PointFormData) => void;
   onCancel: () => void;
+  error?: string | null;
+  isSubmitting?: boolean;
 }) {
   const [formData, setFormData] = useState<PointFormData>({
     student: point?.student
@@ -159,6 +164,12 @@ function PointForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          {error}
+        </Alert>
+      )}
+
       <FormField label="Course" required>
         <Select
           value={formData.course}
@@ -282,10 +293,12 @@ function PointForm({
       </FormField>
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit">Save</Button>
+        <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+          Save
+        </Button>
       </DialogFooter>
     </form>
   );
@@ -590,7 +603,7 @@ export function ProfessorPointsList() {
 
       <Dialog
         open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
+        onClose={() => !createMutation.isPending && setCreateDialogOpen(false)}
         title="Assign Points"
         description="Assign curriculum points to a student"
         maxWidth="lg"
@@ -602,13 +615,15 @@ export function ProfessorPointsList() {
             enrollments={enrollments}
             onSubmit={data => createMutation.mutate(data)}
             onCancel={() => setCreateDialogOpen(false)}
+            error={createMutation.error ? getErrorMessage(createMutation.error, 'Failed to assign points') : null}
+            isSubmitting={createMutation.isPending}
           />
         </DialogContent>
       </Dialog>
 
       <Dialog
         open={editDialog.open}
-        onClose={() => setEditDialog({ open: false, point: null })}
+        onClose={() => !updateMutation.isPending && setEditDialog({ open: false, point: null })}
         title="Edit Points"
         description="Update point assignment"
         maxWidth="lg"
@@ -624,6 +639,8 @@ export function ProfessorPointsList() {
               updateMutation.mutate({ id: editDialog.point._id, data })
             }
             onCancel={() => setEditDialog({ open: false, point: null })}
+            error={updateMutation.error ? getErrorMessage(updateMutation.error, 'Failed to update points') : null}
+            isSubmitting={updateMutation.isPending}
           />
         </DialogContent>
       </Dialog>

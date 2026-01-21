@@ -9,6 +9,7 @@ import { usersApi } from '../../lib/api/users';
 import { coursesApi } from '../../lib/api/courses';
 import { getErrorMessage } from '../../lib/utils';
 import { GradeForm, useGradeForm, type GradeFormData } from './GradeForm';
+import { useTenantSettings } from '../../hooks/useTenantSettings';
 import {
   Card,
   CardContent,
@@ -24,6 +25,7 @@ export function GradeEdit() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const { gradeScale } = useTenantSettings();
 
   const { data: grade, isLoading } = useQuery({
     queryKey: ['grade', id],
@@ -41,7 +43,10 @@ export function GradeEdit() {
     queryFn: () => coursesApi.list({}),
   });
 
-  const form = useGradeForm(grade);
+  const form = useGradeForm(grade, {
+    minGrade: gradeScale.min,
+    maxGrade: gradeScale.max,
+  });
 
   useEffect(() => {
     if (grade) {
@@ -99,12 +104,7 @@ export function GradeEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Grade not found</p>
-            <p className="text-sm">
-              The grade you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The grade you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/grades')}>
           Back to Grades
@@ -155,6 +155,8 @@ export function GradeEdit() {
               control={form.control}
               errors={form.formState.errors}
               allowEditStudentCourse={false}
+              minGrade={gradeScale.min}
+              maxGrade={gradeScale.max}
             />
             <div className="flex justify-end gap-3">
               <Button

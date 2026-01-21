@@ -19,6 +19,7 @@ import {
   Alert,
   Badge,
 } from '../../components/ui';
+import { MetadataSection } from '../../components/shared/MetadataSection';
 
 export function AttendanceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -46,13 +47,8 @@ export function AttendanceDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Attendance record not found</p>
-            <p className="text-sm">
-              The attendance record you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The attendance record you're looking for doesn't exist or has been
+          deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/attendances')}>
           Back to Attendance
@@ -293,56 +289,15 @@ export function AttendanceDetail() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Record Details
+            Record Information
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Attendance ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">
-                {attendance._id}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Tenant ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">
-                {attendance.tenant}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Created At
-              </p>
-              <p className="text-base mt-1">
-                {new Date(attendance.createdAt).toLocaleString()}
-              </p>
-            </div>
-            {attendance.createdBy && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Created By
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {attendance.createdBy}
-                </p>
-              </div>
-            )}
-            {attendance.updatedBy && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Updated By
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {attendance.updatedBy}
-                </p>
-              </div>
-            )}
-          </div>
+          <MetadataSection
+            createdAt={attendance.createdAt}
+            createdBy={attendance.createdBy}
+            updatedBy={attendance.updatedBy}
+          />
         </CardContent>
       </Card>
     </div>

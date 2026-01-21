@@ -66,6 +66,7 @@ type IndividualSignupForm = z.infer<typeof individualSignupSchema>;
 
 export function SignupIndividual() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {
     control,
@@ -84,6 +85,7 @@ export function SignupIndividual() {
   const onSubmit = async (values: IndividualSignupForm) => {
     try {
       setSuccessMessage(null);
+      setErrorMessage(null);
       await authApi.register({
         email: values.email,
         password: values.password,
@@ -107,7 +109,9 @@ export function SignupIndividual() {
         confirmPassword: '',
       });
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Unable to complete registration'));
+      const message = getErrorMessage(error, 'Unable to complete registration');
+      setErrorMessage(message);
+      toast.error(message);
     }
   };
 
@@ -133,6 +137,16 @@ export function SignupIndividual() {
 
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {errorMessage && (
+                <Alert
+                  variant="destructive"
+                  onClose={() => setErrorMessage(null)}
+                  className="animate-slide-down"
+                >
+                  {errorMessage}
+                </Alert>
+              )}
+
               <Controller
                 name="tenant"
                 control={control}
@@ -257,12 +271,7 @@ export function SignupIndividual() {
           <CardFooter className="flex flex-col gap-4 text-sm text-muted-foreground">
             {successMessage && (
               <Alert variant="success">
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground">Request submitted</p>
-                  <p className="text-sm text-muted-foreground">
-                    {successMessage}
-                  </p>
-                </div>
+                {successMessage}
               </Alert>
             )}
             <p>

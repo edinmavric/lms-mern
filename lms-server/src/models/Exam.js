@@ -68,8 +68,8 @@ const examSchema = new mongoose.Schema(
 examSchema.pre('validate', async function (next) {
   const User = mongoose.model('User');
   const professor = await User.findById(this.professor);
-  if (professor && professor.role !== 'professor') {
-    return next(new Error('Assigned user must have role: professor'));
+  if (professor && !['professor', 'admin'].includes(professor.role)) {
+    return next(new Error('Assigned user must have role: professor or admin'));
   }
   if (this.passingPoints > this.maxPoints) {
     return next(new Error('Passing points cannot exceed max points'));

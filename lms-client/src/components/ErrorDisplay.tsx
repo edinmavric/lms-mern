@@ -31,7 +31,6 @@ export function ErrorDisplay({
     <div className={`space-y-4 ${className}`}>
       <Alert variant="destructive">
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
           <div className="flex-1 space-y-2">
             <div>
               <p className="font-semibold">{title}</p>

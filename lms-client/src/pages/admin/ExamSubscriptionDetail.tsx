@@ -117,13 +117,8 @@ export function ExamSubscriptionDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Exam subscription not found</p>
-            <p className="text-sm">
-              The exam subscription you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The exam subscription you're looking for doesn't exist or has been
+          deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/exam-subscriptions')}>
           Back to Exam Subscriptions

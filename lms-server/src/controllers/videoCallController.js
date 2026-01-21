@@ -17,6 +17,29 @@ const {
 
 const ACTIVE_STATUS = 'active';
 
+/**
+ * Auto-expire video calls that are past their lesson end time.
+ * This updates the database and returns the count of expired calls.
+ */
+async function autoExpireOldCalls(tenantId) {
+  const now = new Date();
+  const result = await VideoCall.updateMany(
+    {
+      tenant: tenantId,
+      status: ACTIVE_STATUS,
+      lessonEndAt: { $lt: now },
+      isDeleted: false,
+    },
+    {
+      $set: {
+        status: 'ended',
+        endedAt: now,
+      },
+    }
+  );
+  return result.modifiedCount || 0;
+}
+
 function getLessonWindow(lesson) {
   const date = new Date(lesson.date);
 
@@ -41,6 +64,9 @@ function isWithinLessonWindow(lesson) {
 }
 
 const getVideoCalls = asyncHandler(async (req, res) => {
+  // Auto-expire any calls that are past their lesson end time
+  await autoExpireOldCalls(req.tenantId);
+
   const criteria = req.applyTenantFilter({ isDeleted: false });
   const { status, courseId, lessonId } = req.query;
 
@@ -110,6 +136,14 @@ const getVideoCallById = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Video call not found' });
   }
 
+  // Auto-expire if lesson time has passed
+  const now = new Date();
+  if (videoCall.status === ACTIVE_STATUS && videoCall.lessonEndAt && videoCall.lessonEndAt < now) {
+    videoCall.status = 'ended';
+    videoCall.endedAt = now;
+    await videoCall.save();
+  }
+
   res.json(videoCall);
 });
 
@@ -118,6 +152,9 @@ const getActiveVideoCallForLesson = asyncHandler(async (req, res) => {
   if (!isValidObjectId(lessonId)) {
     return res.status(400).json({ message: 'Invalid lesson ID' });
   }
+
+  // Auto-expire any calls that are past their lesson end time
+  await autoExpireOldCalls(req.tenantId);
 
   const videoCall = await VideoCall.findOne(
     req.applyTenantFilter({
@@ -286,6 +323,15 @@ const generateVideoCallToken = asyncHandler(async (req, res) => {
 
   if (!videoCall) {
     return res.status(404).json({ message: 'Video call not found' });
+  }
+
+  // Check if lesson time has passed and auto-end the call
+  const now = new Date();
+  if (videoCall.status === ACTIVE_STATUS && videoCall.lessonEndAt && videoCall.lessonEndAt < now) {
+    videoCall.status = 'ended';
+    videoCall.endedAt = now;
+    await videoCall.save();
+    return res.status(400).json({ message: 'Video call has ended - lesson time has passed' });
   }
 
   if (videoCall.status !== ACTIVE_STATUS) {

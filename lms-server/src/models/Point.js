@@ -58,8 +58,8 @@ const pointSchema = new mongoose.Schema(
 pointSchema.pre('validate', async function (next) {
   const User = mongoose.model('User');
   const professor = await User.findById(this.professor);
-  if (professor && professor.role !== 'professor') {
-    return next(new Error('Assigned user must have role: professor'));
+  if (professor && !['professor', 'admin'].includes(professor.role)) {
+    return next(new Error('Assigned user must have role: professor or admin'));
   }
   const student = await User.findById(this.student);
   if (student && student.role !== 'student') {

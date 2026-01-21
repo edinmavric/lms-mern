@@ -4,7 +4,6 @@ import { z } from 'zod';
 import {
   BookOpen,
   DollarSign,
-  AlertCircle,
   Lock,
 } from 'lucide-react';
 
@@ -78,11 +77,7 @@ export function CourseForm({
     <div className="space-y-4">
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <div className="space-y-1">
-            <p className="font-medium">Error</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          {error}
         </Alert>
       )}
 

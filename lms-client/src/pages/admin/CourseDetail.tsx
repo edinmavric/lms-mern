@@ -21,6 +21,7 @@ import {
   Alert,
   Badge,
 } from '../../components/ui';
+import { MetadataSection } from '../../components/shared/MetadataSection';
 
 export function CourseDetail() {
   const { id } = useParams<{ id: string }>();
@@ -48,12 +49,7 @@ export function CourseDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Course not found</p>
-            <p className="text-sm">
-              The course you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The course you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/courses')}>
           Back to Courses
@@ -272,44 +268,15 @@ export function CourseDetail() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Course Details
+            Record Information
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Course ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">{course._id}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Tenant ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">
-                {course.tenant}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Created At
-              </p>
-              <p className="text-base mt-1">
-                {new Date(course.createdAt).toLocaleString()}
-              </p>
-            </div>
-            {course.createdBy && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Created By
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {course.createdBy}
-                </p>
-              </div>
-            )}
-          </div>
+          <MetadataSection
+            createdAt={course.createdAt}
+            createdBy={course.createdBy}
+            updatedBy={course.updatedBy}
+          />
         </CardContent>
       </Card>
     </div>

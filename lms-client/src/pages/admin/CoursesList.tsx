@@ -550,13 +550,8 @@ export function CoursesList() {
       >
         <DialogContent>
           <Alert variant="destructive">
-            <div className="space-y-1">
-              <p className="font-medium">Warning</p>
-              <p className="text-sm">
-                Deleting this course will permanently remove it and all
-                associated data.
-              </p>
-            </div>
+            Deleting this course will permanently remove it and all associated
+            data.
           </Alert>
           <DialogFooter>
             <Button
@@ -616,7 +611,9 @@ function CreateCourseDialog({
       try {
         await onSubmit(form.getValues());
         form.reset();
-      } catch (err) {}
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to create course'));
+      }
     }
   };
 
@@ -713,7 +710,9 @@ function EditCourseDialog({
     if (isValid) {
       try {
         await onSubmit(form.getValues());
-      } catch (err) {}
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to update course'));
+      }
     }
   };
 

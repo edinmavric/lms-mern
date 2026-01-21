@@ -7,7 +7,6 @@ import {
   Filter,
   Calendar,
   User,
-  AlertTriangle,
   Info,
   CheckCircle,
   XCircle,
@@ -278,13 +277,7 @@ export function ActivityLogsList() {
             </div>
           ) : error ? (
             <Alert variant="destructive" className="m-4">
-              <AlertTriangle className="h-4 w-4" />
-              <div>
-                <p className="font-medium">Error loading activity logs</p>
-                <p className="text-sm">
-                  {error instanceof Error ? error.message : 'Unknown error'}
-                </p>
-              </div>
+              {error instanceof Error ? error.message : 'Failed to load activity logs'}
             </Alert>
           ) : !data || data.logs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">

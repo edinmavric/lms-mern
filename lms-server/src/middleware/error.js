@@ -15,6 +15,14 @@ module.exports = function errorMiddleware(err, req, res, next) {
     });
   }
 
+  // Handle errors from Mongoose pre-validate hooks (thrown as plain Error objects)
+  // These typically contain user-friendly validation messages
+  if (err.message && err.stack && err.stack.includes('pre validate')) {
+    return res.status(400).json({
+      message: err.message,
+    });
+  }
+
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
     return res.status(409).json({

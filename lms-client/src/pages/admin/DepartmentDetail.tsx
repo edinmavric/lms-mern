@@ -11,6 +11,7 @@ import {
   Button,
   Alert,
 } from '../../components/ui';
+import { MetadataSection } from '../../components/shared/MetadataSection';
 
 export function DepartmentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -38,13 +39,7 @@ export function DepartmentDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Department not found</p>
-            <p className="text-sm">
-              The department you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The department you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/departments')}>
           Back to Departments
@@ -115,44 +110,24 @@ export function DepartmentDetail() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Record Details
+              Record Information
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Department ID
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {department._id}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Tenant ID
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {department.tenant}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Created At
-                </p>
-                <p className="text-base mt-1">
-                  {new Date(department.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Updated At
-                </p>
-                <p className="text-base mt-1">
-                  {new Date(department.updatedAt).toLocaleString()}
-                </p>
-              </div>
-            </div>
+            <MetadataSection
+              createdAt={department.createdAt}
+              updatedAt={department.updatedAt}
+              createdBy={
+                typeof department.createdBy === 'string'
+                  ? department.createdBy
+                  : undefined
+              }
+              updatedBy={
+                typeof department.updatedBy === 'string'
+                  ? department.updatedBy
+                  : undefined
+              }
+            />
           </CardContent>
         </Card>
       </div>

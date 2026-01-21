@@ -116,15 +116,7 @@ export function Login() {
                   onClose={() => setLoginError(null)}
                   className="animate-slide-down"
                 >
-                  <div className="ml-2 space-y-1">
-                    <p className="font-medium">Login failed</p>
-                    <p className="text-sm">{loginError}</p>
-                    <p className="text-xs opacity-90 mt-2">
-                      Please check your credentials and try again. If you've
-                      forgotten your password, you can reset it using the link
-                      below.
-                    </p>
-                  </div>
+                  {loginError}
                 </Alert>
               )}
 

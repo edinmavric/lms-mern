@@ -181,14 +181,9 @@ export function EnrollmentPaymentApproval() {
 
           {filteredEnrollments.length === 0 ? (
             <Alert>
-              <div className="space-y-1">
-                <p className="font-medium">No pending payments</p>
-                <p className="text-sm">
-                  {searchQuery
-                    ? 'No enrollments with pending payments match your search.'
-                    : 'All payments have been processed.'}
-                </p>
-              </div>
+              {searchQuery
+                ? 'No enrollments with pending payments match your search.'
+                : 'All payments have been processed.'}
             </Alert>
           ) : (
             <div className="space-y-4">

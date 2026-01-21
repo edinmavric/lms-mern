@@ -291,13 +291,7 @@ export function StudentCourses() {
         <DialogContent>
           {enrollDialog.course?.enrollmentPassword && (
             <Alert className="mb-4">
-              <Lock className="h-4 w-4" />
-              <div>
-                <p className="font-medium">Password Required</p>
-                <p className="text-sm">
-                  This course requires an enrollment password.
-                </p>
-              </div>
+              This course requires an enrollment password.
             </Alert>
           )}
           <FormField

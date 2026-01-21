@@ -13,7 +13,6 @@ import {
   Building2,
   Copy,
   Check,
-  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -117,13 +116,7 @@ export function StudentEnrollmentDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Enrollment not found</p>
-            <p className="text-sm">
-              The enrollment you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The enrollment you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/student/enrollments')}>
           Back to Enrollments
@@ -313,17 +306,10 @@ export function StudentEnrollmentDetail() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <div className="ml-2">
-                <p className="text-sm font-medium">
-                  Please transfer payment to the following bank account
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  After making the transfer, submit a payment request below with
-                  the amount you paid
-                </p>
-              </div>
+            <Alert variant="info">
+              Please transfer payment to the following bank account. After
+              making the transfer, submit a payment request below with the
+              amount you paid.
             </Alert>
 
             <div className="space-y-3">
@@ -485,14 +471,9 @@ export function StudentEnrollmentDetail() {
             onSubmit={paymentForm.handleSubmit(handleAddPayment)}
             className="space-y-4"
           >
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <div className="ml-2">
-                <p className="text-sm">
-                  Your payment request will be pending until verified by an
-                  administrator.
-                </p>
-              </div>
+            <Alert variant="info">
+              Your payment request will be pending until verified by an
+              administrator.
             </Alert>
 
             <FormField

@@ -1,7 +1,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { BookOpen, AlertCircle, Calendar, Clock } from 'lucide-react';
+import { BookOpen, Calendar, Clock } from 'lucide-react';
 
 import type { Lesson } from '../../types';
 import {
@@ -78,11 +78,7 @@ export function LessonForm({
     <div className="space-y-4">
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <div className="space-y-1">
-            <p className="font-medium">Error</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          {error}
         </Alert>
       )}
 

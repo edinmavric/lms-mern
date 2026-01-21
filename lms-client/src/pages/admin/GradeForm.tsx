@@ -1,7 +1,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle, Hash } from 'lucide-react';
+import { Hash } from 'lucide-react';
 
 import type { Grade } from '../../types';
 import {
@@ -16,13 +16,20 @@ import {
   Textarea,
 } from '../../components/ui';
 
-const gradeFormSchema = z.object({
-  student: z.string().min(1, 'Student is required'),
-  course: z.string().min(1, 'Course is required'),
-  value: z.number().min(0, 'Grade value must be non-negative'),
-  comment: z.string().optional(),
-  attempt: z.number().min(1, 'Attempt must be at least 1').optional(),
-});
+export const createGradeFormSchema = (minGrade: number = 1, maxGrade: number = 10) =>
+  z.object({
+    student: z.string().min(1, 'Student is required'),
+    course: z.string().min(1, 'Course is required'),
+    value: z
+      .number()
+      .min(minGrade, `Grade must be at least ${minGrade}`)
+      .max(maxGrade, `Grade must be at most ${maxGrade}`),
+    comment: z.string().optional(),
+    attempt: z.number().min(1, 'Attempt must be at least 1').optional(),
+  });
+
+// Default schema for type inference
+const gradeFormSchema = createGradeFormSchema();
 
 export type GradeFormData = z.infer<typeof gradeFormSchema>;
 
@@ -64,11 +71,7 @@ export function GradeForm({
     <div className="space-y-4">
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <div className="space-y-1">
-            <p className="font-medium">Error</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          {error}
         </Alert>
       )}
 
@@ -208,9 +211,17 @@ export function GradeForm({
   );
 }
 
-export function useGradeForm(grade?: Grade) {
+interface UseGradeFormOptions {
+  minGrade?: number;
+  maxGrade?: number;
+}
+
+export function useGradeForm(grade?: Grade, options?: UseGradeFormOptions) {
+  const { minGrade = 1, maxGrade = 10 } = options || {};
+  const schema = createGradeFormSchema(minGrade, maxGrade);
+
   const form = useForm<GradeFormData>({
-    resolver: zodResolver(gradeFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       student:
         typeof grade?.student === 'string'
@@ -220,7 +231,7 @@ export function useGradeForm(grade?: Grade) {
         typeof grade?.course === 'string'
           ? grade.course
           : (grade?.course as any)?._id || '',
-      value: grade?.value !== undefined ? grade.value : 0,
+      value: grade?.value !== undefined ? grade.value : minGrade,
       comment: grade?.comment || '',
       attempt: grade?.attempt || 1,
     },

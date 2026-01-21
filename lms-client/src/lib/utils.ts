@@ -31,15 +31,17 @@ export function getErrorMessage(error: unknown, fallback = 'Something went wrong
     return error;
   }
 
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
+  // Check for Axios error response first (prioritize server message over generic Axios message)
   const axiosError = error as AxiosError<{ message?: string; error?: string }>;
   const responseData = axiosError?.response?.data;
 
   if (responseData) {
     return responseData.message ?? responseData.error ?? fallback;
+  }
+
+  // Fall back to generic Error message only if no response data
+  if (error instanceof Error && error.message) {
+    return error.message;
   }
 
   return fallback;

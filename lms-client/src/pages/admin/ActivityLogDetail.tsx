@@ -88,13 +88,7 @@ export function ActivityLogDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Activity log not found</p>
-            <p className="text-sm">
-              The activity log you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The activity log you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/activity-logs')}>
           Back to Activity Logs

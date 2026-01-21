@@ -598,12 +598,7 @@ export function SignupTenant() {
 
             {submissionError && (
               <Alert variant="destructive">
-                <div className="space-y-1">
-                  <p className="font-medium">Setup failed</p>
-                  <p className="text-sm text-muted-foreground">
-                    {submissionError}
-                  </p>
-                </div>
+                {submissionError}
               </Alert>
             )}
           </CardContent>

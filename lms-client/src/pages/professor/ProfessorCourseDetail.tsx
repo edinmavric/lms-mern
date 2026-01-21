@@ -55,12 +55,7 @@ export function ProfessorCourseDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Course not found</p>
-            <p className="text-sm">
-              The course you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The course you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/professor/courses')}>
           Back to My Courses
@@ -78,10 +73,7 @@ export function ProfessorCourseDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Access Denied</p>
-            <p className="text-sm">You are not assigned to this course.</p>
-          </div>
+          You are not assigned to this course.
         </Alert>
         <Button onClick={() => navigate('/app/professor/courses')}>
           Back to My Courses

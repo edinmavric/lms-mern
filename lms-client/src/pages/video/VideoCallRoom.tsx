@@ -10,7 +10,6 @@ import {
 } from '@stream-io/video-react-sdk';
 import { toast } from 'sonner';
 import {
-  AlertTriangle,
   Loader2,
   LogOut,
   MonitorDot,
@@ -38,6 +37,12 @@ import {
   CardTitle,
 } from '../../components/ui';
 import { getErrorMessage } from '../../lib/utils';
+
+// Debug logging - only logs in development mode
+const DEBUG = import.meta.env.DEV;
+const debug = (...args: unknown[]) => {
+  if (DEBUG) console.log('[VideoCall]', ...args);
+};
 
 export function VideoCallRoom() {
   const { id } = useParams<{ id: string }>();
@@ -117,7 +122,7 @@ export function VideoCallRoom() {
   const isLeavingRef = useRef(false);
 
   const leaveCall = useCallback(async () => {
-    console.log('Leaving call...');
+    debug('Leaving call...');
     isLeavingRef.current = true;
     processedCallIdRef.current = null;
     joiningRef.current = false;
@@ -154,7 +159,7 @@ export function VideoCallRoom() {
 
   useEffect(() => {
     if (isLeavingRef.current) {
-      console.log('Join prevented - user is leaving the call');
+      debug('Join prevented - user is leaving the call');
       return;
     }
 
@@ -163,7 +168,7 @@ export function VideoCallRoom() {
     }
 
     if (videoCall._id !== id) {
-      console.log('Join prevented - videoCall ID does not match URL id', {
+      debug('Join prevented - videoCall ID does not match URL id', {
         videoCallId: videoCall._id,
         urlId: id,
       });
@@ -173,7 +178,7 @@ export function VideoCallRoom() {
     const currentPagePath = location.pathname;
     const expectedPagePath = `/app/video-calls/${id}`;
     if (currentPagePath !== expectedPagePath) {
-      console.log('Join prevented - not on video call page anymore', {
+      debug('Join prevented - not on video call page anymore', {
         currentPagePath,
         expectedPagePath,
       });
@@ -190,7 +195,7 @@ export function VideoCallRoom() {
       !joiningRef.current &&
       !joinInProgressRef.current
     ) {
-      console.log('Join prevented - user has already left this call');
+      debug('Join prevented - user has already left this call');
       return;
     }
 
@@ -199,14 +204,14 @@ export function VideoCallRoom() {
       callInfo?.callCid === videoCall.callCid &&
       activeCall.state?.session
     ) {
-      console.log('Already in active session for this call - skipping join');
+      debug('Already in active session for this call - skipping join');
       return;
     }
 
     const callCid = videoCall.callCid;
 
     if (joinInProgressRef.current === callCid) {
-      console.log(
+      debug(
         'Duplicate join prevented - join already in progress for:',
         callCid
       );
@@ -214,7 +219,7 @@ export function VideoCallRoom() {
     }
 
     if (abortControllerRef.current) {
-      console.log('Aborting previous join attempt');
+      debug('Aborting previous join attempt');
       abortControllerRef.current.abort();
     }
 
@@ -224,14 +229,14 @@ export function VideoCallRoom() {
     joinInProgressRef.current = callCid;
 
     activeJoinsRef.current.add(callCid);
-    console.log('Starting join process for callCid:', callCid);
+    debug('Starting join process for callCid:', callCid);
 
     const cleanup = () => {
       if (
         joinInProgressRef.current === callCid &&
         abortControllerRef.current === abortController
       ) {
-        console.log('Cleaning up join process for:', callCid);
+        debug('Cleaning up join process for:', callCid);
         abortController.abort();
         joinInProgressRef.current = null;
         abortControllerRef.current = null;
@@ -241,7 +246,7 @@ export function VideoCallRoom() {
     };
 
     if (isLeavingRef.current) {
-      console.log('Join prevented - leaving in progress');
+      debug('Join prevented - leaving in progress');
       return cleanup;
     }
 
@@ -254,14 +259,14 @@ export function VideoCallRoom() {
     }
 
     if (isLeavingRef.current) {
-      console.log('Join prevented - leaving flag set during checks');
+      debug('Join prevented - leaving flag set during checks');
       return cleanup;
     }
 
     const currentCallCid = callInfo?.callCid ?? null;
     if (currentCallCid === callCid && activeCall && client) {
       if (activeCall.state?.session) {
-        console.log('Already in active session for this call');
+        debug('Already in active session for this call');
         processedCallIdRef.current = callCid;
         activeJoinsRef.current.delete(callCid);
         joinInProgressRef.current = null;
@@ -275,7 +280,7 @@ export function VideoCallRoom() {
     joiningRef.current = true;
 
     if (videoCall?._id !== id) {
-      console.log('Join prevented - videoCall ID mismatch before API call', {
+      debug('Join prevented - videoCall ID mismatch before API call', {
         videoCallId: videoCall?._id,
         urlId: id,
         callCid,
@@ -284,14 +289,14 @@ export function VideoCallRoom() {
     }
 
     if (isLeavingRef.current) {
-      console.log('Join prevented - leaving flag set before API call');
+      debug('Join prevented - leaving flag set before API call');
       return cleanup;
     }
 
     const currentApiPath = location.pathname;
     const expectedApiPath = `/app/video-calls/${id}`;
     if (currentApiPath !== expectedApiPath) {
-      console.log('Join prevented - not on video call page before API call', {
+      debug('Join prevented - not on video call page before API call', {
         currentApiPath,
         expectedApiPath,
       });
@@ -299,7 +304,7 @@ export function VideoCallRoom() {
     }
 
     if (videoCall?.status !== 'active') {
-      console.log('Join prevented - call is not active before API call', {
+      debug('Join prevented - call is not active before API call', {
         status: videoCall?.status,
       });
       return cleanup;
@@ -310,12 +315,12 @@ export function VideoCallRoom() {
       callInfo?.callCid === callCid &&
       activeCall.state?.session
     ) {
-      console.log('Join prevented - already in call before API call');
+      debug('Join prevented - already in call before API call');
       return cleanup;
     }
 
     if (abortController.signal.aborted) {
-      console.log(
+      debug(
         'Join prevented - abort signal already aborted before API call'
       );
       return cleanup;
@@ -328,7 +333,7 @@ export function VideoCallRoom() {
       videoCall?.status !== 'active' ||
       abortController.signal.aborted
     ) {
-      console.log('Join prevented - final check failed before API call', {
+      debug('Join prevented - final check failed before API call', {
         videoCallId: videoCall?._id,
         urlId: id,
         isLeaving: isLeavingRef.current,
@@ -347,7 +352,7 @@ export function VideoCallRoom() {
           joinInProgressRef.current !== callCid ||
           isLeavingRef.current
         ) {
-          console.log('Join cancelled - aborted, callCid changed, or leaving');
+          debug('Join cancelled - aborted, callCid changed, or leaving');
           joiningRef.current = false;
           activeJoinsRef.current.delete(callCid);
           return;
@@ -356,14 +361,14 @@ export function VideoCallRoom() {
         const currentTokenPath = location.pathname;
         const expectedTokenPath = `/app/video-calls/${id}`;
         if (currentTokenPath !== expectedTokenPath) {
-          console.log('Join cancelled - navigated away from video call page');
+          debug('Join cancelled - navigated away from video call page');
           joiningRef.current = false;
           activeJoinsRef.current.delete(callCid);
           return;
         }
 
         if (videoCall?._id !== id) {
-          console.log('Join cancelled - videoCall ID no longer matches URL', {
+          debug('Join cancelled - videoCall ID no longer matches URL', {
             videoCallId: videoCall?._id,
             urlId: id,
           });
@@ -382,7 +387,7 @@ export function VideoCallRoom() {
           return;
         }
 
-        console.log('Token received, role:', tokenResponse.role);
+        debug('Token received, role:', tokenResponse.role);
 
         const streamClient = StreamVideoClient.getOrCreateInstance({
           apiKey: tokenResponse.apiKey,
@@ -405,13 +410,13 @@ export function VideoCallRoom() {
           joinInProgressRef.current !== callCid ||
           isLeavingRef.current
         ) {
-          console.log('Join cancelled before call.join() - leaving or aborted');
+          debug('Join cancelled before call.join() - leaving or aborted');
           return;
         }
 
         try {
           if (tokenResponse.role === 'host') {
-            console.log('Joining as host...');
+            debug('Joining as host...');
             await call.join({
               create: true,
               data: {
@@ -419,7 +424,7 @@ export function VideoCallRoom() {
               },
             });
           } else {
-            console.log('Joining as participant...');
+            debug('Joining as participant...');
             await call.join();
           }
 
@@ -428,14 +433,14 @@ export function VideoCallRoom() {
             joinInProgressRef.current !== callCid ||
             isLeavingRef.current
           ) {
-            console.log(
+            debug(
               'Join cancelled after call.join() - leaving or aborted'
             );
             await call.leave().catch(() => {});
             return;
           }
 
-          console.log('Successfully joined call');
+          debug('Successfully joined call');
 
           setActiveCall({
             call,
@@ -446,14 +451,14 @@ export function VideoCallRoom() {
             isDockVisible: false,
           });
         } catch (joinError: any) {
-          console.error('Join error:', joinError);
+          debug('Join error:', joinError);
 
           if (
             joinError?.message?.includes('already') ||
             joinError?.message?.includes('active participant') ||
             call.state?.session
           ) {
-            console.log(
+            debug(
               'Already in call or recovering from error, setting active call'
             );
             setActiveCall({
@@ -471,7 +476,7 @@ export function VideoCallRoom() {
       })
       .catch(err => {
         if (isLeavingRef.current) {
-          console.log('Join error ignored - user is leaving');
+          debug('Join error ignored - user is leaving');
           processedCallIdRef.current = null;
           return;
         }
@@ -479,7 +484,7 @@ export function VideoCallRoom() {
         const currentErrorPath = location.pathname;
         const expectedErrorPath = `/app/video-calls/${id}`;
         if (currentErrorPath !== expectedErrorPath) {
-          console.log(
+          debug(
             'Join error ignored - navigated away from video call page'
           );
           processedCallIdRef.current = null;
@@ -491,7 +496,7 @@ export function VideoCallRoom() {
           /\/video-calls\/([^/]+)\/token/
         );
         if (errorCallIdMatch && errorCallIdMatch[1] !== id) {
-          console.log('Join error ignored - error is for a different call', {
+          debug('Join error ignored - error is for a different call', {
             errorCallId: errorCallIdMatch[1],
             currentCallId: id,
           });
@@ -507,7 +512,7 @@ export function VideoCallRoom() {
           errorMessage?.includes('Video call is not active') ||
           errorMessage?.includes('Request failed with status code 400')
         ) {
-          console.log(
+          debug(
             'Join error suppressed - call not active or status changed',
             {
               errorMessage,
@@ -519,7 +524,7 @@ export function VideoCallRoom() {
           return;
         }
 
-        console.error('Failed to join call:', {
+        debug('Failed to join call:', {
           error: err,
           message: errorMessage,
           status: err?.response?.status,
@@ -586,16 +591,8 @@ export function VideoCallRoom() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <Alert variant="destructive">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5" />
-            <div>
-              <p className="font-semibold">Video call unavailable</p>
-              <p className="text-sm">
-                {getErrorMessage(error) ||
-                  'We could not load the requested call. It may no longer be active.'}
-              </p>
-            </div>
-          </div>
+          {getErrorMessage(error) ||
+            'We could not load the requested call. It may no longer be active.'}
         </Alert>
         <Button onClick={handleReturnBack}>Go back</Button>
       </div>
@@ -834,7 +831,7 @@ function CustomCallControls({ onLeave }: { onLeave: () => void }) {
         await call?.camera.enable();
       }
     } catch (error) {
-      console.error('Failed to toggle camera:', error);
+      debug('Failed to toggle camera:', error);
       toast.error('Failed to toggle camera');
     }
   }, [call, camera.isEnabled]);
@@ -847,7 +844,7 @@ function CustomCallControls({ onLeave }: { onLeave: () => void }) {
         await call?.microphone.enable();
       }
     } catch (error) {
-      console.error('Failed to toggle microphone:', error);
+      debug('Failed to toggle microphone:', error);
       toast.error('Failed to toggle microphone');
     }
   }, [call, microphone.isEnabled]);
@@ -866,7 +863,7 @@ function CustomCallControls({ onLeave }: { onLeave: () => void }) {
         toast.success('Screen sharing started');
       }
     } catch (error) {
-      console.error('Failed to toggle screen share:', error);
+      debug('Failed to toggle screen share:', error);
       toast.error('Failed to toggle screen share');
     }
   }, [call, hasOngoingScreenShare]);
@@ -880,7 +877,7 @@ function CustomCallControls({ onLeave }: { onLeave: () => void }) {
         setShowReactions(false);
         toast.success(`Sent ${reaction} reaction`);
       } catch (error) {
-        console.error('Failed to send reaction:', error);
+        debug('Failed to send reaction:', error);
         toast.error('Failed to send reaction');
       }
     },

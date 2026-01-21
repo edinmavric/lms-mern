@@ -177,13 +177,8 @@ export function ProfessorLessonMaterialEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Lesson material not found</p>
-            <p className="text-sm">
-              The lesson material you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The lesson material you're looking for doesn't exist or has been
+          deleted.
         </Alert>
         <Button onClick={() => navigate('/app/professor/lesson-materials')}>
           Back to Lesson Materials
@@ -196,10 +191,7 @@ export function ProfessorLessonMaterialEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Access Denied</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          {error}
         </Alert>
         <Button onClick={() => navigate('/app/professor/lesson-materials')}>
           Back to Lesson Materials
@@ -239,7 +231,7 @@ export function ProfessorLessonMaterialEdit() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <p>{error}</p>
+                {error}
               </Alert>
             )}
 

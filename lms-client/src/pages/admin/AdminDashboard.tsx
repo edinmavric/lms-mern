@@ -9,6 +9,7 @@ import {
   Wallet,
   TrendingUp,
   Activity,
+  BarChart3,
 } from 'lucide-react';
 
 import { usersApi } from '../../lib/api/users';
@@ -20,6 +21,14 @@ import { bankAccountsApi } from '../../lib/api/bankAccounts';
 import { activityLogsApi } from '../../lib/api/activityLogs';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
+import {
+  UsersByRoleChart,
+  EnrollmentStatusChart,
+  GradeDistributionChart,
+  AttendanceStatusChart,
+  ActivityChart,
+  RevenueChart,
+} from '../../components/charts';
 
 export function AdminDashboard() {
   const { user } = useAuthStore();
@@ -243,6 +252,68 @@ export function AdminDashboard() {
               </Card>
             </Link>
           ))}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <BarChart3 className="h-6 w-6" />
+          Analytics
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Users by Role</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <UsersByRoleChart users={users} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Enrollment Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EnrollmentStatusChart enrollments={enrollments} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Grade Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <GradeDistributionChart grades={grades} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Attendance Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AttendanceStatusChart attendances={attendances} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Activity (Last 7 Days)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ActivityChart stats={activityLogsStats} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Revenue from Enrollments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RevenueChart enrollments={enrollments} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

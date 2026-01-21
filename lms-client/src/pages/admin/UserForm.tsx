@@ -1,7 +1,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, UserRound, Lock, AlertCircle } from 'lucide-react';
+import { Mail, UserRound, Lock } from 'lucide-react';
 
 import type { User } from '../../types';
 import {
@@ -60,11 +60,7 @@ export function UserForm({
     <div className="space-y-4">
       {error && (
         <Alert variant="destructive" className="animate-slide-down">
-          <AlertCircle className="h-4 w-4" />
-          <div className="ml-2 space-y-1">
-            <p className="font-medium">Error</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          {error}
         </Alert>
       )}
 

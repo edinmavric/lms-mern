@@ -110,8 +110,8 @@ consultationSchema.pre('validate', async function (next) {
   const User = mongoose.model('User');
 
   const professor = await User.findById(this.professor);
-  if (!professor || professor.role !== 'professor') {
-    return next(new Error('Consultation must be created by a professor'));
+  if (!professor || !['professor', 'admin'].includes(professor.role)) {
+    return next(new Error('Consultation must be created by a professor or admin'));
   }
   if (this.startTime >= this.endTime) {
     return next(new Error('End time must be after start time'));

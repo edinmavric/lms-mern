@@ -130,12 +130,7 @@ export function StudentLessonDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Lesson not found</p>
-            <p className="text-sm">
-              The lesson you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The lesson you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/student/lessons')}>
           Back to My Lessons
@@ -156,13 +151,8 @@ export function StudentLessonDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Access Denied</p>
-            <p className="text-sm">
-              You are not enrolled in this course. Please enroll to view lesson
-              details.
-            </p>
-          </div>
+          You are not enrolled in this course. Please enroll to view lesson
+          details.
         </Alert>
         <Button onClick={() => navigate('/app/student/lessons')}>
           Back to My Lessons

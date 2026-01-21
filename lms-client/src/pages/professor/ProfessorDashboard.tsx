@@ -1,12 +1,33 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { BookOpen, FileText, Award, TrendingUp } from 'lucide-react';
+import {
+  BookOpen,
+  FileText,
+  Award,
+  TrendingUp,
+  Users,
+  ClipboardCheck,
+  Calendar,
+  Video,
+  ArrowRight,
+} from 'lucide-react';
 
 import { coursesApi } from '../../lib/api/courses';
 import { enrollmentsApi } from '../../lib/api/enrollments';
 import { gradesApi } from '../../lib/api/grades';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
+import { lessonsApi } from '../../lib/api/lessons';
+import { attendanceApi } from '../../lib/api/attendance';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+} from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
+import { GradeDistributionChart } from '../../components/charts/GradeDistributionChart';
+import { AttendanceStatusChart } from '../../components/charts/AttendanceStatusChart';
+import type { Lesson, Course } from '../../types';
 
 export function ProfessorDashboard() {
   const { user } = useAuthStore();
@@ -24,6 +45,16 @@ export function ProfessorDashboard() {
   const { data: grades = [] } = useQuery({
     queryKey: ['grades', 'all'],
     queryFn: () => gradesApi.list({}),
+  });
+
+  const { data: lessons = [] } = useQuery({
+    queryKey: ['lessons', 'all'],
+    queryFn: () => lessonsApi.list({}),
+  });
+
+  const { data: attendances = [] } = useQuery({
+    queryKey: ['attendances', 'all'],
+    queryFn: () => attendanceApi.list({}),
   });
 
   const myCourses = courses.filter(course =>
@@ -48,6 +79,48 @@ export function ProfessorDashboard() {
         : grade.professor?._id) === user?._id
   );
 
+  const myCourseIds = myCourses.map(c => c._id);
+
+  const myLessons = lessons.filter((lesson: Lesson) => {
+    const courseId =
+      typeof lesson.course === 'string' ? lesson.course : lesson.course._id;
+    return myCourseIds.includes(courseId);
+  });
+
+  const myAttendances = attendances.filter(attendance => {
+    const courseId =
+      typeof attendance.course === 'string'
+        ? attendance.course
+        : attendance.course._id;
+    return myCourseIds.includes(courseId);
+  });
+
+  // Get today's lessons
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const todaysLessons = myLessons
+    .filter((lesson: Lesson) => {
+      const lessonDate = new Date(lesson.date);
+      lessonDate.setHours(0, 0, 0, 0);
+      return lessonDate >= today && lessonDate < tomorrow;
+    })
+    .sort((a: Lesson, b: Lesson) => {
+      const timeA = a.startTime.split(':').map(Number);
+      const timeB = b.startTime.split(':').map(Number);
+      return timeA[0] * 60 + timeA[1] - (timeB[0] * 60 + timeB[1]);
+    });
+
+  // Calculate attendance rate
+  const attendanceRate =
+    myAttendances.length > 0
+      ? (myAttendances.filter(a => a.status === 'present').length /
+          myAttendances.length) *
+        100
+      : 0;
+
   const stats = {
     totalCourses: myCourses.length,
     totalEnrollments: myEnrollments.length,
@@ -57,6 +130,8 @@ export function ProfessorDashboard() {
       myGrades.length > 0
         ? myGrades.reduce((sum, g) => sum + g.value, 0) / myGrades.length
         : 0,
+    totalLessons: myLessons.length,
+    attendanceRate,
   };
 
   const dashboardCards = [
@@ -95,7 +170,7 @@ export function ProfessorDashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">My Courses</CardTitle>
@@ -104,7 +179,20 @@ export function ProfessorDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalCourses}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.activeEnrollments} active students
+              {stats.totalLessons} lessons created
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Students</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.activeEnrollments}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.totalEnrollments} total enrollments
             </p>
           </CardContent>
         </Card>
@@ -123,6 +211,115 @@ export function ProfessorDashboard() {
             </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
+            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.attendanceRate.toFixed(1)}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              across all my courses
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Today's Lessons
+            </CardTitle>
+            <Link to="/app/professor/lessons">
+              <Button variant="ghost" size="sm">
+                View all
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {todaysLessons.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No lessons scheduled for today
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {todaysLessons.slice(0, 5).map((lesson: Lesson) => {
+                  const course =
+                    typeof lesson.course === 'object'
+                      ? (lesson.course as Course)
+                      : null;
+                  return (
+                    <Link
+                      key={lesson._id}
+                      to={`/app/professor/lessons/${lesson._id}`}
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{lesson.title}</p>
+                        {course && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {course.name}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right ml-2 shrink-0">
+                        <p className="text-sm font-medium">
+                          {lesson.startTime}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {lesson.endTime}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5" />
+              Grade Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <GradeDistributionChart grades={myGrades} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardCheck className="h-5 w-5" />
+              Attendance Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AttendanceStatusChart attendances={myAttendances} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex items-center justify-center gap-4 p-6 border rounded-lg bg-card">
+        <Video className="h-8 w-8 text-primary" />
+        <div className="flex-1">
+          <h3 className="font-semibold">Start a Video Call</h3>
+          <p className="text-sm text-muted-foreground">
+            Connect with your students through video conferencing
+          </p>
+        </div>
+        <Link to="/app/professor/video-calls">
+          <Button>View Video Calls</Button>
+        </Link>
       </div>
 
       <div>

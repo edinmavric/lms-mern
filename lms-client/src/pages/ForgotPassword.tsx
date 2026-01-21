@@ -96,14 +96,9 @@ export function ForgotPassword() {
 
             <CardContent className="space-y-4">
               <Alert variant="success">
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground">Email sent</p>
-                  <p className="text-sm text-muted-foreground">
-                    If an account exists with the email you provided, you'll
-                    receive a password reset link shortly. Please check your
-                    inbox and spam folder.
-                  </p>
-                </div>
+                If an account exists with the email you provided, you'll
+                receive a password reset link shortly. Please check your
+                inbox and spam folder.
               </Alert>
 
               <div className="space-y-3">
@@ -158,10 +153,7 @@ export function ForgotPassword() {
                   onClose={() => setError(null)}
                   className="animate-slide-down"
                 >
-                  <div className="ml-2 space-y-1">
-                    <p className="font-medium">Request failed</p>
-                    <p className="text-sm">{error}</p>
-                  </div>
+                  {error}
                 </Alert>
               )}
 

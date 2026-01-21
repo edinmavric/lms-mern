@@ -20,6 +20,7 @@ import {
   Button,
   Alert,
 } from '../../components/ui';
+import { MetadataSection } from '../../components/shared/MetadataSection';
 
 export function GradeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -47,12 +48,7 @@ export function GradeDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Grade not found</p>
-            <p className="text-sm">
-              The grade you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The grade you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/grades')}>
           Back to Grades
@@ -249,58 +245,24 @@ export function GradeDetail() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Grade Details
+            Record Information
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Grade ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">{grade._id}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Tenant ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">{grade.tenant}</p>
-            </div>
+          <div className="grid gap-4 md:grid-cols-2 mb-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Date</p>
               <p className="text-base mt-1">
                 {new Date(grade.date).toLocaleString()}
               </p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Created At
-              </p>
-              <p className="text-base mt-1">
-                {new Date(grade.createdAt).toLocaleString()}
-              </p>
-            </div>
-            {grade.createdBy && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Created By
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {grade.createdBy}
-                </p>
-              </div>
-            )}
-            {grade.updatedBy && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Updated By
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {grade.updatedBy}
-                </p>
-              </div>
-            )}
           </div>
+          <MetadataSection
+            createdAt={grade.createdAt}
+            updatedAt={grade.updatedAt}
+            createdBy={grade.createdBy}
+            updatedBy={grade.updatedBy}
+          />
         </CardContent>
       </Card>
     </div>

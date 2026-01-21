@@ -124,13 +124,7 @@ export function ResetPassword() {
 
             <CardContent className="space-y-4">
               <Alert variant="success">
-                <div className="ml-2 space-y-1">
-                  <p className="font-medium text-foreground">Success</p>
-                  <p className="text-sm text-muted-foreground">
-                    Your password has been successfully reset. Redirecting to
-                    login...
-                  </p>
-                </div>
+                Your password has been successfully reset. Redirecting to login...
               </Alert>
 
               <Button className="w-full" onClick={() => navigate('/login')}>
@@ -162,13 +156,8 @@ export function ResetPassword() {
 
             <CardContent className="space-y-4">
               <Alert variant="destructive">
-                <div className="ml-2 space-y-1">
-                  <p className="font-medium">Link invalid</p>
-                  <p className="text-sm">
-                    The password reset link is missing required parameters or
-                    has expired. Please request a new password reset.
-                  </p>
-                </div>
+                The password reset link is missing required parameters or has expired.
+                Please request a new password reset.
               </Alert>
 
               <div className="space-y-3">
@@ -219,10 +208,7 @@ export function ResetPassword() {
                   onClose={() => setError(null)}
                   className="animate-slide-down"
                 >
-                  <div className="ml-2 space-y-1">
-                    <p className="font-medium">Reset failed</p>
-                    <p className="text-sm">{error}</p>
-                  </div>
+                  {error}
                 </Alert>
               )}
 

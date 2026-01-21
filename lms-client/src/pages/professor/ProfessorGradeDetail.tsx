@@ -55,12 +55,7 @@ export function ProfessorGradeDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Grade not found</p>
-            <p className="text-sm">
-              The grade you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The grade you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/professor/grades')}>
           Back to My Grades
@@ -82,12 +77,7 @@ export function ProfessorGradeDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Access Denied</p>
-            <p className="text-sm">
-              This grade does not belong to any of your courses.
-            </p>
-          </div>
+          This grade does not belong to any of your courses.
         </Alert>
         <Button onClick={() => navigate('/app/professor/grades')}>
           Back to My Grades

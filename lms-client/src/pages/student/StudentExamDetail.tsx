@@ -101,12 +101,7 @@ export function StudentExamDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Exam not found</p>
-            <p className="text-sm">
-              The exam you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The exam you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/student/exams')}>
           Back to My Exams
@@ -127,13 +122,8 @@ export function StudentExamDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Access Denied</p>
-            <p className="text-sm">
-              You are not enrolled in this course. Please enroll to view exam
-              details.
-            </p>
-          </div>
+          You are not enrolled in this course. Please enroll to view exam
+          details.
         </Alert>
         <Button onClick={() => navigate('/app/student/exams')}>
           Back to My Exams

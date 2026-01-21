@@ -39,6 +39,7 @@ import {
   FormField,
   Input,
 } from '../../components/ui';
+import { MetadataSection } from '../../components/shared/MetadataSection';
 
 interface MaterialFormData {
   name: string;
@@ -379,12 +380,7 @@ export function LessonDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Lesson not found</p>
-            <p className="text-sm">
-              The lesson you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The lesson you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/lessons')}>
           Back to Lessons
@@ -665,58 +661,23 @@ export function LessonDetail() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Lesson Metadata
+            Record Information
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Lesson ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">{lesson._id}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Tenant ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">
-                {lesson.tenant}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Created At
-              </p>
-              <p className="text-base mt-1">
-                {new Date(lesson.createdAt).toLocaleString()}
-              </p>
-            </div>
-            {lesson.createdBy && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Created By
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {typeof lesson.createdBy === 'string'
-                    ? lesson.createdBy
-                    : `${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}
-                </p>
-              </div>
-            )}
-            {lesson.updatedBy && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Updated By
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {typeof lesson.updatedBy === 'string'
-                    ? lesson.updatedBy
-                    : `${lesson.updatedBy.firstName} ${lesson.updatedBy.lastName}`}
-                </p>
-              </div>
-            )}
-          </div>
+          <MetadataSection
+            createdAt={lesson.createdAt}
+            createdBy={
+              typeof lesson.createdBy === 'string'
+                ? lesson.createdBy
+                : undefined
+            }
+            updatedBy={
+              typeof lesson.updatedBy === 'string'
+                ? lesson.updatedBy
+                : undefined
+            }
+          />
         </CardContent>
       </Card>
 

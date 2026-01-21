@@ -121,12 +121,7 @@ export function StudentCourseDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Course not found</p>
-            <p className="text-sm">
-              The course you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The course you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/student/courses')}>
           Back to My Courses
@@ -139,13 +134,8 @@ export function StudentCourseDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Not Enrolled</p>
-            <p className="text-sm">
-              You are not enrolled in this course. Please enroll to view course
-              details.
-            </p>
-          </div>
+          You are not enrolled in this course. Please enroll to view course
+          details.
         </Alert>
         <Button onClick={() => navigate('/app/student/courses')}>
           Back to My Courses

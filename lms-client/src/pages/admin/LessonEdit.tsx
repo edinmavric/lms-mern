@@ -96,12 +96,7 @@ export function LessonEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Lesson not found</p>
-            <p className="text-sm">
-              The lesson you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The lesson you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/lessons')}>
           Back to Lessons

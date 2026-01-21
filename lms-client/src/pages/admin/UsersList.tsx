@@ -541,13 +541,8 @@ export function UsersList() {
       >
         <DialogContent>
           <Alert variant="destructive">
-            <div className="space-y-1">
-              <p className="font-medium">Warning</p>
-              <p className="text-sm">
-                Deleting this user will permanently remove their account and all
-                associated data.
-              </p>
-            </div>
+            Deleting this user will permanently remove their account and all
+            associated data.
           </Alert>
           <DialogFooter>
             <Button
@@ -595,6 +590,7 @@ function CreateUserDialog({
         await onSubmit(form.getValues());
         form.reset();
       } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to create user'));
       }
     }
   };
@@ -667,6 +663,7 @@ function EditUserDialog({
       try {
         await onSubmit(form.getValues());
       } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to update user'));
       }
     }
   };

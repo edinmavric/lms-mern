@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, AlertCircle } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
 import type { Department } from '../../types';
 import { Input, FormField, Alert, Textarea } from '../../components/ui';
@@ -31,11 +31,7 @@ export function DepartmentForm({
     <div className="space-y-4">
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <div className="space-y-1">
-            <p className="font-medium">Error</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          {error}
         </Alert>
       )}
 

@@ -33,6 +33,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { MetadataSection } from '../../components/shared/MetadataSection';
 
 const paymentFormSchema = z.object({
   amount: z.number().min(0.01, 'Amount must be greater than 0'),
@@ -100,13 +101,7 @@ export function EnrollmentDetail() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Enrollment not found</p>
-            <p className="text-sm">
-              The enrollment you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The enrollment you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/enrollments')}>
           Back to Enrollments
@@ -359,46 +354,15 @@ export function EnrollmentDetail() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Enrollment Details
+            Record Information
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Enrollment ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">
-                {enrollment._id}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Tenant ID
-              </p>
-              <p className="text-sm font-mono mt-1 break-all">
-                {enrollment.tenant}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Created At
-              </p>
-              <p className="text-base mt-1">
-                {new Date(enrollment.createdAt).toLocaleString()}
-              </p>
-            </div>
-            {enrollment.createdBy && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Created By
-                </p>
-                <p className="text-sm font-mono mt-1 break-all">
-                  {enrollment.createdBy}
-                </p>
-              </div>
-            )}
-          </div>
+          <MetadataSection
+            createdAt={enrollment.createdAt}
+            createdBy={enrollment.createdBy}
+            updatedBy={enrollment.updatedBy}
+          />
         </CardContent>
       </Card>
 

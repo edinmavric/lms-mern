@@ -8,6 +8,7 @@ import { gradesApi } from '../../lib/api/grades';
 import { usersApi } from '../../lib/api/users';
 import { coursesApi } from '../../lib/api/courses';
 import { useAuthStore } from '../../store/authStore';
+import { useTenantSettings } from '../../hooks/useTenantSettings';
 import { getErrorMessage } from '../../lib/utils';
 import {
   GradeForm,
@@ -29,6 +30,7 @@ export function ProfessorGradeEdit() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const { gradeScale } = useTenantSettings();
   const [error, setError] = useState<string | null>(null);
 
   const { data: grade, isLoading } = useQuery({
@@ -48,7 +50,10 @@ export function ProfessorGradeEdit() {
     queryFn: () => usersApi.list({ role: 'student', status: 'active' }),
   });
 
-  const form = useGradeForm(grade);
+  const form = useGradeForm(grade, {
+    minGrade: gradeScale.min,
+    maxGrade: gradeScale.max,
+  });
 
   useEffect(() => {
     if (grade) {
@@ -112,12 +117,7 @@ export function ProfessorGradeEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Grade not found</p>
-            <p className="text-sm">
-              The grade you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The grade you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/professor/grades')}>
           Back to Grades
@@ -130,10 +130,7 @@ export function ProfessorGradeEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Access Denied</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          {error}
         </Alert>
         <Button onClick={() => navigate('/app/professor/grades')}>
           Back to Grades
@@ -184,6 +181,8 @@ export function ProfessorGradeEdit() {
               control={form.control}
               errors={form.formState.errors}
               allowEditStudentCourse={false}
+              minGrade={gradeScale.min}
+              maxGrade={gradeScale.max}
             />
             <div className="flex justify-end gap-3">
               <Button

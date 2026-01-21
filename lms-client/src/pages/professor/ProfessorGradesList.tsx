@@ -9,6 +9,7 @@ import { usersApi } from '../../lib/api/users';
 import { coursesApi } from '../../lib/api/courses';
 import { getErrorMessage } from '../../lib/utils';
 import { useAuthStore } from '../../store/authStore';
+import { useTenantSettings } from '../../hooks/useTenantSettings';
 import type { Grade } from '../../types';
 import {
   GradeForm,
@@ -38,6 +39,7 @@ export function ProfessorGradesList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { gradeScale } = useTenantSettings();
   const [searchStudent, setSearchStudent] = useState('');
   const [filterCourse, setFilterCourse] = useState<string>('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -159,8 +161,14 @@ export function ProfessorGradesList() {
     },
   });
 
-  const createForm = useGradeForm();
-  const editForm = useGradeForm(editDialog.grade || undefined);
+  const createForm = useGradeForm(undefined, {
+    minGrade: gradeScale.min,
+    maxGrade: gradeScale.max,
+  });
+  const editForm = useGradeForm(editDialog.grade || undefined, {
+    minGrade: gradeScale.min,
+    maxGrade: gradeScale.max,
+  });
 
   const handleCreateSubmit = async (data: GradeFormData) => {
     await createMutation.mutateAsync(data);
@@ -405,7 +413,10 @@ export function ProfessorGradesList() {
           control={createForm.control}
           errors={createForm.formState.errors}
           isSubmitting={createMutation.isPending}
+          error={createMutation.error ? getErrorMessage(createMutation.error, 'Failed to create grade') : null}
           allowEditStudentCourse={true}
+          minGrade={gradeScale.min}
+          maxGrade={gradeScale.max}
         />
       </FormDialog>
 
@@ -427,7 +438,10 @@ export function ProfessorGradesList() {
           control={editForm.control}
           errors={editForm.formState.errors}
           isSubmitting={updateMutation.isPending}
+          error={updateMutation.error ? getErrorMessage(updateMutation.error, 'Failed to update grade') : null}
           allowEditStudentCourse={false}
+          minGrade={gradeScale.min}
+          maxGrade={gradeScale.max}
         />
       </FormDialog>
 

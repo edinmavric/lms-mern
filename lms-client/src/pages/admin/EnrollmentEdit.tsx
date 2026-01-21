@@ -103,13 +103,7 @@ export function EnrollmentEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Enrollment not found</p>
-            <p className="text-sm">
-              The enrollment you're looking for doesn't exist or has been
-              deleted.
-            </p>
-          </div>
+          The enrollment you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/enrollments')}>
           Back to Enrollments

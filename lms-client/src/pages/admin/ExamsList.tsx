@@ -38,6 +38,7 @@ import {
   DialogFooter,
   FormField,
   Badge,
+  Alert,
 } from '../../components/ui';
 
 interface ExamFormData {
@@ -58,11 +59,15 @@ function ExamForm({
   courses,
   onSubmit,
   onCancel,
+  error,
+  isSubmitting,
 }: {
   exam?: Exam | null;
   courses: Array<{ _id: string; name: string }>;
   onSubmit: (data: ExamFormData) => void;
   onCancel: () => void;
+  error?: string | null;
+  isSubmitting?: boolean;
 }) {
   const [formData, setFormData] = useState<ExamFormData>({
     course: exam?.course
@@ -92,6 +97,12 @@ function ExamForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          {error}
+        </Alert>
+      )}
+
       <FormField label="Course" required>
         <Select
           value={formData.course}
@@ -257,10 +268,12 @@ function ExamForm({
       </div>
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit">Save</Button>
+        <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+          Save
+        </Button>
       </DialogFooter>
     </form>
   );
@@ -676,7 +689,7 @@ export function ExamsList() {
 
       <Dialog
         open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
+        onClose={() => !createMutation.isPending && setCreateDialogOpen(false)}
         title="Create Exam"
         description="Create a new exam for a course"
       >
@@ -685,13 +698,15 @@ export function ExamsList() {
             courses={courses}
             onSubmit={data => createMutation.mutate(data)}
             onCancel={() => setCreateDialogOpen(false)}
+            error={createMutation.error ? getErrorMessage(createMutation.error, 'Failed to create exam') : null}
+            isSubmitting={createMutation.isPending}
           />
         </DialogContent>
       </Dialog>
 
       <Dialog
         open={editDialog.open}
-        onClose={() => setEditDialog({ open: false, exam: null })}
+        onClose={() => !updateMutation.isPending && setEditDialog({ open: false, exam: null })}
         title="Edit Exam"
         description="Update exam details"
       >
@@ -704,6 +719,8 @@ export function ExamsList() {
               updateMutation.mutate({ id: editDialog.exam._id, data })
             }
             onCancel={() => setEditDialog({ open: false, exam: null })}
+            error={updateMutation.error ? getErrorMessage(updateMutation.error, 'Failed to update exam') : null}
+            isSubmitting={updateMutation.isPending}
           />
         </DialogContent>
       </Dialog>

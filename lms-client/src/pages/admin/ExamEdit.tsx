@@ -134,12 +134,7 @@ export function ExamEdit() {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <div className="space-y-1">
-            <p className="font-medium">Exam not found</p>
-            <p className="text-sm">
-              The exam you're looking for doesn't exist or has been deleted.
-            </p>
-          </div>
+          The exam you're looking for doesn't exist or has been deleted.
         </Alert>
         <Button onClick={() => navigate('/app/admin/exams')}>
           Back to Exams
@@ -175,7 +170,7 @@ export function ExamEdit() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <p>{error}</p>
+                {error}
               </Alert>
             )}
 

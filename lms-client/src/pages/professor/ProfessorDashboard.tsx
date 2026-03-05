@@ -88,10 +88,9 @@ export function ProfessorDashboard() {
   });
 
   const myAttendances = attendances.filter(attendance => {
-    const courseId =
-      typeof attendance.course === 'string'
-        ? attendance.course
-        : attendance.course._id;
+    const lesson = typeof attendance.lesson === 'object' ? attendance.lesson as Lesson : null;
+    if (!lesson) return false;
+    const courseId = typeof lesson.course === 'string' ? lesson.course : lesson.course._id;
     return myCourseIds.includes(courseId);
   });
 
